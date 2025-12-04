@@ -112,27 +112,75 @@ public class SC_GameLogic : MonoBehaviour
     {
         yield return new WaitForSeconds(.2f);
 
-        int nullCounter = 0;
-        for (int x = 0; x < gameBoard.Width; x++)
+        bool hasActivity = true;
+        while (hasActivity)
         {
-            for (int y = 0; y < gameBoard.Height; y++)
+            SpawnTopRow();
+            hasActivity = DropSingleRow();
+
+            if (hasActivity)
             {
-                SC_Gem _curGem = gameBoard.GetGem(x, y);
-                if (_curGem == null)
-                {
-                    nullCounter++;
-                }
-                else if (nullCounter > 0)
-                {
-                    _curGem.posIndex.y -= nullCounter;
-                    SetGem(x, y - nullCounter, _curGem);
-                    SetGem(x, y, null);
-                }
+                yield return new WaitForSeconds(0.05f);
             }
-            nullCounter = 0;
         }
 
-        StartCoroutine(FilledBoardCo());
+        CheckMisplacedGems();
+        yield return new WaitForSeconds(0.5f);
+        gameBoard.FindAllMatches();
+        if (gameBoard.CurrentMatches.Count > 0)
+        {
+            yield return new WaitForSeconds(0.5f);
+            DestroyMatches();
+        }
+        else
+        {
+            yield return new WaitForSeconds(0.5f);
+            currentState = GlobalEnums.GameState.move;
+        }
+    }
+
+    private void SpawnTopRow()
+    {
+        for (int x = 0; x < gameBoard.Width; x++)
+        {
+            int topY = gameBoard.Height - 1;
+            SC_Gem topGem = gameBoard.GetGem(x, topY);
+            
+            if (topGem == null)
+            {
+                SC_Gem gemToSpawn = SelectNonMatchingGem(new Vector2Int(x, topY));
+                SpawnGem(new Vector2Int(x, topY), gemToSpawn);
+            }
+        }
+    }
+
+    private bool DropSingleRow()
+    {
+        bool anyDropped = false;
+
+        for (int y = 1; y < gameBoard.Height; y++)
+        {
+            for (int x = 0; x < gameBoard.Width; x++)
+            {
+                SC_Gem currentGem = gameBoard.GetGem(x, y);
+                SC_Gem gemBelow = gameBoard.GetGem(x, y - 1);
+
+                if (currentGem != null && gemBelow == null)
+                {
+                    currentGem.posIndex.y--;
+                    SetGem(x, y - 1, currentGem);
+                    SetGem(x, y, null);
+                    anyDropped = true;
+                }
+            }
+
+            if (anyDropped)
+            {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     public void ScoreCheck(SC_Gem gemToCheck)
@@ -151,39 +199,6 @@ public class SC_GameLogic : MonoBehaviour
         }
     }
 
-    private IEnumerator FilledBoardCo()
-    {
-        yield return new WaitForSeconds(0.5f);
-        RefillBoard();
-        yield return new WaitForSeconds(0.5f);
-        gameBoard.FindAllMatches();
-        if (gameBoard.CurrentMatches.Count > 0)
-        {
-            yield return new WaitForSeconds(0.5f);
-            DestroyMatches();
-        }
-        else
-        {
-            yield return new WaitForSeconds(0.5f);
-            currentState = GlobalEnums.GameState.move;
-        }
-    }
-    private void RefillBoard()
-    {
-        for (int x = 0; x < gameBoard.Width; x++)
-        {
-            for (int y = 0; y < gameBoard.Height; y++)
-            {
-                SC_Gem _curGem = gameBoard.GetGem(x,y);
-                if (_curGem == null)
-                {
-                    SC_Gem gemToSpawn = SelectNonMatchingGem(new Vector2Int(x, y));
-                    SpawnGem(new Vector2Int(x, y), gemToSpawn);
-                }
-            }
-        }
-        CheckMisplacedGems();
-    }
     private void CheckMisplacedGems()
     {
         List<SC_Gem> foundGems = new List<SC_Gem>();
