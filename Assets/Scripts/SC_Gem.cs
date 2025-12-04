@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public class SC_Gem : MonoBehaviour
+public class SC_Gem : MonoBehaviour, IPoolable
 {
     [HideInInspector]
     public Vector2Int posIndex;
@@ -46,6 +46,24 @@ public class SC_Gem : MonoBehaviour
     {
         posIndex = _Position;
         scGameLogic = _ScGameLogic;
+    }
+
+    public void OnSpawnFromPool()
+    {
+        isMatch = false;
+        mousePressed = false;
+        otherGem = null;
+        swipeAngle = 0;
+    }
+
+    public void OnReturnToPool()
+    {
+        isMatch = false;
+        mousePressed = false;
+        otherGem = null;
+        swipeAngle = 0;
+        previousPos = Vector2Int.zero;
+        StopAllCoroutines();
     }
 
     private void OnMouseDown()

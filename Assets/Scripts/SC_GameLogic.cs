@@ -11,6 +11,7 @@ public class SC_GameLogic : MonoBehaviour
     private GameBoard gameBoard;
     private GlobalEnums.GameState currentState = GlobalEnums.GameState.move;
     public GlobalEnums.GameState CurrentState { get { return currentState; } }
+    private GemPool gemPool;
 
     #region MonoBehaviour
     private void Awake()
@@ -39,6 +40,7 @@ public class SC_GameLogic : MonoBehaviour
             unityObjects.Add(g.name,g);
 
         gameBoard = new GameBoard(7, 7);
+        gemPool = new GemPool(unityObjects["GemsHolder"].transform);
         Setup();
     }
     private void Setup()
@@ -79,11 +81,8 @@ public class SC_GameLogic : MonoBehaviour
         if (Random.Range(0, 100f) < SC_GameVariables.Instance.bombChance)
             _GemToSpawn = SC_GameVariables.Instance.bomb;
 
-        SC_Gem _gem = Instantiate(_GemToSpawn, new Vector3(_Position.x, _Position.y + SC_GameVariables.Instance.dropHeight, 0f), Quaternion.identity);
-        _gem.transform.SetParent(unityObjects["GemsHolder"].transform);
-        _gem.name = "Gem - " + _Position.x + ", " + _Position.y;
+        SC_Gem _gem = gemPool.SpawnGem(_GemToSpawn, _Position, this, SC_GameVariables.Instance.dropHeight);
         gameBoard.SetGem(_Position.x,_Position.y, _gem);
-        _gem.SetupGem(this,_Position);
     }
     public void SetGem(int _X,int _Y, SC_Gem _Gem)
     {
@@ -194,7 +193,7 @@ public class SC_GameLogic : MonoBehaviour
         {
             Instantiate(_curGem.destroyEffect, new Vector2(_Pos.x, _Pos.y), Quaternion.identity);
 
-            Destroy(_curGem.gameObject);
+            gemPool.ReturnGem(_curGem);
             SetGem(_Pos.x,_Pos.y, null);
         }
     }
@@ -214,7 +213,7 @@ public class SC_GameLogic : MonoBehaviour
         }
 
         foreach (SC_Gem g in foundGems)
-            Destroy(g.gameObject);
+            gemPool.ReturnGem(g);
     }
     public void FindAllMatches()
     {
