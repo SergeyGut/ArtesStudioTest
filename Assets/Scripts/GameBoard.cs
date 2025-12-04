@@ -35,21 +35,45 @@ public class GameBoard
     }
     public bool MatchesAt(Vector2Int _PositionToCheck, SC_Gem _GemToCheck)
     {
-        if (_PositionToCheck.x > 1)
+        return CheckHorizontalMatch(_PositionToCheck, _GemToCheck) || 
+               CheckVerticalMatch(_PositionToCheck, _GemToCheck);
+    }
+
+    private bool CheckHorizontalMatch(Vector2Int pos, SC_Gem gemToCheck)
+    {
+        int leftCount = CountMatchingGemsInDirection(pos, -1, 0, gemToCheck.type);
+        int rightCount = CountMatchingGemsInDirection(pos, 1, 0, gemToCheck.type);
+        
+        return (leftCount + rightCount) >= 2;
+    }
+
+    private bool CheckVerticalMatch(Vector2Int pos, SC_Gem gemToCheck)
+    {
+        int belowCount = CountMatchingGemsInDirection(pos, 0, -1, gemToCheck.type);
+        int aboveCount = CountMatchingGemsInDirection(pos, 0, 1, gemToCheck.type);
+        
+        return (belowCount + aboveCount) >= 2;
+    }
+
+    private int CountMatchingGemsInDirection(Vector2Int startPos, int deltaX, int deltaY, GlobalEnums.GemType typeToMatch)
+    {
+        int count = 0;
+        int x = startPos.x + deltaX;
+        int y = startPos.y + deltaY;
+
+        while (IsValidPosition(x, y) && allGems[x, y] != null && allGems[x, y].type == typeToMatch)
         {
-            if (allGems[_PositionToCheck.x - 1, _PositionToCheck.y].type == _GemToCheck.type &&
-                allGems[_PositionToCheck.x - 2, _PositionToCheck.y].type == _GemToCheck.type)
-                return true;
+            count++;
+            x += deltaX;
+            y += deltaY;
         }
 
-        if (_PositionToCheck.y > 1)
-        {
-            if (allGems[_PositionToCheck.x, _PositionToCheck.y - 1].type == _GemToCheck.type &&
-                allGems[_PositionToCheck.x, _PositionToCheck.y - 2].type == _GemToCheck.type)
-                return true;
-        }
+        return count;
+    }
 
-        return false;
+    private bool IsValidPosition(int x, int y)
+    {
+        return x >= 0 && x < width && y >= 0 && y < height;
     }
 
     public void SetGem(int _X, int _Y, SC_Gem _Gem)

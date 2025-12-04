@@ -51,21 +51,29 @@ public class SC_GameLogic : MonoBehaviour
                 _bgTile.transform.SetParent(unityObjects["GemsHolder"].transform);
                 _bgTile.name = "BG Tile - " + x + ", " + y;
 
-                int _gemToUse = Random.Range(0, SC_GameVariables.Instance.gems.Length);
-
-                int iterations = 0;
-                while (gameBoard.MatchesAt(new Vector2Int(x, y), SC_GameVariables.Instance.gems[_gemToUse]) && iterations < 100)
-                {
-                    _gemToUse = Random.Range(0, SC_GameVariables.Instance.gems.Length);
-                    iterations++;
-                }
-                SpawnGem(new Vector2Int(x, y), SC_GameVariables.Instance.gems[_gemToUse]);
+                SC_Gem gemToSpawn = SelectNonMatchingGem(new Vector2Int(x, y));
+                SpawnGem(new Vector2Int(x, y), gemToSpawn);
             }
     }
     public void StartGame()
     {
         unityObjects["Txt_Score"].GetComponent<TextMeshProUGUI>().text = score.ToString("0");
     }
+    private SC_Gem SelectNonMatchingGem(Vector2Int _Position)
+    {
+        int gemToUse = Random.Range(0, SC_GameVariables.Instance.gems.Length);
+        int iterations = 0;
+        int maxIterations = 100;
+
+        while (gameBoard.MatchesAt(_Position, SC_GameVariables.Instance.gems[gemToUse]) && iterations < maxIterations)
+        {
+            gemToUse = Random.Range(0, SC_GameVariables.Instance.gems.Length);
+            iterations++;
+        }
+
+        return SC_GameVariables.Instance.gems[gemToUse];
+    }
+
     private void SpawnGem(Vector2Int _Position, SC_Gem _GemToSpawn)
     {
         if (Random.Range(0, 100f) < SC_GameVariables.Instance.bombChance)
@@ -169,8 +177,8 @@ public class SC_GameLogic : MonoBehaviour
                 SC_Gem _curGem = gameBoard.GetGem(x,y);
                 if (_curGem == null)
                 {
-                    int gemToUse = Random.Range(0, SC_GameVariables.Instance.gems.Length);
-                    SpawnGem(new Vector2Int(x, y), SC_GameVariables.Instance.gems[gemToUse]);
+                    SC_Gem gemToSpawn = SelectNonMatchingGem(new Vector2Int(x, y));
+                    SpawnGem(new Vector2Int(x, y), gemToSpawn);
                 }
             }
         }
