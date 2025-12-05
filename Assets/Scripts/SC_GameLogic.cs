@@ -125,7 +125,17 @@ public class SC_GameLogic : MonoBehaviour
             }
         }
         
-        yield return new WaitForSeconds(0.3f);
+        foreach (var bombCreationPosition in bombCreationPositions)
+        {
+            var bombToSpawn = GetBombPrefabForType(bombCreationPosition.Value);
+            var bombPos = bombCreationPosition.Key;
+            
+            SC_Gem newBomb = gemPool.SpawnGem(bombToSpawn, bombPos, this, 0);
+            newBomb.transform.position = new Vector3(bombPos.x, bombPos.y, 0);
+            gameBoard.SetGem(bombPos.x, bombPos.y, newBomb);
+        }
+        
+        yield return new WaitForSeconds(SC_GameVariables.Instance.bombNeighborDelay);
 
         foreach (var gem in gameBoard.CurrentMatches)
         {
@@ -136,7 +146,7 @@ public class SC_GameLogic : MonoBehaviour
             }
         }
         
-        yield return new WaitForSeconds(0.3f);
+        yield return new WaitForSeconds(SC_GameVariables.Instance.bombSelfDelay);
 
         foreach (var gem in gameBoard.CurrentMatches)
         {
@@ -145,18 +155,6 @@ public class SC_GameLogic : MonoBehaviour
                 ScoreCheck(gem);
                 DestroyMatchedGemsAt(gem.posIndex);
             }
-        }
-
-        yield return new WaitForSeconds(0.2f);
-        
-        foreach (var bombCreationPosition in bombCreationPositions)
-        {
-            var bombToSpawn = GetBombPrefabForType(bombCreationPosition.Value);
-            var bombPos = bombCreationPosition.Key;
-            
-            SC_Gem newBomb = gemPool.SpawnGem(bombToSpawn, bombPos, this, 0);
-            newBomb.transform.position = new Vector3(bombPos.x, bombPos.y, 0);
-            gameBoard.SetGem(bombPos.x, bombPos.y, newBomb);
         }
         
         yield return DecreaseRowCo();
