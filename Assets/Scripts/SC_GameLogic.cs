@@ -108,7 +108,7 @@ public class SC_GameLogic : MonoBehaviour
 
         foreach (var matchInfo in gameBoard.MatchInfoMap)
         {
-            if (matchInfo.matchedGems.Count > SC_GameVariables.Instance.minMatchForBomb)
+            if (matchInfo.matchedGems.Count >= SC_GameVariables.Instance.minMatchForBomb)
             {
                 var firstGem = matchInfo.matchedGems.First();
                 bombCreationPositions.Add(matchInfo.userActionPos?? firstGem.posIndex, firstGem.type);
