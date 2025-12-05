@@ -105,8 +105,8 @@ public class GameBoard
                 SC_Gem currentGem = allGems[x, y];
                 if (currentGem != null)
                 {
-                    HashSet<SC_Gem> horizontalMatches = CheckHorizontalMatches(x, y);
-                    HashSet<SC_Gem> verticalMatches = CheckVerticalMatches(x, y);
+                    HashSet<SC_Gem> horizontalMatches = CheckMatchesInDirection(x, y, 1, 0);
+                    HashSet<SC_Gem> verticalMatches = CheckMatchesInDirection(x, y, 0, 1);
 
                     if (horizontalMatches != null)
                     {
@@ -145,8 +145,8 @@ public class GameBoard
         
         matchInfoMap.Add(newMatch);
     }
-    
-    private HashSet<SC_Gem> CheckHorizontalMatches(int x, int y)
+
+    private HashSet<SC_Gem> CheckMatchesInDirection(int x, int y, int deltaX, int deltaY)
     {
         SC_Gem currentGem = allGems[x, y];
         
@@ -155,47 +155,30 @@ public class GameBoard
 
         HashSet<SC_Gem> matches = new HashSet<SC_Gem> { currentGem };
 
-        int left = x - 1;
-        while (left >= 0 && allGems[left, y] != null && allGems[left, y].type == currentGem.type)
+        foreach (var gem in GetMatchingGemsInDirection(x, y, deltaX, deltaY, currentGem.type))
         {
-            matches.Add(allGems[left, y]);
-            left--;
+            matches.Add(gem);
         }
 
-        int right = x + 1;
-        while (right < width && allGems[right, y] != null && allGems[right, y].type == currentGem.type)
+        foreach (var gem in GetMatchingGemsInDirection(x, y, -deltaX, -deltaY, currentGem.type))
         {
-            matches.Add(allGems[right, y]);
-            right++;
+            matches.Add(gem);
         }
 
         return matches.Count >= 3 ? matches : null;
     }
 
-    private HashSet<SC_Gem> CheckVerticalMatches(int x, int y)
+    private IEnumerable<SC_Gem> GetMatchingGemsInDirection(int startX, int startY, int deltaX, int deltaY, GlobalEnums.GemType typeToMatch)
     {
-        SC_Gem currentGem = allGems[x, y];
-        
-        if (!currentGem)
-            return null;
+        int x = startX + deltaX;
+        int y = startY + deltaY;
 
-        HashSet<SC_Gem> matches = new HashSet<SC_Gem> { currentGem };
-
-        int below = y - 1;
-        while (below >= 0 && allGems[x, below] != null && allGems[x, below].type == currentGem.type)
+        while (IsValidPosition(x, y) && allGems[x, y] && allGems[x, y].type == typeToMatch)
         {
-            matches.Add(allGems[x, below]);
-            below--;
+            yield return allGems[x, y];
+            x += deltaX;
+            y += deltaY;
         }
-
-        int above = y + 1;
-        while (above < height && allGems[x, above] != null && allGems[x, above].type == currentGem.type)
-        {
-            matches.Add(allGems[x, above]);
-            above++;
-        }
-
-        return matches.Count >= 3 ? matches : null;
     }
 
     public void CheckForBombs()
