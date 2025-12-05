@@ -22,15 +22,35 @@ public class SC_Gem : MonoBehaviour, IPoolable
 
     public int blastSize = 1;
     private SC_GameLogic scGameLogic;
+    private Vector2 startPosition;
+    private float moveStartTime;
+    private bool isMoving = false;
 
     void Update()
     {
         if (Vector2.Distance(transform.position, posIndex) > 0.01f)
-            transform.position = Vector2.Lerp(transform.position, posIndex, SC_GameVariables.Instance.gemSpeed * Time.deltaTime);
+        {
+            if (!isMoving)
+            {
+                startPosition = transform.position;
+                moveStartTime = Time.time;
+                isMoving = true;
+            }
+
+            float distance = Vector2.Distance(startPosition, posIndex);
+            float elapsed = Time.time - moveStartTime;
+            float speed = SC_GameVariables.Instance.gemSpeed * 2f;
+            float t = Mathf.Clamp01((elapsed * speed) / Mathf.Max(distance, 0.1f));
+            
+            t = EaseOutCubic(t);
+            
+            transform.position = Vector2.Lerp(startPosition, posIndex, t);
+        }
         else
         {
             transform.position = new Vector3(posIndex.x, posIndex.y, 0);
             scGameLogic.SetGem(posIndex.x, posIndex.y, this);
+            isMoving = false;
         }
         if (mousePressed && Input.GetMouseButtonUp(0))
         {
@@ -43,10 +63,16 @@ public class SC_Gem : MonoBehaviour, IPoolable
         }
     }
 
+    private float EaseOutCubic(float t)
+    {
+        return 1f - Mathf.Pow(1f - t, 3f);
+    }
+
     public void SetupGem(SC_GameLogic _ScGameLogic,Vector2Int _Position)
     {
         posIndex = _Position;
         scGameLogic = _ScGameLogic;
+        isMoving = false;
     }
 
     public void OnSpawnFromPool()
@@ -55,6 +81,7 @@ public class SC_Gem : MonoBehaviour, IPoolable
         mousePressed = false;
         otherGem = null;
         swipeAngle = 0;
+        isMoving = false;
     }
 
     public void OnReturnToPool()
@@ -64,6 +91,7 @@ public class SC_Gem : MonoBehaviour, IPoolable
         otherGem = null;
         swipeAngle = 0;
         previousPos = Vector2Int.zero;
+        isMoving = false;
         StopAllCoroutines();
     }
 
