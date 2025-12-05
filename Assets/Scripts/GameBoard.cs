@@ -110,13 +110,11 @@ public class GameBoard
 
                     if (horizontalMatches != null)
                     {
-                        currentMatches.AddRange(horizontalMatches);
                         AddMatch(new MatchInfo { matchedGems = horizontalMatches, userActionPos = userActionPos });
                     }
 
                     if (verticalMatches != null)
                     {
-                        currentMatches.AddRange(verticalMatches);
                         AddMatch(new MatchInfo { matchedGems = verticalMatches, userActionPos = userActionPos });
                     }
                 }
@@ -130,6 +128,13 @@ public class GameBoard
 
     private void AddMatch(MatchInfo newMatch)
     {
+        currentMatches.AddRange(newMatch.matchedGems);
+
+        foreach (var gem in newMatch.matchedGems)
+        {
+            gem.isMatch = true;
+        }
+        
         for (int i = 0; i < matchInfoMap.Count; ++i)
         {
             if (matchInfoMap[i].matchedGems.Overlaps(newMatch.matchedGems))
@@ -155,7 +160,6 @@ public class GameBoard
         int left = x - 1;
         while (left >= 0 && allGems[left, y] != null && allGems[left, y].type == currentGem.type)
         {
-            allGems[left, y].isMatch = true;
             matches.Add(allGems[left, y]);
             left--;
         }
@@ -163,7 +167,6 @@ public class GameBoard
         int right = x + 1;
         while (right < width && allGems[right, y] != null && allGems[right, y].type == currentGem.type)
         {
-            allGems[right, y].isMatch = true;
             matches.Add(allGems[right, y]);
             right++;
         }
@@ -183,7 +186,6 @@ public class GameBoard
         int below = y - 1;
         while (below >= 0 && allGems[x, below] != null && allGems[x, below].type == currentGem.type)
         {
-            allGems[x, below].isMatch = true;
             matches.Add(allGems[x, below]);
             below--;
         }
@@ -191,7 +193,6 @@ public class GameBoard
         int above = y + 1;
         while (above < height && allGems[x, above] != null && allGems[x, above].type == currentGem.type)
         {
-            allGems[x, above].isMatch = true;
             matches.Add(allGems[x, above]);
             above++;
         }
