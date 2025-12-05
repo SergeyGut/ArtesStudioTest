@@ -104,60 +104,52 @@ public class SC_GameLogic : MonoBehaviour
 
     private IEnumerator DestroyMatchesCo()
     {
-        Dictionary<Vector2Int, GlobalEnums.GemType> bombCreationPositions = new Dictionary<Vector2Int, GlobalEnums.GemType>();
-
-        foreach (var matchInfo in gameBoard.MatchInfoMap)
-        {
-            if (matchInfo.matchedGems.Count >= SC_GameVariables.Instance.minMatchForBomb)
-            {
-                var firstGem = matchInfo.matchedGems.First();
-                bombCreationPositions.TryAdd(matchInfo.userActionPos?? firstGem.posIndex, firstGem.type);
-            }
-        }
+        using var bombCreationPositions = PooledDictionary<Vector2Int, GlobalEnums.GemType>.Get();
         
         foreach (var matchInfo in gameBoard.MatchInfoMap)
-        foreach (var gem in matchInfo.matchedGems)
         {
-            if (gem && !gem.isColorBomb && gem.type != GlobalEnums.GemType.bomb)
+            if (matchInfo.MatchedGems.Count >= SC_GameVariables.Instance.minMatchForBomb)
             {
-                ScoreCheck(gem);
-                DestroyMatchedGemsAt(gem.posIndex);
+                var firstGem = matchInfo.MatchedGems.First();
+                bombCreationPositions.Value.TryAdd(matchInfo.UserActionPos ?? firstGem.posIndex, firstGem.type);
             }
         }
-        
-        foreach (var bombCreationPosition in bombCreationPositions)
-        {
-            var bombToSpawn = GetBombPrefabForType(bombCreationPosition.Value);
-            var bombPos = bombCreationPosition.Key;
-            
-            SC_Gem newBomb = gemPool.SpawnGem(bombToSpawn, bombPos, this, 0);
-            newBomb.transform.position = new Vector3(bombPos.x, bombPos.y, 0);
-            gameBoard.SetGem(bombPos.x, bombPos.y, newBomb);
-        }
-        
-        yield return new WaitForSeconds(SC_GameVariables.Instance.bombNeighborDelay);
 
-        foreach (var gem in gameBoard.Explosions)
-        {
-            if (gem && !gem.isColorBomb && gem.type != GlobalEnums.GemType.bomb)
-            {
-                ScoreCheck(gem);
-                DestroyMatchedGemsAt(gem.posIndex);
-            }
-        }
+        DestroyGems(gameBoard.MatchInfoMap.SelectMany(m => m.MatchedGems), g => g && !g.isColorBomb && g.type != GlobalEnums.GemType.bomb);
         
-        yield return new WaitForSeconds(SC_GameVariables.Instance.bombSelfDelay);
-
-        foreach (var gem in gameBoard.Explosions)
-        {
-            if (gem && (gem.isColorBomb || gem.type == GlobalEnums.GemType.bomb))
-            {
-                ScoreCheck(gem);
-                DestroyMatchedGemsAt(gem.posIndex);
-            }
-        }
+        yield return WaitForSeconds(SC_GameVariables.Instance.bombNeighborDelay);
+        DestroyGems(gameBoard.Explosions, g => g && !g.isColorBomb && g.type != GlobalEnums.GemType.bomb);
         
+        yield return WaitForSeconds(SC_GameVariables.Instance.bombSelfDelay);
+        DestroyGems(gameBoard.Explosions, g => g && (g.isColorBomb || g.type == GlobalEnums.GemType.bomb));
+        
+        CreateBombs(bombCreationPositions);
         yield return DecreaseRowCo();
+    }
+
+    private void DestroyGems(IEnumerable<SC_Gem> gems, System.Func<SC_Gem, bool> predicate)
+    {
+        foreach (var gem in gems.Where(predicate))
+        {
+            ScoreCheck(gem);
+            DestroyMatchedGemsAt(gem.posIndex);
+        }
+    }
+
+    private void CreateBombs(Dictionary<Vector2Int, GlobalEnums.GemType> bombPositions)
+    {
+        foreach (var (pos, type) in bombPositions)
+        {
+            var bombPrefab = GetBombPrefabForType(type);
+            var newBomb = gemPool.SpawnGem(bombPrefab, pos, this, 0);
+            newBomb.transform.position = new Vector3(pos.x, pos.y, 0);
+            gameBoard.SetGem(pos.x, pos.y, newBomb);
+        }
+    }
+
+    private IEnumerator WaitForSeconds(float seconds)
+    {
+        yield return new WaitForSeconds(seconds);
     }
 
     private SC_Gem GetBombPrefabForType(GlobalEnums.GemType type)
@@ -262,19 +254,19 @@ public class SC_GameLogic : MonoBehaviour
 
     private void CheckMisplacedGems()
     {
-        List<SC_Gem> foundGems = new List<SC_Gem>();
-        foundGems.AddRange(FindObjectsOfType<SC_Gem>());
+        using var foundGems = PooledList<SC_Gem>.Get();
+        foundGems.Value.AddRange(FindObjectsOfType<SC_Gem>());
         for (int x = 0; x < gameBoard.Width; x++)
         {
             for (int y = 0; y < gameBoard.Height; y++)
             {
                 SC_Gem _curGem = gameBoard.GetGem(x, y);
-                if (foundGems.Contains(_curGem))
-                    foundGems.Remove(_curGem);
+                if (foundGems.Value.Contains(_curGem))
+                    foundGems.Value.Remove(_curGem);
             }
         }
 
-        foreach (SC_Gem g in foundGems)
+        foreach (SC_Gem g in foundGems.Value)
             gemPool.ReturnGem(g);
     }
     public void FindAllMatches(Vector2Int? posIndex = null, Vector2Int? otherPosIndex = null)

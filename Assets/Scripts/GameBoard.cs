@@ -1,38 +1,36 @@
-﻿using System.Collections;
-using System.Collections.Generic;
-using System.Linq;
+﻿using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.Pool;
 
 public class GameBoard
 {
     #region Variables
 
-    private int height = 0;
-    public int Height { get { return height; } }
+    private readonly int height = 0;
+    public int Height => height;
 
-    private int width = 0;
-    public int Width { get { return width; } }
-  
+    private readonly int width = 0;
+    public int Width => width;
+
     private SC_Gem[,] allGems;
-  //  public Gem[,] AllGems { get { return allGems; } }
 
     private int score = 0;
     public int Score 
     {
-        get { return score; }
-        set { score = value; }
+        get => score;
+        set => score = value;
     }
 
-    private List<SC_Gem> explosions = new List<SC_Gem>();
-    public List<SC_Gem> Explosions { get { return explosions; } }
-    
-    private List<MatchInfo> matchInfoMap = new List<MatchInfo>();
-    public List<MatchInfo> MatchInfoMap { get { return matchInfoMap; } }
-    
+    private readonly HashSet<SC_Gem> explosions = new();
+    public HashSet<SC_Gem> Explosions => explosions;
+
+    private readonly List<MatchInfo> matchInfoMap = new();
+    public List<MatchInfo> MatchInfoMap => matchInfoMap;
+
     public class MatchInfo
     {
-        public HashSet<SC_Gem> matchedGems;
-        public Vector2Int? userActionPos;
+        public HashSet<SC_Gem> MatchedGems;
+        public Vector2Int? UserActionPos;
     }
     #endregion
 
@@ -97,6 +95,11 @@ public class GameBoard
     public void FindAllMatches(Vector2Int? userActionPos = null)
     {
         explosions.Clear();
+        foreach (var matchInfo in matchInfoMap)
+        {
+            if (matchInfo.MatchedGems != null)
+                HashSetPool<SC_Gem>.Release(matchInfo.MatchedGems);
+        }
         matchInfoMap.Clear();
 
         for (int x = 0; x < width; x++)
@@ -110,35 +113,34 @@ public class GameBoard
 
                     if (horizontalMatches != null)
                     {
-                        AddMatch(new MatchInfo { matchedGems = horizontalMatches, userActionPos = userActionPos });
+                        AddMatch(new MatchInfo { MatchedGems = horizontalMatches, UserActionPos = userActionPos });
                     }
 
                     if (verticalMatches != null)
                     {
-                        AddMatch(new MatchInfo { matchedGems = verticalMatches, userActionPos = userActionPos });
+                        AddMatch(new MatchInfo { MatchedGems = verticalMatches, UserActionPos = userActionPos });
                     }
                 }
             }
-
-        if (explosions.Count > 0)
-            explosions = explosions.Distinct().ToList();
 
         CheckForBombs();
     }
 
     private void AddMatch(MatchInfo newMatch)
     {
-        foreach (var gem in newMatch.matchedGems)
+        foreach (var gem in newMatch.MatchedGems)
         {
             MarkGemAsMatched(gem);
         }
         
         for (int i = 0; i < matchInfoMap.Count; ++i)
         {
-            if (matchInfoMap[i].matchedGems.Overlaps(newMatch.matchedGems))
+            if (matchInfoMap[i].MatchedGems.Overlaps(newMatch.MatchedGems))
             {
-                matchInfoMap[i].matchedGems.UnionWith(newMatch.matchedGems);
-                matchInfoMap[i].userActionPos ??= newMatch.userActionPos;
+                matchInfoMap[i].MatchedGems.UnionWith(newMatch.MatchedGems);
+                matchInfoMap[i].UserActionPos ??= newMatch.UserActionPos;
+                if (newMatch.MatchedGems != matchInfoMap[i].MatchedGems)
+                    HashSetPool<SC_Gem>.Release(newMatch.MatchedGems);
                 return;
             }
         }
@@ -153,7 +155,8 @@ public class GameBoard
         if (!currentGem)
             return null;
 
-        HashSet<SC_Gem> matches = new HashSet<SC_Gem> { currentGem };
+        var matches = HashSetPool<SC_Gem>.Get();
+        matches.Add(currentGem);
 
         foreach (var gem in GetMatchingGemsInDirection(x, y, deltaX, deltaY, currentGem.type))
         {
@@ -165,7 +168,13 @@ public class GameBoard
             matches.Add(gem);
         }
 
-        return matches.Count >= 3 ? matches : null;
+        if (matches.Count < 3)
+        {
+            HashSetPool<SC_Gem>.Release(matches);
+            return null;
+        }
+
+        return matches;
     }
 
     private IEnumerable<SC_Gem> GetMatchingGemsInDirection(int startX, int startY, int deltaX, int deltaY, GlobalEnums.GemType typeToMatch)
@@ -184,7 +193,7 @@ public class GameBoard
     public void CheckForBombs()
     {
         foreach (var matchInfo in MatchInfoMap)
-        foreach (var gem in matchInfo.matchedGems)
+        foreach (var gem in matchInfo.MatchedGems)
         {
             int x = gem.posIndex.x;
             int y = gem.posIndex.y;
@@ -237,7 +246,6 @@ public class GameBoard
                 }
             }
         }
-        explosions = explosions.Distinct().ToList();
     }
     
     public void MarkColorBombArea(Vector2Int bombPos, int _BlastSize)
@@ -270,7 +278,6 @@ public class GameBoard
                 }
             }
         }
-        explosions = explosions.Distinct().ToList();
     }
     
     private void MarkGemAsMatched(SC_Gem gem)
