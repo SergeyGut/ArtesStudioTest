@@ -1,5 +1,6 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using TMPro;
 using UnityEngine;
 
@@ -98,6 +99,22 @@ public class SC_GameLogic : MonoBehaviour
     }
     public void DestroyMatches()
     {
+        StartCoroutine(DestroyMatchesCo());
+    }
+
+    private IEnumerator DestroyMatchesCo()
+    {
+        Dictionary<Vector2Int, GlobalEnums.GemType> bombCreationPositions = new Dictionary<Vector2Int, GlobalEnums.GemType>();
+
+        foreach (var matchInfo in gameBoard.MatchInfoMap)
+        {
+            if (matchInfo.matchedGems.Count > SC_GameVariables.Instance.minMatchForBomb)
+            {
+                var firstGem = matchInfo.matchedGems.First();
+                bombCreationPositions.Add(matchInfo.userActionPos?? firstGem.posIndex, firstGem.type);
+            }
+        }
+        
         for (int i = 0; i < gameBoard.CurrentMatches.Count; i++)
             if (gameBoard.CurrentMatches[i] != null)
             {
@@ -105,7 +122,29 @@ public class SC_GameLogic : MonoBehaviour
                 DestroyMatchedGemsAt(gameBoard.CurrentMatches[i].posIndex);
             }
 
-        StartCoroutine(DecreaseRowCo());
+        yield return new WaitForSeconds(0.2f);
+        
+        foreach (var bombCreationPosition in bombCreationPositions)
+        {
+            var bombToSpawn = GetBombPrefabForType(bombCreationPosition.Value);
+            var bombPos = bombCreationPosition.Key;
+            
+            SC_Gem newBomb = gemPool.SpawnGem(bombToSpawn, bombPos, this, 0);
+            newBomb.transform.position = new Vector3(bombPos.x, bombPos.y, 0);
+            gameBoard.SetGem(bombPos.x, bombPos.y, newBomb);
+        }
+        
+        yield return DecreaseRowCo();
+    }
+
+    private SC_Gem GetBombPrefabForType(GlobalEnums.GemType type)
+    {
+        foreach (SC_Gem bomb in SC_GameVariables.Instance.gemBombs)
+        {
+            if (bomb.type == type)
+                return bomb;
+        }
+        return null;
     }
     private IEnumerator DecreaseRowCo()
     {
@@ -215,9 +254,14 @@ public class SC_GameLogic : MonoBehaviour
         foreach (SC_Gem g in foundGems)
             gemPool.ReturnGem(g);
     }
-    public void FindAllMatches()
+    public void FindAllMatches(Vector2Int? posIndex = null, Vector2Int? otherPosIndex = null)
     {
-        gameBoard.FindAllMatches();
+        if (posIndex.HasValue)
+            gameBoard.FindAllMatches(posIndex);
+        else if (otherPosIndex.HasValue)
+            gameBoard.FindAllMatches(otherPosIndex);
+        else
+            gameBoard.FindAllMatches();
     }
 
     #endregion

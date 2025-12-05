@@ -14,7 +14,7 @@ public class GemPool
         pool = new GenericObjectPool<SC_Gem>(parent);
     }
 
-    public SC_Gem SpawnGem(SC_Gem prefab, Vector2Int position, SC_GameLogic gameLogic, float dropHeight)
+    public SC_Gem SpawnGem(SC_Gem prefab, Vector2Int position, SC_GameLogic gameLogic, float dropHeight = 0f)
     {
         SC_Gem gem = pool.Get(prefab);
         

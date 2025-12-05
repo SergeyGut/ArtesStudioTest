@@ -25,6 +25,15 @@ public class GameBoard
 
     private List<SC_Gem> currentMatches = new List<SC_Gem>();
     public List<SC_Gem> CurrentMatches { get { return currentMatches; } }
+    
+    private List<MatchInfo> matchInfoMap = new List<MatchInfo>();
+    public List<MatchInfo> MatchInfoMap { get { return matchInfoMap; } }
+    
+    public class MatchInfo
+    {
+        public HashSet<SC_Gem> matchedGems;
+        public Vector2Int? userActionPos;
+    }
     #endregion
 
     public GameBoard(int _Width, int _Height)
@@ -85,9 +94,10 @@ public class GameBoard
        return allGems[_X, _Y];
     }
 
-    public void FindAllMatches()
+    public void FindAllMatches(Vector2Int? userActionPos = null)
     {
         currentMatches.Clear();
+        matchInfoMap.Clear();
 
         for (int x = 0; x < width; x++)
             for (int y = 0; y < height; y++)
@@ -95,44 +105,19 @@ public class GameBoard
                 SC_Gem currentGem = allGems[x, y];
                 if (currentGem != null)
                 {
-                    if (x > 0 && x < width - 1)
+                    HashSet<SC_Gem> horizontalMatches = CheckHorizontalMatches(x, y);
+                    HashSet<SC_Gem> verticalMatches = CheckVerticalMatches(x, y);
+
+                    if (horizontalMatches != null)
                     {
-                        SC_Gem leftGem = allGems[x - 1, y];
-                        SC_Gem rightGem = allGems[x + 1, y];
-                        //checking no empty spots
-                        if (leftGem != null && rightGem != null)
-                        {
-                            //Match
-                            if (leftGem.type == currentGem.type && rightGem.type == currentGem.type)
-                            {
-                                currentGem.isMatch = true;
-                                leftGem.isMatch = true;
-                                rightGem.isMatch = true;
-                                currentMatches.Add(currentGem);
-                                currentMatches.Add(leftGem);
-                                currentMatches.Add(rightGem);
-                            }
-                        }
+                        currentMatches.AddRange(horizontalMatches);
+                        AddMatch(new MatchInfo { matchedGems = horizontalMatches, userActionPos = userActionPos });
                     }
 
-                    if (y > 0 && y < height - 1)
+                    if (verticalMatches != null)
                     {
-                        SC_Gem aboveGem = allGems[x, y - 1];
-                        SC_Gem bellowGem = allGems[x, y + 1];
-                        //checking no empty spots
-                        if (aboveGem != null && bellowGem != null)
-                        {
-                            //Match
-                            if (aboveGem.type == currentGem.type && bellowGem.type == currentGem.type)
-                            {
-                                currentGem.isMatch = true;
-                                aboveGem.isMatch = true;
-                                bellowGem.isMatch = true;
-                                currentMatches.Add(currentGem);
-                                currentMatches.Add(aboveGem);
-                                currentMatches.Add(bellowGem);
-                            }
-                        }
+                        currentMatches.AddRange(verticalMatches);
+                        AddMatch(new MatchInfo { matchedGems = verticalMatches, userActionPos = userActionPos });
                     }
                 }
             }
@@ -141,6 +126,77 @@ public class GameBoard
             currentMatches = currentMatches.Distinct().ToList();
 
         CheckForBombs();
+    }
+
+    private void AddMatch(MatchInfo newMatch)
+    {
+        for (int i = 0; i < matchInfoMap.Count; ++i)
+        {
+            if (matchInfoMap[i].matchedGems.Overlaps(newMatch.matchedGems))
+            {
+                matchInfoMap[i].matchedGems.UnionWith(newMatch.matchedGems);
+                matchInfoMap[i].userActionPos ??= newMatch.userActionPos;
+                return;
+            }
+        }
+        
+        matchInfoMap.Add(newMatch);
+    }
+    
+    private HashSet<SC_Gem> CheckHorizontalMatches(int x, int y)
+    {
+        SC_Gem currentGem = allGems[x, y];
+        
+        if (!currentGem)
+            return null;
+
+        HashSet<SC_Gem> matches = new HashSet<SC_Gem> { currentGem };
+
+        int left = x - 1;
+        while (left >= 0 && allGems[left, y] != null && allGems[left, y].type == currentGem.type)
+        {
+            allGems[left, y].isMatch = true;
+            matches.Add(allGems[left, y]);
+            left--;
+        }
+
+        int right = x + 1;
+        while (right < width && allGems[right, y] != null && allGems[right, y].type == currentGem.type)
+        {
+            allGems[right, y].isMatch = true;
+            matches.Add(allGems[right, y]);
+            right++;
+        }
+
+        return matches.Count >= 3 ? matches : null;
+    }
+
+    private HashSet<SC_Gem> CheckVerticalMatches(int x, int y)
+    {
+        SC_Gem currentGem = allGems[x, y];
+        
+        if (!currentGem)
+            return null;
+
+        HashSet<SC_Gem> matches = new HashSet<SC_Gem> { currentGem };
+
+        int below = y - 1;
+        while (below >= 0 && allGems[x, below] != null && allGems[x, below].type == currentGem.type)
+        {
+            allGems[x, below].isMatch = true;
+            matches.Add(allGems[x, below]);
+            below--;
+        }
+
+        int above = y + 1;
+        while (above < height && allGems[x, above] != null && allGems[x, above].type == currentGem.type)
+        {
+            allGems[x, above].isMatch = true;
+            matches.Add(allGems[x, above]);
+            above++;
+        }
+
+        return matches.Count >= 3 ? matches : null;
     }
 
     public void CheckForBombs()

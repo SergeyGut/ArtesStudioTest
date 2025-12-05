@@ -14,6 +14,7 @@ public class SC_Gem : MonoBehaviour, IPoolable
     private SC_Gem otherGem;
 
     public GlobalEnums.GemType type;
+    public bool isColorBomb = false;
     public bool isMatch = false;
     private Vector2Int previousPos;
     public GameObject destroyEffect;
@@ -125,7 +126,7 @@ public class SC_Gem : MonoBehaviour, IPoolable
         scGameLogic.SetState(GlobalEnums.GameState.wait);
 
         yield return new WaitForSeconds(.5f);
-        scGameLogic.FindAllMatches();
+        scGameLogic.FindAllMatches(posIndex, otherGem.posIndex);
 
         if (otherGem != null)
         {
