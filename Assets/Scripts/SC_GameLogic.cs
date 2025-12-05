@@ -11,7 +11,7 @@ public class SC_GameLogic : MonoBehaviour
     private float displayScore = 0;
     private GameBoard gameBoard;
     private GlobalEnums.GameState currentState = GlobalEnums.GameState.move;
-    public GlobalEnums.GameState CurrentState { get { return currentState; } }
+    public GlobalEnums.GameState CurrentState => currentState;
     private GemPool gemPool;
 
     #region MonoBehaviour
@@ -149,7 +149,7 @@ public class SC_GameLogic : MonoBehaviour
 
     private IEnumerator WaitForSeconds(float seconds)
     {
-        yield return new WaitForSeconds(seconds);
+        yield return WaitForSecondsPool.Get(seconds);
     }
 
     private SC_Gem GetBombPrefabForType(GlobalEnums.GemType type)
@@ -163,7 +163,7 @@ public class SC_GameLogic : MonoBehaviour
     }
     private IEnumerator DecreaseRowCo()
     {
-        yield return new WaitForSeconds(.2f);
+        yield return WaitForSecondsPool.Get(.2f);
 
         bool hasActivity = true;
         while (hasActivity)
@@ -173,21 +173,21 @@ public class SC_GameLogic : MonoBehaviour
 
             if (hasActivity)
             {
-                yield return new WaitForSeconds(0.05f);
+                yield return WaitForSecondsPool.Get(0.05f);
             }
         }
 
         CheckMisplacedGems();
-        yield return new WaitForSeconds(0.5f);
+        yield return WaitForSecondsPool.Get(0.5f);
         gameBoard.FindAllMatches();
         if (gameBoard.MatchInfoMap.Count > 0)
         {
-            yield return new WaitForSeconds(0.5f);
+            yield return WaitForSecondsPool.Get(0.5f);
             DestroyMatches();
         }
         else
         {
-            yield return new WaitForSeconds(0.5f);
+            yield return WaitForSecondsPool.Get(0.5f);
             currentState = GlobalEnums.GameState.move;
         }
     }

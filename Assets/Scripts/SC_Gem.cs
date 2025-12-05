@@ -125,7 +125,7 @@ public class SC_Gem : MonoBehaviour, IPoolable
     {
         scGameLogic.SetState(GlobalEnums.GameState.wait);
 
-        yield return new WaitForSeconds(.5f);
+        yield return WaitForSecondsPool.Get(.5f);
         scGameLogic.FindAllMatches(posIndex, otherGem.posIndex);
 
         if (otherGem != null)
@@ -138,7 +138,7 @@ public class SC_Gem : MonoBehaviour, IPoolable
                 scGameLogic.SetGem(posIndex.x, posIndex.y, this);
                 scGameLogic.SetGem(otherGem.posIndex.x, otherGem.posIndex.y, otherGem);
 
-                yield return new WaitForSeconds(.5f);
+                yield return WaitForSecondsPool.Get(.5f);
                 scGameLogic.SetState(GlobalEnums.GameState.move);
             }
             else
