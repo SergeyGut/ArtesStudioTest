@@ -132,7 +132,7 @@ public class GameBoard
 
         foreach (var gem in newMatch.matchedGems)
         {
-            gem.isMatch = true;
+            MarkGemAsMatched(gem);
         }
         
         for (int i = 0; i < matchInfoMap.Count; ++i)
@@ -243,16 +243,66 @@ public class GameBoard
             {
                 if (x >= 0 && x < width && y >= 0 && y < height)
                 {
-                    if (allGems[x, y] != null)
+                    var gem = allGems[x, y];
+                    
+                    if (gem != null)
                     {
                         _print += "(" + x + "," + y + ")" + System.Environment.NewLine;
-                        allGems[x, y].isMatch = true;
-                        currentMatches.Add(allGems[x, y]);
+                        
+                        MarkGemAsMatched(gem);
+                        
+                        currentMatches.Add(gem);
                     }
                 }
             }
         }
         currentMatches = currentMatches.Distinct().ToList();
+    }
+    
+    public void MarkColorBombArea(Vector2Int bombPos, int _BlastSize)
+    {
+        string _print = "";
+        for (int x = bombPos.x - _BlastSize; x <= bombPos.x + _BlastSize; x++)
+        {
+            for (int y = bombPos.y - _BlastSize; y <= bombPos.y + _BlastSize; y++)
+            {
+                if (x >= 0 && x < width && y >= 0 && y < height)
+                {
+                    var gem = allGems[x, y];
+
+                    if (gem != null)
+                    {
+                        int dx = x - bombPos.x;
+                        int dy = y - bombPos.y;
+                        float distance = Mathf.Sqrt(dx * dx + dy * dy);
+                        if (distance > _BlastSize)
+                        {
+                            continue;
+                        }
+                        
+                        _print += "(" + x + "," + y + ")" + System.Environment.NewLine;
+
+                        MarkGemAsMatched(gem);
+                        
+                        currentMatches.Add(gem);
+                    }
+                }
+            }
+        }
+        currentMatches = currentMatches.Distinct().ToList();
+    }
+    
+    private void MarkGemAsMatched(SC_Gem gem)
+    {
+        if (gem != null && gem.isMatch == false)
+        {
+            gem.isMatch = true;
+            
+            if (gem.isColorBomb)
+            {
+                MarkColorBombArea(gem.posIndex, gem.blastSize);
+            }
+        }
     }
 }
 
