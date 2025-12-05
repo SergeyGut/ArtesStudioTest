@@ -128,8 +128,6 @@ public class GameBoard
 
     private void AddMatch(MatchInfo newMatch)
     {
-        currentMatches.AddRange(newMatch.matchedGems);
-
         foreach (var gem in newMatch.matchedGems)
         {
             MarkGemAsMatched(gem);
@@ -202,9 +200,9 @@ public class GameBoard
 
     public void CheckForBombs()
     {
-        for (int i = 0; i < currentMatches.Count; i++)
+        foreach (var matchInfo in MatchInfoMap)
+        foreach (var gem in matchInfo.matchedGems)
         {
-            SC_Gem gem = currentMatches[i];
             int x = gem.posIndex.x;
             int y = gem.posIndex.y;
 

@@ -111,16 +111,41 @@ public class SC_GameLogic : MonoBehaviour
             if (matchInfo.matchedGems.Count >= SC_GameVariables.Instance.minMatchForBomb)
             {
                 var firstGem = matchInfo.matchedGems.First();
-                bombCreationPositions.Add(matchInfo.userActionPos?? firstGem.posIndex, firstGem.type);
+                bombCreationPositions.TryAdd(matchInfo.userActionPos?? firstGem.posIndex, firstGem.type);
             }
         }
         
-        for (int i = 0; i < gameBoard.CurrentMatches.Count; i++)
-            if (gameBoard.CurrentMatches[i] != null)
+        foreach (var matchInfo in gameBoard.MatchInfoMap)
+        foreach (var gem in matchInfo.matchedGems)
+        {
+            if (gem && !gem.isColorBomb && gem.type != GlobalEnums.GemType.bomb)
             {
-                ScoreCheck(gameBoard.CurrentMatches[i]);
-                DestroyMatchedGemsAt(gameBoard.CurrentMatches[i].posIndex);
+                ScoreCheck(gem);
+                DestroyMatchedGemsAt(gem.posIndex);
             }
+        }
+        
+        yield return new WaitForSeconds(0.3f);
+
+        foreach (var gem in gameBoard.CurrentMatches)
+        {
+            if (gem && !gem.isColorBomb && gem.type != GlobalEnums.GemType.bomb)
+            {
+                ScoreCheck(gem);
+                DestroyMatchedGemsAt(gem.posIndex);
+            }
+        }
+        
+        yield return new WaitForSeconds(0.3f);
+
+        foreach (var gem in gameBoard.CurrentMatches)
+        {
+            if (gem && (gem.isColorBomb || gem.type != GlobalEnums.GemType.bomb))
+            {
+                ScoreCheck(gem);
+                DestroyMatchedGemsAt(gem.posIndex);
+            }
+        }
 
         yield return new WaitForSeconds(0.2f);
         
