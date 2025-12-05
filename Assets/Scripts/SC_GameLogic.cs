@@ -140,7 +140,7 @@ public class SC_GameLogic : MonoBehaviour
 
         foreach (var gem in gameBoard.CurrentMatches)
         {
-            if (gem && (gem.isColorBomb || gem.type != GlobalEnums.GemType.bomb))
+            if (gem && (gem.isColorBomb || gem.type == GlobalEnums.GemType.bomb))
             {
                 ScoreCheck(gem);
                 DestroyMatchedGemsAt(gem.posIndex);
