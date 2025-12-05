@@ -23,8 +23,8 @@ public class GameBoard
         set { score = value; }
     }
 
-    private List<SC_Gem> currentMatches = new List<SC_Gem>();
-    public List<SC_Gem> CurrentMatches { get { return currentMatches; } }
+    private List<SC_Gem> explosions = new List<SC_Gem>();
+    public List<SC_Gem> Explosions { get { return explosions; } }
     
     private List<MatchInfo> matchInfoMap = new List<MatchInfo>();
     public List<MatchInfo> MatchInfoMap { get { return matchInfoMap; } }
@@ -96,7 +96,7 @@ public class GameBoard
 
     public void FindAllMatches(Vector2Int? userActionPos = null)
     {
-        currentMatches.Clear();
+        explosions.Clear();
         matchInfoMap.Clear();
 
         for (int x = 0; x < width; x++)
@@ -120,8 +120,8 @@ public class GameBoard
                 }
             }
 
-        if (currentMatches.Count > 0)
-            currentMatches = currentMatches.Distinct().ToList();
+        if (explosions.Count > 0)
+            explosions = explosions.Distinct().ToList();
 
         CheckForBombs();
     }
@@ -249,12 +249,12 @@ public class GameBoard
                         
                         MarkGemAsMatched(gem);
                         
-                        currentMatches.Add(gem);
+                        explosions.Add(gem);
                     }
                 }
             }
         }
-        currentMatches = currentMatches.Distinct().ToList();
+        explosions = explosions.Distinct().ToList();
     }
     
     public void MarkColorBombArea(Vector2Int bombPos, int _BlastSize)
@@ -282,12 +282,12 @@ public class GameBoard
 
                         MarkGemAsMatched(gem);
                         
-                        currentMatches.Add(gem);
+                        explosions.Add(gem);
                     }
                 }
             }
         }
-        currentMatches = currentMatches.Distinct().ToList();
+        explosions = explosions.Distinct().ToList();
     }
     
     private void MarkGemAsMatched(SC_Gem gem)

@@ -137,7 +137,7 @@ public class SC_GameLogic : MonoBehaviour
         
         yield return new WaitForSeconds(SC_GameVariables.Instance.bombNeighborDelay);
 
-        foreach (var gem in gameBoard.CurrentMatches)
+        foreach (var gem in gameBoard.Explosions)
         {
             if (gem && !gem.isColorBomb && gem.type != GlobalEnums.GemType.bomb)
             {
@@ -148,7 +148,7 @@ public class SC_GameLogic : MonoBehaviour
         
         yield return new WaitForSeconds(SC_GameVariables.Instance.bombSelfDelay);
 
-        foreach (var gem in gameBoard.CurrentMatches)
+        foreach (var gem in gameBoard.Explosions)
         {
             if (gem && (gem.isColorBomb || gem.type == GlobalEnums.GemType.bomb))
             {
@@ -188,7 +188,7 @@ public class SC_GameLogic : MonoBehaviour
         CheckMisplacedGems();
         yield return new WaitForSeconds(0.5f);
         gameBoard.FindAllMatches();
-        if (gameBoard.CurrentMatches.Count > 0)
+        if (gameBoard.MatchInfoMap.Count > 0)
         {
             yield return new WaitForSeconds(0.5f);
             DestroyMatches();
