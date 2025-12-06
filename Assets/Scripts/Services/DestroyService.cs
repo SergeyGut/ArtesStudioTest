@@ -4,7 +4,7 @@ using UnityEngine;
 public interface IDestroyService
 {
     void DestroyGems(IEnumerable<SC_Gem> gems);
-    void DestroyMatchedGemsAt(Vector2Int position);
+    void DestroyMatchedGemsAt(SC_Gem gem);
 }
 
 public class DestroyService : IDestroyService
@@ -27,16 +27,16 @@ public class DestroyService : IDestroyService
             if (gem != null)
             {
                 scoreService.AddScore(gem.scoreValue);
-                DestroyMatchedGemsAt(gem.posIndex);
+                DestroyMatchedGemsAt(gem);
             }
         }
     }
     
-    public void DestroyMatchedGemsAt(Vector2Int position)
+    public void DestroyMatchedGemsAt(SC_Gem gem)
     {
-        SC_Gem gem = gameBoard.GetGem(position.x, position.y);
         if (gem != null)
         {
+            var position = gem.posIndex;
             Object.Instantiate(gem.destroyEffect, new Vector2(position.x, position.y), Quaternion.identity);
             gemPool.ReturnGem(gem);
             gameBoard.SetGem(position.x, position.y, null);
