@@ -27,6 +27,12 @@ public class SC_Gem : MonoBehaviour, IPoolable
     private bool isMoving = false;
     private bool isSwapMovement = false;
 
+    private SC_GameVariables Settings
+    {
+        [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+        get => SC_GameVariables.Instance;
+    }
+    
     void Update()
     {
         if (Vector2.Distance(transform.position, posIndex) > 0.01f)
@@ -40,12 +46,12 @@ public class SC_Gem : MonoBehaviour, IPoolable
 
             float distance = Vector2.Distance(startPosition, posIndex);
             float elapsed = Time.time - moveStartTime;
-            float speed = SC_GameVariables.Instance.gemSpeed;
+            float speed = Settings.gemSpeed;
             float t = Mathf.Clamp01((elapsed * speed) / Mathf.Max(distance, 0.1f));
             
             AnimationCurve curve = isSwapMovement 
-                ? SC_GameVariables.Instance.gemSwapEaseCurve 
-                : SC_GameVariables.Instance.gemEaseCurve;
+                ? Settings.gemSwapEaseCurve 
+                : Settings.gemEaseCurve;
             
             if (curve != null && curve.length > 0)
             {
@@ -157,7 +163,7 @@ public class SC_Gem : MonoBehaviour, IPoolable
         previousPos = posIndex;
         isSwapMovement = true;
 
-        if (swipeAngle < 45 && swipeAngle > -45 && posIndex.x < SC_GameVariables.Instance.rowsSize - 1)
+        if (swipeAngle < 45 && swipeAngle > -45 && posIndex.x < Settings.rowsSize - 1)
         {
             otherGem = scGameLogic.GetGem(posIndex.x + 1, posIndex.y);
             otherGem.posIndex.x--;
@@ -165,7 +171,7 @@ public class SC_Gem : MonoBehaviour, IPoolable
             if (otherGem != null) otherGem.isSwapMovement = true;
 
         }
-        else if (swipeAngle > 45 && swipeAngle <= 135 && posIndex.y < SC_GameVariables.Instance.colsSize - 1)
+        else if (swipeAngle > 45 && swipeAngle <= 135 && posIndex.y < Settings.colsSize - 1)
         {
             otherGem = scGameLogic.GetGem(posIndex.x, posIndex.y + 1);
             otherGem.posIndex.y--;

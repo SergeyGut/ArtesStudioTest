@@ -290,6 +290,11 @@ public class GameBoard
             {
                 MarkColorBombArea(gem.posIndex, gem.blastSize);
             }
+
+            if (gem.type == GlobalEnums.GemType.bomb)
+            {
+                MarkBombArea(gem.posIndex, gem.blastSize);
+            }
         }
     }
 }

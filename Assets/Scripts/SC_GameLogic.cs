@@ -164,14 +164,14 @@ public class SC_GameLogic : MonoBehaviour
         using var nonBombExplosions = CollectNonBombExplosions(newlyCreatedBombs);
         if (nonBombExplosions.Value.Count > 0)
         {
-            yield return WaitForSeconds(Settings.bombNeighborDelay);
+            yield return WaitForSecondsPool.Get(Settings.bombNeighborDelay);
             DestroyGems(nonBombExplosions.Value);
         }
         
         using var bombExplosions = CollectBombExplosions(newlyCreatedBombs);
         if (bombExplosions.Value.Count > 0)
         {
-            yield return WaitForSeconds(Settings.bombSelfDelay);
+            yield return WaitForSecondsPool.Get(Settings.bombSelfDelay);
             DestroyGems(bombExplosions.Value);
         }
     }
@@ -226,11 +226,6 @@ public class SC_GameLogic : MonoBehaviour
             
             gameBoard.Explosions.Remove(newBomb);
         }
-    }
-
-    private IEnumerator WaitForSeconds(float seconds)
-    {
-        yield return WaitForSecondsPool.Get(seconds);
     }
 
     private SC_Gem GetBombPrefabForType(GlobalEnums.GemType type)
