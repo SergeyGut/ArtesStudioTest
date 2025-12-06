@@ -16,12 +16,21 @@ public class SpawnService : ISpawnService
     public SC_Gem SelectNonMatchingGem(Vector2Int position)
     {
         using var validGems = PooledList<SC_Gem>.Get();
+        using var matchCounts = PooledList<int>.Get();
+        int lowestMatchCount = int.MaxValue;
         
         for (int i = 0; i < settings.gems.Length; i++)
         {
-            if (!gameBoard.MatchesAt(position, settings.gems[i]))
+            int matchCount = gameBoard.GetMatchCountAt(position, settings.gems[i]);
+            matchCounts.Value.Add(matchCount);
+            
+            if (matchCount == 0)
             {
                 validGems.Value.Add(settings.gems[i]);
+            }
+            else if (matchCount < lowestMatchCount)
+            {
+                lowestMatchCount = matchCount;
             }
         }
         
@@ -30,7 +39,16 @@ public class SpawnService : ISpawnService
             return validGems.Value[Random.Range(0, validGems.Value.Count)];
         }
         
-        return settings.gems[Random.Range(0, settings.gems.Length)];
+        validGems.Value.Clear();
+        for (int i = 0; i < settings.gems.Length; i++)
+        {
+            if (matchCounts.Value[i] == lowestMatchCount)
+            {
+                validGems.Value.Add(settings.gems[i]);
+            }
+        }
+        
+        return validGems.Value[Random.Range(0, validGems.Value.Count)];
     }
     
     public void SpawnGem(Vector2Int position, SC_Gem gemToSpawn, IGameLogic gameLogic)

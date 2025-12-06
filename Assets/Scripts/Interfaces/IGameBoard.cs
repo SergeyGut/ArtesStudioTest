@@ -8,8 +8,8 @@ public interface IGameBoard
     int Score { get; set; }
     HashSet<SC_Gem> Explosions { get; }
     List<MatchInfo> MatchInfoMap { get; }
-    
-    bool MatchesAt(Vector2Int position, SC_Gem gemToCheck);
+
+    int GetMatchCountAt(Vector2Int _PositionToCheck, SC_Gem _GemToCheck);
     void SetGem(int x, int y, SC_Gem gem);
     SC_Gem GetGem(int x, int y);
     void FindAllMatches(Vector2Int? userActionPos = null);

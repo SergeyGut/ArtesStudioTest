@@ -34,26 +34,28 @@ public class GameBoard : IGameBoard
         width = _Width;
         allGems = new SC_Gem[width, height];
     }
-    public bool MatchesAt(Vector2Int _PositionToCheck, SC_Gem _GemToCheck)
+    public int GetMatchCountAt(Vector2Int _PositionToCheck, SC_Gem _GemToCheck)
     {
-        return CheckHorizontalMatch(_PositionToCheck, _GemToCheck) || 
-               CheckVerticalMatch(_PositionToCheck, _GemToCheck);
+        int horizontalMatches = CountHorizontalMatch(_PositionToCheck, _GemToCheck);
+        int verticalMatches = CountVerticalMatch(_PositionToCheck, _GemToCheck);
+        return (horizontalMatches >= 2 ? horizontalMatches : 0) + 
+               (verticalMatches >= 2 ? verticalMatches : 0);
     }
-
-    private bool CheckHorizontalMatch(Vector2Int pos, SC_Gem gemToCheck)
+    
+    private int CountHorizontalMatch(Vector2Int pos, SC_Gem gemToCheck)
     {
         int leftCount = CountMatchingGemsInDirection(pos, -1, 0, gemToCheck.type);
         int rightCount = CountMatchingGemsInDirection(pos, 1, 0, gemToCheck.type);
         
-        return (leftCount + rightCount) >= 2;
+        return leftCount + rightCount;
     }
 
-    private bool CheckVerticalMatch(Vector2Int pos, SC_Gem gemToCheck)
+    private int CountVerticalMatch(Vector2Int pos, SC_Gem gemToCheck)
     {
         int belowCount = CountMatchingGemsInDirection(pos, 0, -1, gemToCheck.type);
         int aboveCount = CountMatchingGemsInDirection(pos, 0, 1, gemToCheck.type);
         
-        return (belowCount + aboveCount) >= 2;
+        return belowCount + aboveCount;
     }
 
     private int CountMatchingGemsInDirection(Vector2Int startPos, int deltaX, int deltaY, GlobalEnums.GemType typeToMatch)
