@@ -12,6 +12,9 @@ public class SC_GameLogic : MonoBehaviour
     private GlobalEnums.GameState currentState = GlobalEnums.GameState.move;
     public GlobalEnums.GameState CurrentState => currentState;
     private GemPool gemPool;
+    private TMPro.TextMeshProUGUI scoreText;
+    private float scoreSpeed;
+    private int lastDisplayedScoreInt = -1;
 
     #region MonoBehaviour
     private void Awake()
@@ -21,13 +24,21 @@ public class SC_GameLogic : MonoBehaviour
 
     private void Start()
     {
+        scoreText = unityObjects["Txt_Score"].GetComponent<TMPro.TextMeshProUGUI>();
+        scoreSpeed = Settings.scoreSpeed;
         StartGame();
     }
 
     private void Update()
     {
-        displayScore = Mathf.Lerp(displayScore, gameBoard.Score, Settings.scoreSpeed * Time.deltaTime);
-        unityObjects["Txt_Score"].GetComponent<TMPro.TextMeshProUGUI>().text = displayScore.ToString("0");
+        displayScore = Mathf.Lerp(displayScore, gameBoard.Score, scoreSpeed * Time.deltaTime);
+        
+        int currentScoreInt = Mathf.RoundToInt(displayScore);
+        if (currentScoreInt != lastDisplayedScoreInt)
+        {
+            scoreText.text = currentScoreInt.ToString();
+            lastDisplayedScoreInt = currentScoreInt;
+        }
     }
     #endregion
 
@@ -64,7 +75,12 @@ public class SC_GameLogic : MonoBehaviour
     }
     public void StartGame()
     {
-        unityObjects["Txt_Score"].GetComponent<TextMeshProUGUI>().text = score.ToString("0");
+        if (scoreText != null)
+        {
+            scoreText.text = score.ToString();
+        }
+        displayScore = score;
+        lastDisplayedScoreInt = score;
     }
     private SC_Gem SelectNonMatchingGem(Vector2Int _Position)
     {
