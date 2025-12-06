@@ -24,6 +24,7 @@ public class SC_Gem : MonoBehaviour, IPoolable
     private Vector2 startPosition;
     private float moveStartTime;
     private bool isMoving = false;
+    private bool isSwapMovement = false;
 
     void Update()
     {
@@ -41,7 +42,10 @@ public class SC_Gem : MonoBehaviour, IPoolable
             float speed = SC_GameVariables.Instance.gemSpeed;
             float t = Mathf.Clamp01((elapsed * speed) / Mathf.Max(distance, 0.1f));
             
-            AnimationCurve curve = SC_GameVariables.Instance.gemEaseCurve;
+            AnimationCurve curve = isSwapMovement 
+                ? SC_GameVariables.Instance.gemSwapEaseCurve 
+                : SC_GameVariables.Instance.gemEaseCurve;
+            
             if (curve != null && curve.length > 0)
             {
                 t = curve.Evaluate(t);
@@ -58,6 +62,7 @@ public class SC_Gem : MonoBehaviour, IPoolable
             transform.position = new Vector3(posIndex.x, posIndex.y, 0);
             scGameLogic.SetGem(posIndex.x, posIndex.y, this);
             isMoving = false;
+            isSwapMovement = false;
         }
         if (mousePressed && Input.GetMouseButtonUp(0))
         {
@@ -88,6 +93,7 @@ public class SC_Gem : MonoBehaviour, IPoolable
         posIndex = _Position;
         scGameLogic = _ScGameLogic;
         isMoving = false;
+        isSwapMovement = false;
     }
 
     public void OnSpawnFromPool()
@@ -97,6 +103,7 @@ public class SC_Gem : MonoBehaviour, IPoolable
         otherGem = null;
         swipeAngle = 0;
         isMoving = false;
+        isSwapMovement = false;
     }
 
     public void OnReturnToPool()
@@ -107,6 +114,7 @@ public class SC_Gem : MonoBehaviour, IPoolable
         swipeAngle = 0;
         previousPos = Vector2Int.zero;
         isMoving = false;
+        isSwapMovement = false;
         StopAllCoroutines();
     }
 
@@ -131,12 +139,14 @@ public class SC_Gem : MonoBehaviour, IPoolable
     private void MovePieces()
     {
         previousPos = posIndex;
+        isSwapMovement = true;
 
         if (swipeAngle < 45 && swipeAngle > -45 && posIndex.x < SC_GameVariables.Instance.rowsSize - 1)
         {
             otherGem = scGameLogic.GetGem(posIndex.x + 1, posIndex.y);
             otherGem.posIndex.x--;
             posIndex.x++;
+            if (otherGem != null) otherGem.isSwapMovement = true;
 
         }
         else if (swipeAngle > 45 && swipeAngle <= 135 && posIndex.y < SC_GameVariables.Instance.colsSize - 1)
@@ -144,18 +154,21 @@ public class SC_Gem : MonoBehaviour, IPoolable
             otherGem = scGameLogic.GetGem(posIndex.x, posIndex.y + 1);
             otherGem.posIndex.y--;
             posIndex.y++;
+            if (otherGem != null) otherGem.isSwapMovement = true;
         }
         else if (swipeAngle < -45 && swipeAngle >= -135 && posIndex.y > 0)
         {
             otherGem = scGameLogic.GetGem(posIndex.x, posIndex.y - 1);
             otherGem.posIndex.y++;
             posIndex.y--;
+            if (otherGem != null) otherGem.isSwapMovement = true;
         }
         else if (swipeAngle > 135 || swipeAngle < -135 && posIndex.x > 0)
         {
             otherGem = scGameLogic.GetGem(posIndex.x - 1, posIndex.y);
             otherGem.posIndex.x++;
             posIndex.x--;
+            if (otherGem != null) otherGem.isSwapMovement = true;
         }
 
         scGameLogic.SetGem(posIndex.x,posIndex.y, this);
@@ -177,6 +190,8 @@ public class SC_Gem : MonoBehaviour, IPoolable
             {
                 otherGem.posIndex = posIndex;
                 posIndex = previousPos;
+                isSwapMovement = true;
+                otherGem.isSwapMovement = true;
 
                 scGameLogic.SetGem(posIndex.x, posIndex.y, this);
                 scGameLogic.SetGem(otherGem.posIndex.x, otherGem.posIndex.y, otherGem);
