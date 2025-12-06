@@ -35,16 +35,21 @@ public class SC_Gem : MonoBehaviour, IPoolable
     
     void Update()
     {
-        if (Vector2.Distance(transform.position, posIndex) > 0.01f)
+        Vector2 currentPos = transform.position;
+        Vector2 targetPos = new Vector2(posIndex.x, posIndex.y);
+        float sqrDistance = (currentPos - targetPos).sqrMagnitude;
+        
+        if (sqrDistance > 0.0001f)
         {
             if (!isMoving)
             {
-                startPosition = transform.position;
+                startPosition = currentPos;
                 moveStartTime = Time.time;
                 isMoving = true;
             }
 
-            float distance = Vector2.Distance(startPosition, posIndex);
+            float sqrStartDistance = (startPosition - targetPos).sqrMagnitude;
+            float distance = Mathf.Sqrt(sqrStartDistance);
             float elapsed = Time.time - moveStartTime;
             float speed = Settings.gemSpeed;
             float t = Mathf.Clamp01((elapsed * speed) / Mathf.Max(distance, 0.1f));
@@ -62,7 +67,7 @@ public class SC_Gem : MonoBehaviour, IPoolable
                 t = EaseInOutCustom(t);
             }
             
-            transform.position = Vector2.Lerp(startPosition, posIndex, t);
+            transform.position = Vector2.Lerp(startPosition, targetPos, t);
         }
         else
         {
@@ -185,7 +190,7 @@ public class SC_Gem : MonoBehaviour, IPoolable
             posIndex.y--;
             if (otherGem != null) otherGem.isSwapMovement = true;
         }
-        else if (swipeAngle > 135 || swipeAngle < -135 && posIndex.x > 0)
+        else if ((swipeAngle > 135 || swipeAngle < -135) && posIndex.x > 0)
         {
             otherGem = scGameLogic.GetGem(posIndex.x - 1, posIndex.y);
             otherGem.posIndex.x++;

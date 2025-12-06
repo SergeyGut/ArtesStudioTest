@@ -15,6 +15,7 @@ public class SC_GameVariables : MonoBehaviour
     public float scoreSpeed = 5;
     public float bombNeighborDelay = 0.2f;
     public float bombSelfDelay = 0.3f;
+    public float bombPostSelfDelay = 0.3f;
     public float decreaseRowDelay = 0.2f;
     public float decreaseSingleRowDelay = 0.05f;
     public float findAllMatchesDelay = 0.5f;
@@ -35,9 +36,19 @@ public class SC_GameVariables : MonoBehaviour
         get
         {
             if (instance == null)
-                instance = GameObject.Find("SC_GameVariables").GetComponent<SC_GameVariables>();
+            {
+                instance = FindObjectOfType<SC_GameVariables>();
+            }
 
             return instance;
+        }
+    }
+    
+    private void Awake()
+    {
+        if (instance == null)
+        {
+            instance = this;
         }
     }
 

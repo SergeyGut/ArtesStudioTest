@@ -226,7 +226,6 @@ public class GameBoard
 
     public void MarkBombArea(Vector2Int bombPos, int _BlastSize)
     {
-        string _print = "";
         for (int x = bombPos.x - _BlastSize; x <= bombPos.x + _BlastSize; x++)
         {
             for (int y = bombPos.y - _BlastSize; y <= bombPos.y + _BlastSize; y++)
@@ -237,10 +236,7 @@ public class GameBoard
                     
                     if (gem != null)
                     {
-                        _print += "(" + x + "," + y + ")" + System.Environment.NewLine;
-                        
                         MarkGemAsMatched(gem);
-                        
                         explosions.Add(gem);
                     }
                 }
@@ -250,7 +246,7 @@ public class GameBoard
     
     public void MarkColorBombArea(Vector2Int bombPos, int _BlastSize)
     {
-        string _print = "";
+        int sqrBlastSize = _BlastSize * _BlastSize;
         for (int x = bombPos.x - _BlastSize; x <= bombPos.x + _BlastSize; x++)
         {
             for (int y = bombPos.y - _BlastSize; y <= bombPos.y + _BlastSize; y++)
@@ -263,16 +259,13 @@ public class GameBoard
                     {
                         int dx = x - bombPos.x;
                         int dy = y - bombPos.y;
-                        float distance = Mathf.Sqrt(dx * dx + dy * dy);
-                        if (distance > _BlastSize)
+                        int sqrDistance = dx * dx + dy * dy;
+                        if (sqrDistance > sqrBlastSize)
                         {
                             continue;
                         }
-                        
-                        _print += "(" + x + "," + y + ")" + System.Environment.NewLine;
 
                         MarkGemAsMatched(gem);
-                        
                         explosions.Add(gem);
                     }
                 }
@@ -289,6 +282,7 @@ public class GameBoard
             if (gem.isColorBomb)
             {
                 MarkColorBombArea(gem.posIndex, gem.blastSize);
+                return;
             }
 
             if (gem.type == GlobalEnums.GemType.bomb)

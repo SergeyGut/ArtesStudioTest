@@ -671,7 +671,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!114 &823371449
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -964,6 +964,7 @@ MonoBehaviour:
   scoreSpeed: 5
   bombNeighborDelay: 0.3
   bombSelfDelay: 0.2
+  bombPostSelfDelay: 0.1
   decreaseRowDelay: 0.2
   decreaseSingleRowDelay: 0.05
   findAllMatchesDelay: 0.1

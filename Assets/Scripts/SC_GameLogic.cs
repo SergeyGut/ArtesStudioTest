@@ -194,6 +194,7 @@ public class SC_GameLogic : MonoBehaviour
         {
             yield return WaitForSecondsPool.Get(Settings.bombSelfDelay);
             DestroyGems(bombExplosions.Value);
+            yield return WaitForSecondsPool.Get(Settings.bombPostSelfDelay);
         }
     }
 
@@ -351,15 +352,18 @@ public class SC_GameLogic : MonoBehaviour
 
     private void CheckMisplacedGems()
     {
-        using var foundGems = PooledList<SC_Gem>.Get();
-        foundGems.Value.AddRange(FindObjectsOfType<SC_Gem>());
+        using var foundGems = PooledHashSet<SC_Gem>.Get();
+        foundGems.Value.UnionWith(FindObjectsOfType<SC_Gem>());
+        
         for (int x = 0; x < gameBoard.Width; x++)
         {
             for (int y = 0; y < gameBoard.Height; y++)
             {
                 SC_Gem _curGem = gameBoard.GetGem(x, y);
-                if (foundGems.Value.Contains(_curGem))
+                if (_curGem != null)
+                {
                     foundGems.Value.Remove(_curGem);
+                }
             }
         }
 
