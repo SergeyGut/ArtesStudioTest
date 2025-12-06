@@ -23,6 +23,7 @@ public class SC_Gem : MonoBehaviour, IPoolable
     public int blastSize = 1;
     private IGameLogic scGameLogic;
     private Vector2 startPosition;
+    private Vector2 previousTargetPos;
     private float moveStartTime;
     private bool isMoving = false;
     private bool isSwapMovement = false;
@@ -41,11 +42,12 @@ public class SC_Gem : MonoBehaviour, IPoolable
         
         if (sqrDistance > 0.0001f)
         {
-            if (!isMoving)
+            if (!isMoving || previousTargetPos != targetPos)
             {
                 startPosition = currentPos;
                 moveStartTime = Time.time;
                 isMoving = true;
+                previousTargetPos = targetPos;
             }
 
             float sqrStartDistance = (startPosition - targetPos).sqrMagnitude;
@@ -58,14 +60,7 @@ public class SC_Gem : MonoBehaviour, IPoolable
                 ? Settings.gemSwapEaseCurve 
                 : Settings.gemEaseCurve;
             
-            if (curve != null && curve.length > 0)
-            {
-                t = curve.Evaluate(t);
-            }
-            else
-            {
-                t = EaseInOutCustom(t);
-            }
+            t = curve.Evaluate(t);
             
             transform.position = Vector2.Lerp(startPosition, targetPos, t);
         }
@@ -75,6 +70,7 @@ public class SC_Gem : MonoBehaviour, IPoolable
             scGameLogic.SetGem(posIndex.x, posIndex.y, this);
             isMoving = false;
             isSwapMovement = false;
+            previousTargetPos = targetPos;
         }
         if (mousePressed)
         {
@@ -94,25 +90,13 @@ public class SC_Gem : MonoBehaviour, IPoolable
         }
     }
 
-    private float EaseInOutCustom(float t)
-    {
-        if (t < 0.5f)
-        {
-            return 2f * t * t;
-        }
-        else
-        {
-            float f = 2f * t - 2f;
-            return 1f - f * f * f * f * f;
-        }
-    }
-
     public void SetupGem(IGameLogic _ScGameLogic,Vector2Int _Position)
     {
         posIndex = _Position;
         scGameLogic = _ScGameLogic;
         isMoving = false;
         isSwapMovement = false;
+        previousTargetPos = new Vector2(posIndex.x, posIndex.y);
     }
 
     public void OnSpawnFromPool()
@@ -124,6 +108,7 @@ public class SC_Gem : MonoBehaviour, IPoolable
         swipeAngle = 0;
         isMoving = false;
         isSwapMovement = false;
+        previousTargetPos = Vector2.zero;
     }
 
     public void OnReturnToPool()
@@ -136,6 +121,7 @@ public class SC_Gem : MonoBehaviour, IPoolable
         previousPos = Vector2Int.zero;
         isMoving = false;
         isSwapMovement = false;
+        previousTargetPos = Vector2.zero;
         StopAllCoroutines();
     }
 
