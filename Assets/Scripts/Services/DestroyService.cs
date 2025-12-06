@@ -39,7 +39,11 @@ public class DestroyService : IDestroyService
             var position = gem.posIndex;
             Object.Instantiate(gem.destroyEffect, new Vector2(position.x, position.y), Quaternion.identity);
             gemPool.ReturnGem(gem);
-            gameBoard.SetGem(position.x, position.y, null);
+            
+            if (gameBoard.GetGem(position.x, position.y) == gem)
+            {
+                gameBoard.SetGem(position.x, position.y, null);
+            }
         }
     }
 }
