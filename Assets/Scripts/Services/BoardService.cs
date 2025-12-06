@@ -1,9 +1,9 @@
 public class BoardService
 {
     private readonly IGameBoard gameBoard;
-    private readonly SpawnService spawnService;
+    private readonly ISpawnService spawnService;
     
-    public BoardService(IGameBoard gameBoard, SpawnService spawnService)
+    public BoardService(IGameBoard gameBoard, ISpawnService spawnService)
     {
         this.gameBoard = gameBoard;
         this.spawnService = spawnService;

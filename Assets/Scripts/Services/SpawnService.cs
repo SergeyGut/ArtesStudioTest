@@ -1,6 +1,6 @@
 using UnityEngine;
 
-public class SpawnService
+public class SpawnService : ISpawnService
 {
     private readonly IGameBoard gameBoard;
     private readonly IGemPool gemPool;
