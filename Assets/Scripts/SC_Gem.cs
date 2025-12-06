@@ -7,8 +7,9 @@ public class SC_Gem : MonoBehaviour, IPoolable
     public Vector2Int posIndex;
 
     private Vector2 firstTouchPosition;
-    private Vector2 finalTouchPosition;
+    private Vector2 currentTouchPosition;
     private bool mousePressed;
+    private bool swapTriggered = false;
     private float swipeAngle = 0;
     private SC_Gem otherGem;
 
@@ -64,13 +65,20 @@ public class SC_Gem : MonoBehaviour, IPoolable
             isMoving = false;
             isSwapMovement = false;
         }
-        if (mousePressed && Input.GetMouseButtonUp(0))
+        if (mousePressed)
         {
-            mousePressed = false;
-            if (scGameLogic.CurrentState == GlobalEnums.GameState.move)
+            if (Input.GetMouseButton(0))
             {
-                finalTouchPosition = Camera.main.ScreenToWorldPoint(Input.mousePosition);
-                CalculateAngle();
+                currentTouchPosition = Camera.main.ScreenToWorldPoint(Input.mousePosition);
+                if (!swapTriggered && scGameLogic.CurrentState == GlobalEnums.GameState.move)
+                {
+                    CheckForBorderCross();
+                }
+            }
+            else if (Input.GetMouseButtonUp(0))
+            {
+                mousePressed = false;
+                swapTriggered = false;
             }
         }
     }
@@ -100,6 +108,7 @@ public class SC_Gem : MonoBehaviour, IPoolable
     {
         isMatch = false;
         mousePressed = false;
+        swapTriggered = false;
         otherGem = null;
         swipeAngle = 0;
         isMoving = false;
@@ -110,6 +119,7 @@ public class SC_Gem : MonoBehaviour, IPoolable
     {
         isMatch = false;
         mousePressed = false;
+        swapTriggered = false;
         otherGem = null;
         swipeAngle = 0;
         previousPos = Vector2Int.zero;
@@ -123,17 +133,23 @@ public class SC_Gem : MonoBehaviour, IPoolable
         if (scGameLogic.CurrentState == GlobalEnums.GameState.move)
         {
             firstTouchPosition = Camera.main.ScreenToWorldPoint(Input.mousePosition);
+            currentTouchPosition = firstTouchPosition;
             mousePressed = true;
+            swapTriggered = false;
         }
     }
 
-    private void CalculateAngle()
+    private void CheckForBorderCross()
     {
-        swipeAngle = Mathf.Atan2(finalTouchPosition.y - firstTouchPosition.y, finalTouchPosition.x - firstTouchPosition.x);
-        swipeAngle = swipeAngle * 180 / Mathf.PI;
-
-        if (Vector3.Distance(firstTouchPosition, finalTouchPosition) > .5f)
+        Vector2 delta = currentTouchPosition - firstTouchPosition;
+        float distance = delta.magnitude;
+        
+        if (distance > 0.5f)
+        {
+            swipeAngle = Mathf.Atan2(delta.y, delta.x) * Mathf.Rad2Deg;
             MovePieces();
+            swapTriggered = true;
+        }
     }
 
     private void MovePieces()
@@ -181,7 +197,7 @@ public class SC_Gem : MonoBehaviour, IPoolable
     {
         scGameLogic.SetState(GlobalEnums.GameState.wait);
 
-        yield return WaitForSecondsPool.Get(.5f);
+        yield return WaitForSwapCompletion();
         scGameLogic.FindAllMatches(posIndex, otherGem.posIndex);
 
         if (otherGem != null)
@@ -196,13 +212,22 @@ public class SC_Gem : MonoBehaviour, IPoolable
                 scGameLogic.SetGem(posIndex.x, posIndex.y, this);
                 scGameLogic.SetGem(otherGem.posIndex.x, otherGem.posIndex.y, otherGem);
 
-                yield return WaitForSecondsPool.Get(.5f);
+                yield return WaitForSwapCompletion();
                 scGameLogic.SetState(GlobalEnums.GameState.move);
             }
             else
             {
                 scGameLogic.DestroyMatches();
             }
+        }
+    }
+
+    private IEnumerator WaitForSwapCompletion()
+    {
+        while (Vector2.Distance(transform.position, posIndex) > 0.01f || 
+               (otherGem != null && Vector2.Distance(otherGem.transform.position, otherGem.posIndex) > 0.01f))
+        {
+            yield return null;
         }
     }
 }
