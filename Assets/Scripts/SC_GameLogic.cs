@@ -1,6 +1,5 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
-using System.Linq;
 using TMPro;
 using UnityEngine;
 
@@ -109,36 +108,109 @@ public class SC_GameLogic : MonoBehaviour
 
     private IEnumerator DestroyMatchesCo()
     {
-        using var bombCreationPositions = PooledDictionary<Vector2Int, GlobalEnums.GemType>.Get();
+        using var bombCreationPositions = CollectBombCreationPositions();
         using var newlyCreatedBombs = PooledHashSet<SC_Gem>.Get();
+        
+        CollectAndDestroyMatchedGems();
+        CreateBombs(bombCreationPositions, newlyCreatedBombs);
+        
+        yield return DestroyExplosionsWithDelay(newlyCreatedBombs);
+        
+        yield return DecreaseRowCo();
+    }
+
+    private PooledDictionary<Vector2Int, GlobalEnums.GemType> CollectBombCreationPositions()
+    {
+        var bombCreationPositions = PooledDictionary<Vector2Int, GlobalEnums.GemType>.Get();
         
         foreach (var matchInfo in gameBoard.MatchInfoMap)
         {
             if (matchInfo.MatchedGems.Count >= Settings.minMatchForBomb)
             {
-                var firstGem = matchInfo.MatchedGems.First();
-                bombCreationPositions.Value.TryAdd(matchInfo.UserActionPos ?? firstGem.posIndex, firstGem.type);
+                SC_Gem firstGem = null;
+                foreach (var gem in matchInfo.MatchedGems)
+                {
+                    firstGem = gem;
+                    break;
+                }
+                if (firstGem != null)
+                {
+                    bombCreationPositions.Value.TryAdd(matchInfo.UserActionPos ?? firstGem.posIndex, firstGem.type);
+                }
             }
         }
-
-        DestroyGems(gameBoard.MatchInfoMap.SelectMany(m => m.MatchedGems), g => g && !g.isColorBomb && g.type != GlobalEnums.GemType.bomb);
-        CreateBombs(bombCreationPositions, newlyCreatedBombs);
         
-        yield return WaitForSeconds(Settings.bombNeighborDelay);
-        DestroyGems(gameBoard.Explosions, g => g && !g.isColorBomb && g.type != GlobalEnums.GemType.bomb && !newlyCreatedBombs.Value.Contains(g));
-        
-        yield return WaitForSeconds(Settings.bombSelfDelay);
-        DestroyGems(gameBoard.Explosions, g => g && (g.isColorBomb || g.type == GlobalEnums.GemType.bomb) && !newlyCreatedBombs.Value.Contains(g));
-        
-        yield return DecreaseRowCo();
+        return bombCreationPositions;
     }
 
-    private void DestroyGems(IEnumerable<SC_Gem> gems, System.Func<SC_Gem, bool> predicate)
+    private void CollectAndDestroyMatchedGems()
     {
-        foreach (var gem in gems.Where(predicate))
+        using var matchedGems = PooledList<SC_Gem>.Get();
+        foreach (var matchInfo in gameBoard.MatchInfoMap)
         {
-            ScoreCheck(gem);
-            DestroyMatchedGemsAt(gem.posIndex);
+            foreach (var gem in matchInfo.MatchedGems)
+            {
+                if (gem && !gem.isColorBomb && gem.type != GlobalEnums.GemType.bomb)
+                {
+                    matchedGems.Value.Add(gem);
+                }
+            }
+        }
+        DestroyGems(matchedGems.Value);
+    }
+
+    private IEnumerator DestroyExplosionsWithDelay(PooledHashSet<SC_Gem> newlyCreatedBombs)
+    {
+        using var nonBombExplosions = CollectNonBombExplosions(newlyCreatedBombs);
+        if (nonBombExplosions.Value.Count > 0)
+        {
+            yield return WaitForSeconds(Settings.bombNeighborDelay);
+            DestroyGems(nonBombExplosions.Value);
+        }
+        
+        using var bombExplosions = CollectBombExplosions(newlyCreatedBombs);
+        if (bombExplosions.Value.Count > 0)
+        {
+            yield return WaitForSeconds(Settings.bombSelfDelay);
+            DestroyGems(bombExplosions.Value);
+        }
+    }
+
+    private PooledList<SC_Gem> CollectNonBombExplosions(PooledHashSet<SC_Gem> newlyCreatedBombs)
+    {
+        var nonBombExplosions = PooledList<SC_Gem>.Get();
+        foreach (var gem in gameBoard.Explosions)
+        {
+            if (gem && !gem.isColorBomb && gem.type != GlobalEnums.GemType.bomb && !newlyCreatedBombs.Value.Contains(gem))
+            {
+                nonBombExplosions.Value.Add(gem);
+            }
+        }
+        return nonBombExplosions;
+    }
+
+    private PooledList<SC_Gem> CollectBombExplosions(PooledHashSet<SC_Gem> newlyCreatedBombs)
+    {
+        var bombExplosions = PooledList<SC_Gem>.Get();
+        foreach (var gem in gameBoard.Explosions)
+        {
+            if (gem && (gem.isColorBomb || gem.type == GlobalEnums.GemType.bomb) && !newlyCreatedBombs.Value.Contains(gem))
+            {
+                bombExplosions.Value.Add(gem);
+            }
+        }
+        return bombExplosions;
+    }
+
+    private void DestroyGems(IEnumerable<SC_Gem> gems)
+    {
+        foreach (var gem in gems)
+        {
+            if (gem != null)
+            {
+                ScoreCheck(gem);
+                DestroyMatchedGemsAt(gem.posIndex);
+            }
         }
     }
 
