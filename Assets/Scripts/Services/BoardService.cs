@@ -9,13 +9,13 @@ public class BoardService
         this.spawnService = spawnService;
     }
     
-    public bool DropSingleRow(IGameLogic gameLogic)
+    public bool DropSingleRow()
     {
         bool anyDropped = false;
 
-        for (int y = 1; y < gameBoard.Height; y++)
+        for (int x = 0; x < gameBoard.Width; x++)
         {
-            for (int x = 0; x < gameBoard.Width; x++)
+            for (int y = 1; y < gameBoard.Height; y++)
             {
                 SC_Gem currentGem = gameBoard.GetGem(x, y);
                 SC_Gem gemBelow = gameBoard.GetGem(x, y - 1);
@@ -26,16 +26,12 @@ public class BoardService
                     gameBoard.SetGem(x, y - 1, currentGem);
                     gameBoard.SetGem(x, y, null);
                     anyDropped = true;
+                    break;
                 }
-            }
-
-            if (anyDropped)
-            {
-                return true;
             }
         }
 
-        return false;
+        return anyDropped;
     }
     
     public void SpawnTopRow(IGameLogic gameLogic)

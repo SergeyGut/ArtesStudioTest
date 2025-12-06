@@ -4,7 +4,6 @@ using UnityEngine;
 public interface IDestroyService
 {
     void DestroyGems(IEnumerable<SC_Gem> gems);
-    void DestroyMatchedGemsAt(SC_Gem gem);
 }
 
 public class DestroyService : IDestroyService
@@ -32,7 +31,7 @@ public class DestroyService : IDestroyService
         }
     }
     
-    public void DestroyMatchedGemsAt(SC_Gem gem)
+    private void DestroyMatchedGemsAt(SC_Gem gem)
     {
         if (gem != null)
         {

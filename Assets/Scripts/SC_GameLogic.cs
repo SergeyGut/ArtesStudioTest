@@ -11,14 +11,14 @@ public class SC_GameLogic : MonoBehaviour, IGameLogic
     private GlobalEnums.GameState currentState = GlobalEnums.GameState.move;
     public GlobalEnums.GameState CurrentState => currentState;
     private IGemPool gemPool;
-    private TMPro.TextMeshProUGUI scoreText;
+    private TextMeshProUGUI scoreText;
     private float scoreSpeed;
     private int lastDisplayedScoreInt = -1;
     
     private MatchService matchService;
-    private SpawnService spawnService;
-    private DestroyService destroyService;
-    private ScoreService scoreService;
+    private ISpawnService spawnService;
+    private IDestroyService destroyService;
+    private IScoreService scoreService;
     private BombService bombService;
     private BoardService boardService;
 
@@ -152,7 +152,7 @@ public class SC_GameLogic : MonoBehaviour, IGameLogic
         while (hasActivity)
         {
             boardService.SpawnTopRow(this);
-            hasActivity = boardService.DropSingleRow(this);
+            hasActivity = boardService.DropSingleRow();
 
             if (hasActivity)
             {
