@@ -68,17 +68,22 @@ public class SC_GameLogic : MonoBehaviour
     }
     private SC_Gem SelectNonMatchingGem(Vector2Int _Position)
     {
-        int gemToUse = Random.Range(0, Settings.gems.Length);
-        int iterations = 0;
-        int maxIterations = 100;
-
-        while (gameBoard.MatchesAt(_Position, Settings.gems[gemToUse]) && iterations < maxIterations)
+        using var validGems = PooledList<SC_Gem>.Get();
+        
+        for (int i = 0; i < Settings.gems.Length; i++)
         {
-            gemToUse = Random.Range(0, Settings.gems.Length);
-            iterations++;
+            if (!gameBoard.MatchesAt(_Position, Settings.gems[i]))
+            {
+                validGems.Value.Add(Settings.gems[i]);
+            }
         }
-
-        return Settings.gems[gemToUse];
+        
+        if (validGems.Value.Count > 0)
+        {
+            return validGems.Value[Random.Range(0, validGems.Value.Count)];
+        }
+        
+        return Settings.gems[Random.Range(0, Settings.gems.Length)];
     }
 
     private void SpawnGem(Vector2Int _Position, SC_Gem _GemToSpawn)
