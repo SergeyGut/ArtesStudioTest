@@ -3,18 +3,24 @@ using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
 
-public class SC_GameLogic : MonoBehaviour
+public class SC_GameLogic : MonoBehaviour, IGameLogic
 {
     private Dictionary<string, GameObject> unityObjects;
-    private int score = 0;
     private float displayScore = 0;
-    private GameBoard gameBoard;
+    private IGameBoard gameBoard;
     private GlobalEnums.GameState currentState = GlobalEnums.GameState.move;
     public GlobalEnums.GameState CurrentState => currentState;
-    private GemPool gemPool;
+    private IGemPool gemPool;
     private TMPro.TextMeshProUGUI scoreText;
     private float scoreSpeed;
     private int lastDisplayedScoreInt = -1;
+    
+    private MatchService matchService;
+    private SpawnService spawnService;
+    private DestroyService destroyService;
+    private ScoreService scoreService;
+    private BombService bombService;
+    private BoardService boardService;
 
     #region MonoBehaviour
     private void Awake()
@@ -31,7 +37,7 @@ public class SC_GameLogic : MonoBehaviour
 
     private void Update()
     {
-        displayScore = Mathf.Lerp(displayScore, gameBoard.Score, scoreSpeed * Time.deltaTime);
+        displayScore = Mathf.Lerp(displayScore, scoreService.Score, scoreSpeed * Time.deltaTime);
         
         int currentScoreInt = Mathf.RoundToInt(displayScore);
         if (currentScoreInt != lastDisplayedScoreInt)
@@ -57,6 +63,14 @@ public class SC_GameLogic : MonoBehaviour
 
         gameBoard = new GameBoard(7, 7);
         gemPool = new GemPool(unityObjects["GemsHolder"].transform);
+        
+        scoreService = new ScoreService(gameBoard);
+        destroyService = new DestroyService(gameBoard, gemPool, scoreService);
+        matchService = new MatchService(gameBoard, Settings);
+        spawnService = new SpawnService(gameBoard, gemPool, Settings);
+        bombService = new BombService(gameBoard, gemPool, Settings);
+        boardService = new BoardService(gameBoard, spawnService);
+        
         Setup();
     }
     private void Setup()
@@ -69,46 +83,19 @@ public class SC_GameLogic : MonoBehaviour
                 _bgTile.transform.SetParent(unityObjects["GemsHolder"].transform);
                 _bgTile.name = "BG Tile - " + x + ", " + y;
 
-                SC_Gem gemToSpawn = SelectNonMatchingGem(new Vector2Int(x, y));
-                SpawnGem(new Vector2Int(x, y), gemToSpawn);
+                SC_Gem gemToSpawn = spawnService.SelectNonMatchingGem(new Vector2Int(x, y));
+                spawnService.SpawnGem(new Vector2Int(x, y), gemToSpawn, this);
             }
     }
+    
     public void StartGame()
     {
         if (scoreText != null)
         {
-            scoreText.text = score.ToString();
+            scoreText.text = scoreService.Score.ToString();
         }
-        displayScore = score;
-        lastDisplayedScoreInt = score;
-    }
-    private SC_Gem SelectNonMatchingGem(Vector2Int _Position)
-    {
-        using var validGems = PooledList<SC_Gem>.Get();
-        
-        for (int i = 0; i < Settings.gems.Length; i++)
-        {
-            if (!gameBoard.MatchesAt(_Position, Settings.gems[i]))
-            {
-                validGems.Value.Add(Settings.gems[i]);
-            }
-        }
-        
-        if (validGems.Value.Count > 0)
-        {
-            return validGems.Value[Random.Range(0, validGems.Value.Count)];
-        }
-        
-        return Settings.gems[Random.Range(0, Settings.gems.Length)];
-    }
-
-    private void SpawnGem(Vector2Int _Position, SC_Gem _GemToSpawn)
-    {
-        if (Random.Range(0, 100f) < Settings.bombChance)
-            _GemToSpawn = Settings.bomb;
-
-        SC_Gem _gem = gemPool.SpawnGem(_GemToSpawn, _Position, this, Settings.dropHeight);
-        gameBoard.SetGem(_Position.x,_Position.y, _gem);
+        displayScore = scoreService.Score;
+        lastDisplayedScoreInt = scoreService.Score;
     }
     public void SetGem(int _X,int _Y, SC_Gem _Gem)
     {
@@ -129,135 +116,33 @@ public class SC_GameLogic : MonoBehaviour
 
     private IEnumerator DestroyMatchesCo()
     {
-        using var bombCreationPositions = CollectBombCreationPositions();
+        using var bombCreationPositions = matchService.CollectBombCreationPositions();
         using var newlyCreatedBombs = PooledHashSet<SC_Gem>.Get();
         
-        CollectAndDestroyMatchedGems();
-        CreateBombs(bombCreationPositions, newlyCreatedBombs);
+        matchService.CollectAndDestroyMatchedGems(destroyService);
+        bombService.CreateBombs(bombCreationPositions.Value, newlyCreatedBombs, this);
         
         yield return DestroyExplosionsWithDelay(newlyCreatedBombs);
         
         yield return DecreaseRowCo();
     }
 
-    private PooledDictionary<Vector2Int, GlobalEnums.GemType> CollectBombCreationPositions()
-    {
-        var bombCreationPositions = PooledDictionary<Vector2Int, GlobalEnums.GemType>.Get();
-        
-        foreach (var matchInfo in gameBoard.MatchInfoMap)
-        {
-            if (matchInfo.MatchedGems.Count >= Settings.minMatchForBomb)
-            {
-                SC_Gem firstGem = null;
-                foreach (var gem in matchInfo.MatchedGems)
-                {
-                    firstGem = gem;
-                    break;
-                }
-                if (firstGem != null)
-                {
-                    bombCreationPositions.Value.TryAdd(matchInfo.UserActionPos ?? firstGem.posIndex, firstGem.type);
-                }
-            }
-        }
-        
-        return bombCreationPositions;
-    }
-
-    private void CollectAndDestroyMatchedGems()
-    {
-        using var matchedGems = PooledList<SC_Gem>.Get();
-        foreach (var matchInfo in gameBoard.MatchInfoMap)
-        {
-            foreach (var gem in matchInfo.MatchedGems)
-            {
-                if (gem && !gem.isColorBomb && gem.type != GlobalEnums.GemType.bomb)
-                {
-                    matchedGems.Value.Add(gem);
-                }
-            }
-        }
-        DestroyGems(matchedGems.Value);
-    }
-
     private IEnumerator DestroyExplosionsWithDelay(PooledHashSet<SC_Gem> newlyCreatedBombs)
     {
-        using var nonBombExplosions = CollectNonBombExplosions(newlyCreatedBombs);
+        using var nonBombExplosions = matchService.CollectNonBombExplosions(newlyCreatedBombs);
         if (nonBombExplosions.Value.Count > 0)
         {
             yield return WaitForSecondsPool.Get(Settings.bombNeighborDelay);
-            DestroyGems(nonBombExplosions.Value);
+            destroyService.DestroyGems(nonBombExplosions.Value);
         }
         
-        using var bombExplosions = CollectBombExplosions(newlyCreatedBombs);
+        using var bombExplosions = matchService.CollectBombExplosions(newlyCreatedBombs);
         if (bombExplosions.Value.Count > 0)
         {
             yield return WaitForSecondsPool.Get(Settings.bombSelfDelay);
-            DestroyGems(bombExplosions.Value);
+            destroyService.DestroyGems(bombExplosions.Value);
             yield return WaitForSecondsPool.Get(Settings.bombPostSelfDelay);
         }
-    }
-
-    private PooledList<SC_Gem> CollectNonBombExplosions(PooledHashSet<SC_Gem> newlyCreatedBombs)
-    {
-        var nonBombExplosions = PooledList<SC_Gem>.Get();
-        foreach (var gem in gameBoard.Explosions)
-        {
-            if (gem && !gem.isColorBomb && gem.type != GlobalEnums.GemType.bomb && !newlyCreatedBombs.Value.Contains(gem))
-            {
-                nonBombExplosions.Value.Add(gem);
-            }
-        }
-        return nonBombExplosions;
-    }
-
-    private PooledList<SC_Gem> CollectBombExplosions(PooledHashSet<SC_Gem> newlyCreatedBombs)
-    {
-        var bombExplosions = PooledList<SC_Gem>.Get();
-        foreach (var gem in gameBoard.Explosions)
-        {
-            if (gem && (gem.isColorBomb || gem.type == GlobalEnums.GemType.bomb) && !newlyCreatedBombs.Value.Contains(gem))
-            {
-                bombExplosions.Value.Add(gem);
-            }
-        }
-        return bombExplosions;
-    }
-
-    private void DestroyGems(IEnumerable<SC_Gem> gems)
-    {
-        foreach (var gem in gems)
-        {
-            if (gem != null)
-            {
-                ScoreCheck(gem);
-                DestroyMatchedGemsAt(gem.posIndex);
-            }
-        }
-    }
-
-    private void CreateBombs(Dictionary<Vector2Int, GlobalEnums.GemType> bombPositions, PooledHashSet<SC_Gem> newlyCreatedBombs)
-    {
-        foreach (var (pos, type) in bombPositions)
-        {
-            var bombPrefab = GetBombPrefabForType(type);
-            var newBomb = gemPool.SpawnGem(bombPrefab, pos, this, 0);
-            newBomb.transform.position = new Vector3(pos.x, pos.y, 0);
-            gameBoard.SetGem(pos.x, pos.y, newBomb);
-            newlyCreatedBombs.Value.Add(newBomb);
-            
-            gameBoard.Explosions.Remove(newBomb);
-        }
-    }
-
-    private SC_Gem GetBombPrefabForType(GlobalEnums.GemType type)
-    {
-        foreach (SC_Gem bomb in Settings.gemBombs)
-        {
-            if (bomb.type == type)
-                return bomb;
-        }
-        return null;
     }
     private IEnumerator DecreaseRowCo()
     {
@@ -266,8 +151,8 @@ public class SC_GameLogic : MonoBehaviour
         bool hasActivity = true;
         while (hasActivity)
         {
-            SpawnTopRow();
-            hasActivity = DropSingleRow();
+            boardService.SpawnTopRow(this);
+            hasActivity = boardService.DropSingleRow(this);
 
             if (hasActivity)
             {
@@ -287,66 +172,6 @@ public class SC_GameLogic : MonoBehaviour
         {
             yield return WaitForSecondsPool.Get(Settings.changeStateDelay);
             currentState = GlobalEnums.GameState.move;
-        }
-    }
-
-    private void SpawnTopRow()
-    {
-        for (int x = 0; x < gameBoard.Width; x++)
-        {
-            int topY = gameBoard.Height - 1;
-            SC_Gem topGem = gameBoard.GetGem(x, topY);
-            
-            if (topGem == null)
-            {
-                SC_Gem gemToSpawn = SelectNonMatchingGem(new Vector2Int(x, topY));
-                SpawnGem(new Vector2Int(x, topY), gemToSpawn);
-            }
-        }
-    }
-
-    private bool DropSingleRow()
-    {
-        bool anyDropped = false;
-
-        for (int y = 1; y < gameBoard.Height; y++)
-        {
-            for (int x = 0; x < gameBoard.Width; x++)
-            {
-                SC_Gem currentGem = gameBoard.GetGem(x, y);
-                SC_Gem gemBelow = gameBoard.GetGem(x, y - 1);
-
-                if (currentGem != null && gemBelow == null)
-                {
-                    currentGem.posIndex.y--;
-                    SetGem(x, y - 1, currentGem);
-                    SetGem(x, y, null);
-                    anyDropped = true;
-                }
-            }
-
-            if (anyDropped)
-            {
-                return true;
-            }
-        }
-
-        return false;
-    }
-
-    public void ScoreCheck(SC_Gem gemToCheck)
-    {
-        gameBoard.Score += gemToCheck.scoreValue;
-    }
-    private void DestroyMatchedGemsAt(Vector2Int _Pos)
-    {
-        SC_Gem _curGem = gameBoard.GetGem(_Pos.x,_Pos.y);
-        if (_curGem != null)
-        {
-            Instantiate(_curGem.destroyEffect, new Vector2(_Pos.x, _Pos.y), Quaternion.identity);
-
-            gemPool.ReturnGem(_curGem);
-            SetGem(_Pos.x,_Pos.y, null);
         }
     }
 

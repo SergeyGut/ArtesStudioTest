@@ -1,6 +1,6 @@
 using UnityEngine;
 
-public class GemPool
+public class GemPool : IGemPool
 {
     private readonly IObjectPool<SC_Gem> pool;
     private readonly Transform parentTransform;
@@ -14,7 +14,7 @@ public class GemPool
         pool = new GenericObjectPool<SC_Gem>(parent);
     }
 
-    public SC_Gem SpawnGem(SC_Gem prefab, Vector2Int position, SC_GameLogic gameLogic, float dropHeight = 0f)
+    public SC_Gem SpawnGem(SC_Gem prefab, Vector2Int position, IGameLogic gameLogic, float dropHeight = 0f)
     {
         SC_Gem gem = pool.Get(prefab);
         

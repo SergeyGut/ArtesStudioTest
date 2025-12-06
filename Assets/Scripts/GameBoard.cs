@@ -2,7 +2,7 @@
 using UnityEngine;
 using UnityEngine.Pool;
 
-public class GameBoard
+public class GameBoard : IGameBoard
 {
     #region Variables
 
@@ -26,12 +26,6 @@ public class GameBoard
 
     private readonly List<MatchInfo> matchInfoMap = new();
     public List<MatchInfo> MatchInfoMap => matchInfoMap;
-
-    public class MatchInfo
-    {
-        public HashSet<SC_Gem> MatchedGems;
-        public Vector2Int? UserActionPos;
-    }
     #endregion
 
     public GameBoard(int _Width, int _Height)

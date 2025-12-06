@@ -21,7 +21,7 @@ public class SC_Gem : MonoBehaviour, IPoolable
     public int scoreValue = 10;
 
     public int blastSize = 1;
-    private SC_GameLogic scGameLogic;
+    private IGameLogic scGameLogic;
     private Vector2 startPosition;
     private float moveStartTime;
     private bool isMoving = false;
@@ -107,7 +107,7 @@ public class SC_Gem : MonoBehaviour, IPoolable
         }
     }
 
-    public void SetupGem(SC_GameLogic _ScGameLogic,Vector2Int _Position)
+    public void SetupGem(IGameLogic _ScGameLogic,Vector2Int _Position)
     {
         posIndex = _Position;
         scGameLogic = _ScGameLogic;
