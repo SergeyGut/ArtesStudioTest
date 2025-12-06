@@ -1,5 +1,4 @@
 ﻿using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 
 public class SC_Gem : MonoBehaviour, IPoolable
@@ -39,10 +38,18 @@ public class SC_Gem : MonoBehaviour, IPoolable
 
             float distance = Vector2.Distance(startPosition, posIndex);
             float elapsed = Time.time - moveStartTime;
-            float speed = SC_GameVariables.Instance.gemSpeed * 2f;
+            float speed = SC_GameVariables.Instance.gemSpeed;
             float t = Mathf.Clamp01((elapsed * speed) / Mathf.Max(distance, 0.1f));
             
-            t = EaseOutCubic(t);
+            AnimationCurve curve = SC_GameVariables.Instance.gemEaseCurve;
+            if (curve != null && curve.length > 0)
+            {
+                t = curve.Evaluate(t);
+            }
+            else
+            {
+                t = EaseInOutCustom(t);
+            }
             
             transform.position = Vector2.Lerp(startPosition, posIndex, t);
         }
@@ -63,9 +70,17 @@ public class SC_Gem : MonoBehaviour, IPoolable
         }
     }
 
-    private float EaseOutCubic(float t)
+    private float EaseInOutCustom(float t)
     {
-        return 1f - Mathf.Pow(1f - t, 3f);
+        if (t < 0.5f)
+        {
+            return 2f * t * t;
+        }
+        else
+        {
+            float f = 2f * t - 2f;
+            return 1f - f * f * f * f * f;
+        }
     }
 
     public void SetupGem(SC_GameLogic _ScGameLogic,Vector2Int _Position)
