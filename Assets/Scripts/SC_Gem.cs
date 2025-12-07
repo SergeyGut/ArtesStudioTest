@@ -30,6 +30,7 @@ public class SC_Gem : MonoBehaviour, IPoolable
     private bool justSpawned;
     private bool isSwapMovement = false;
     private bool isStopMovingReqiested = false;
+    private const float POSITION_THRESHOLD = 0.01f;
 
     public bool JustSpawned => justSpawned;
     public bool IsMoving => isMoving;
@@ -48,7 +49,7 @@ public class SC_Gem : MonoBehaviour, IPoolable
         Vector2 targetPos = new Vector2(posIndex.x, posIndex.y);
         float sqrDistance = (currentPos - targetPos).sqrMagnitude;
         
-        if (isMoving && sqrDistance <= 0.01f)
+        if (isMoving && sqrDistance <= POSITION_THRESHOLD)
         {
             if (posIndex.y > 0 && scBoardService.GetGem(posIndex.x, posIndex.y - 1) == null)
             {
@@ -67,7 +68,7 @@ public class SC_Gem : MonoBehaviour, IPoolable
             }
         }
         
-        if (sqrDistance > 0.01f)
+        if (sqrDistance > POSITION_THRESHOLD)
         {
             if (!isMoving || previousTargetPos != targetPos)
             {
@@ -275,8 +276,8 @@ public class SC_Gem : MonoBehaviour, IPoolable
 
     private IEnumerator WaitForSwapCompletion()
     {
-        while (Vector2.Distance(transform.position, posIndex) > 0.01f || 
-               (otherGem != null && Vector2.Distance(otherGem.transform.position, otherGem.posIndex) > 0.01f))
+        while (Vector2.Distance(transform.position, posIndex) > POSITION_THRESHOLD || 
+               (otherGem != null && Vector2.Distance(otherGem.transform.position, otherGem.posIndex) > POSITION_THRESHOLD))
         {
             yield return null;
         }
