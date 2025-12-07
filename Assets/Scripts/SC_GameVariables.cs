@@ -10,8 +10,8 @@ public class SC_GameVariables : MonoBehaviour
     public float bombChance = 2f;
     public int dropHeight = 0;
     public float gemSpeed;
-    public AnimationCurve gemEaseCurve = AnimationCurve.EaseInOut(0f, 0f, 1f, 1f);
     public AnimationCurve gemSwapEaseCurve = AnimationCurve.EaseInOut(0f, 0f, 1f, 1f);
+    public AnimationCurve gemDropSpeedCurve = AnimationCurve.Linear(0f, 1f, 1f, 1f);
     public float scoreSpeed = 5;
     public float bombNeighborDelay = 0.2f;
     public float bombSelfDelay = 0.3f;

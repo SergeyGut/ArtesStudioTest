@@ -83,11 +83,16 @@ public class SC_Gem : MonoBehaviour, IPoolable
             float speed = Settings.gemSpeed;
             float t = Mathf.Clamp01((elapsed * speed) / Mathf.Max(distance, 0.1f));
             
-            AnimationCurve curve = isSwapMovement 
-                ? Settings.gemSwapEaseCurve 
-                : Settings.gemEaseCurve;
-            
-            t = curve.Evaluate(t);
+            if (isSwapMovement)
+            {
+                t = Settings.gemSwapEaseCurve.Evaluate(t);
+            }
+            else
+            {
+                var multiplier = Settings.gemDropSpeedCurve.Evaluate(distance / scBoardService.Height);
+                speed = Settings.gemSpeed * multiplier * multiplier;
+                t = Mathf.Clamp01((elapsed * speed) / Mathf.Max(distance, 0.1f));
+            }
             
             transform.position = Vector2.Lerp(startPosition, targetPos, t);
         }

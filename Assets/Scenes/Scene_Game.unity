@@ -927,7 +927,7 @@ MonoBehaviour:
   bombChance: 3
   dropHeight: 1
   gemSpeed: 12
-  gemEaseCurve:
+  gemSwapEaseCurve:
     serializedVersion: 2
     m_Curve:
     - serializedVersion: 3
@@ -951,12 +951,12 @@ MonoBehaviour:
     m_PreInfinity: 2
     m_PostInfinity: 2
     m_RotationOrder: 4
-  gemSwapEaseCurve:
+  gemDropSpeedCurve:
     serializedVersion: 2
     m_Curve:
     - serializedVersion: 3
       time: 0
-      value: 0
+      value: 1
       inSlope: 0
       outSlope: 0
       tangentMode: 0
