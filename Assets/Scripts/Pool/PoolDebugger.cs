@@ -14,7 +14,7 @@ public class PoolDebugger : MonoBehaviour
     private int lastGemAvailableCount;
     private int lastWaitForSecondsCacheSize;
     
-    private GemPool gemPool;
+    private IGemPool gemPool;
     private SC_GameLogic gameLogic;
     
     private void Start()

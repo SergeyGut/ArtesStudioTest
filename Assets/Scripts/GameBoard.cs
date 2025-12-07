@@ -14,13 +14,6 @@ public class GameBoard : IGameBoard
 
     private SC_Gem[,] allGems;
 
-    private int score = 0;
-    public int Score 
-    {
-        get => score;
-        set => score = value;
-    }
-
     private readonly HashSet<SC_Gem> explosions = new();
     public HashSet<SC_Gem> Explosions => explosions;
 
@@ -34,6 +27,7 @@ public class GameBoard : IGameBoard
         width = _Width;
         allGems = new SC_Gem[width, height];
     }
+    
     public int GetMatchCountAt(Vector2Int _PositionToCheck, SC_Gem _GemToCheck)
     {
         int horizontalMatches = CountHorizontalMatch(_PositionToCheck, _GemToCheck);
@@ -86,6 +80,16 @@ public class GameBoard : IGameBoard
     public SC_Gem GetGem(int _X,int _Y)
     {
        return allGems[_X, _Y];
+    }
+
+    public void SetGem(Vector2Int position, SC_Gem gem)
+    {
+        SetGem(position.x, position.y, gem);
+    }
+
+    public SC_Gem GetGem(Vector2Int position)
+    {
+        return GetGem(position.x, position.y);
     }
 
     public void FindAllMatches(Vector2Int? userActionPos = null)

@@ -64,12 +64,12 @@ public class SC_GameLogic : MonoBehaviour, IGameLogic
         gameBoard = new GameBoard(7, 7);
         gemPool = new GemPool(unityObjects["GemsHolder"].transform);
         
-        scoreService = new ScoreService(gameBoard);
+        scoreService = new ScoreService();
         destroyService = new DestroyService(gameBoard, gemPool, scoreService);
         matchService = new MatchService(gameBoard, Settings);
         spawnService = new SpawnService(gameBoard, gemPool, Settings);
-        bombService = new BombService(gameBoard, gemPool, Settings);
-        boardService = new BoardService(gameBoard, spawnService);
+        bombService = new BombService(gameBoard, this, gemPool, Settings);
+        boardService = new BoardService(gameBoard);
         
         Setup();
     }
@@ -84,7 +84,7 @@ public class SC_GameLogic : MonoBehaviour, IGameLogic
                 _bgTile.name = "BG Tile - " + x + ", " + y;
 
                 SC_Gem gemToSpawn = spawnService.SelectNonMatchingGem(new Vector2Int(x, y));
-                spawnService.SpawnGem(new Vector2Int(x, y), gemToSpawn, this);
+                spawnService.SpawnGem(new Vector2Int(x, y), gemToSpawn, this, gameBoard);
             }
     }
     
@@ -96,14 +96,6 @@ public class SC_GameLogic : MonoBehaviour, IGameLogic
         }
         displayScore = scoreService.Score;
         lastDisplayedScoreInt = scoreService.Score;
-    }
-    public void SetGem(int _X,int _Y, SC_Gem _Gem)
-    {
-        gameBoard.SetGem(_X,_Y, _Gem);
-    }
-    public SC_Gem GetGem(int _X, int _Y)
-    {
-        return gameBoard.GetGem(_X, _Y);
     }
     public void SetState(GlobalEnums.GameState _CurrentState)
     {
@@ -120,7 +112,7 @@ public class SC_GameLogic : MonoBehaviour, IGameLogic
         using var newlyCreatedBombs = PooledHashSet<SC_Gem>.Get();
         
         matchService.CollectAndDestroyMatchedGems(destroyService);
-        bombService.CreateBombs(bombCreationPositions.Value, newlyCreatedBombs, this);
+        bombService.CreateBombs(bombCreationPositions.Value, newlyCreatedBombs);
         
         yield return DestroyExplosionsWithDelay(newlyCreatedBombs);
         
@@ -151,7 +143,7 @@ public class SC_GameLogic : MonoBehaviour, IGameLogic
         bool hasActivity = true;
         while (hasActivity)
         {
-            boardService.SpawnTopRow(this);
+            spawnService.SpawnTopRow(this, gameBoard);
             hasActivity = boardService.DropSingleRow();
 
             if (hasActivity)

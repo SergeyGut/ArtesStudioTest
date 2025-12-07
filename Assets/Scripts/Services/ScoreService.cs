@@ -6,18 +6,13 @@ public interface IScoreService
 
 public class ScoreService : IScoreService
 {
-    private readonly IGameBoard gameBoard;
-    
-    public ScoreService(IGameBoard gameBoard)
-    {
-        this.gameBoard = gameBoard;
-    }
+    private int score = 0;
     
     public void AddScore(int points)
     {
-        gameBoard.Score += points;
+        score += points;
     }
     
-    public int Score => gameBoard.Score;
+    public int Score => score;
 }
 

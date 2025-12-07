@@ -1,12 +1,11 @@
+
 public class BoardService
 {
     private readonly IGameBoard gameBoard;
-    private readonly ISpawnService spawnService;
     
-    public BoardService(IGameBoard gameBoard, ISpawnService spawnService)
+    public BoardService(IGameBoard gameBoard)
     {
         this.gameBoard = gameBoard;
-        this.spawnService = spawnService;
     }
     
     public bool DropSingleRow()
@@ -20,6 +19,12 @@ public class BoardService
                 SC_Gem currentGem = gameBoard.GetGem(x, y);
                 SC_Gem gemBelow = gameBoard.GetGem(x, y - 1);
 
+                if (currentGem != null && (currentGem.isMoving || currentGem.justSpawned))
+                {
+                    anyDropped = true;
+                    continue;
+                }
+                
                 if (currentGem != null && gemBelow == null)
                 {
                     currentGem.posIndex.y--;
@@ -32,11 +37,6 @@ public class BoardService
         }
 
         return anyDropped;
-    }
-    
-    public void SpawnTopRow(IGameLogic gameLogic)
-    {
-        spawnService.SpawnTopRow(gameLogic);
     }
 }
 
