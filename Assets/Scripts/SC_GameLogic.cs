@@ -10,11 +10,11 @@ public class SC_GameLogic : MonoBehaviour, IGameLogic
     private IGameBoard gameBoard;
     private GlobalEnums.GameState currentState = GlobalEnums.GameState.move;
     public GlobalEnums.GameState CurrentState => currentState;
-    private IGemPool gemPool;
     private TextMeshProUGUI scoreText;
     private float scoreSpeed;
     private int lastDisplayedScoreInt = -1;
     
+    private IGemPool gemPool;
     private IMatchService matchService;
     private ISpawnService spawnService;
     private IDestroyService destroyService;

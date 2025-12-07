@@ -19,7 +19,7 @@ public class BoardService : IBoardService
                 SC_Gem currentGem = gameBoard.GetGem(x, y);
                 SC_Gem gemBelow = gameBoard.GetGem(x, y - 1);
 
-                if (currentGem != null && (currentGem.isMoving || currentGem.justSpawned))
+                if (currentGem != null && (currentGem.IsMoving || currentGem.JustSpawned))
                 {
                     anyDropped = true;
                     continue;

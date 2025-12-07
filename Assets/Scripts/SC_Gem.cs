@@ -26,11 +26,14 @@ public class SC_Gem : MonoBehaviour, IPoolable
     private Vector2 startPosition;
     private Vector2 previousTargetPos;
     private float moveStartTime;
-    public bool isMoving = false;
-    public bool justSpawned;
+    private bool isMoving = false;
+    private bool justSpawned;
     private bool isSwapMovement = false;
     private bool isStopMovingReqiested = false;
 
+    public bool JustSpawned => justSpawned;
+    public bool IsMoving => isMoving;
+    
     private SC_GameVariables Settings
     {
         [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
