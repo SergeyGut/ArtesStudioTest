@@ -1,7 +1,6 @@
-using System.Collections.Generic;
 using UnityEngine;
 
-public class MatchService
+public class MatchService : IMatchService
 {
     private readonly IGameBoard gameBoard;
     private readonly SC_GameVariables settings;

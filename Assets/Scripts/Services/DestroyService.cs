@@ -1,11 +1,6 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public interface IDestroyService
-{
-    void DestroyGems(IEnumerable<SC_Gem> gems);
-}
-
 public class DestroyService : IDestroyService
 {
     private readonly IGameBoard gameBoard;

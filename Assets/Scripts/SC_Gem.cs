@@ -84,7 +84,7 @@ public class SC_Gem : MonoBehaviour, IPoolable
                 ? Settings.gemSwapEaseCurve 
                 : Settings.gemEaseCurve;
             
-            //t = curve.Evaluate(t);
+            t = curve.Evaluate(t);
             
             transform.position = Vector2.Lerp(startPosition, targetPos, t);
         }
@@ -148,18 +148,16 @@ public class SC_Gem : MonoBehaviour, IPoolable
 
     public void OnSpawnFromPool()
     {
-        isMatch = false;
-        mousePressed = false;
-        swapTriggered = false;
-        otherGem = null;
-        swipeAngle = 0;
-        isMoving = false;
-        isSwapMovement = false;
-        isStopMovingReqiested = false;
-        previousTargetPos = Vector2.zero;
+        ResetState();
     }
 
     public void OnReturnToPool()
+    {
+        ResetState();
+        StopAllCoroutines();
+    }
+
+    private void ResetState()
     {
         isMatch = false;
         mousePressed = false;
@@ -171,7 +169,6 @@ public class SC_Gem : MonoBehaviour, IPoolable
         isSwapMovement = false;
         isStopMovingReqiested = false;
         previousTargetPos = Vector2.zero;
-        StopAllCoroutines();
     }
 
     private void OnMouseDown()

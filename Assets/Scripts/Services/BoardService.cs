@@ -1,5 +1,5 @@
 
-public class BoardService
+public class BoardService : IBoardService
 {
     private readonly IGameBoard gameBoard;
     

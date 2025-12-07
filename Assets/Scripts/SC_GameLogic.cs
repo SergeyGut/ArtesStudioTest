@@ -15,12 +15,12 @@ public class SC_GameLogic : MonoBehaviour, IGameLogic
     private float scoreSpeed;
     private int lastDisplayedScoreInt = -1;
     
-    private MatchService matchService;
+    private IMatchService matchService;
     private ISpawnService spawnService;
     private IDestroyService destroyService;
     private IScoreService scoreService;
-    private BombService bombService;
-    private BoardService boardService;
+    private IBombService bombService;
+    private IBoardService boardService;
 
     #region MonoBehaviour
     private void Awake()

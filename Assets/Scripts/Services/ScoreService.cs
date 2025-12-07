@@ -1,8 +1,3 @@
-public interface IScoreService
-{
-    void AddScore(int points);
-    int Score { get; }
-}
 
 public class ScoreService : IScoreService
 {

@@ -1,7 +1,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public class BombService
+public class BombService : IBombService
 {
     private readonly IGameBoard gameBoard;
     private readonly IGameLogic gameLogic;

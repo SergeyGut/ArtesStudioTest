@@ -967,7 +967,7 @@ MonoBehaviour:
   bombPostSelfDelay: 0.1
   decreaseRowDelay: 0.2
   decreaseSingleRowDelay: 0.04
-  findAllMatchesDelay: 0.1
+  findAllMatchesDelay: 0.2
   destroyMatchesDelay: 0.1
   changeStateDelay: 0
   minMatchForBomb: 4
