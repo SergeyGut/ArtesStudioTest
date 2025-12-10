@@ -18,6 +18,7 @@ public class SC_GameVariables : MonoBehaviour
     public float bombPostSelfDelay = 0.3f;
     public float decreaseRowDelay = 0.2f;
     public float decreaseSingleRowDelay = 0.05f;
+    public float decreaseSingleColumnDelay = 0.05f;
     public float findAllMatchesDelay = 0.5f;
     public float destroyMatchesDelay = 0.5f;
     public float changeStateDelay = 0.5f;

@@ -43,7 +43,7 @@ public class PoolDebugger : MonoBehaviour
         
         if (enableDebug)
         {
-            Debug.Log($"[PoolDebugger] Started. Baseline counts - Gems Active: {lastGemActiveCount}, Available: {lastGemAvailableCount}, WaitForSeconds Cache: {lastWaitForSecondsCacheSize}");
+            Debug.Log($"[PoolDebugger] Started. Baseline counts - Gems Active: {lastGemActiveCount}, Available: {lastGemAvailableCount}");
         }
     }
     
@@ -72,14 +72,6 @@ public class PoolDebugger : MonoBehaviour
         {
             lastGemActiveCount = gemPool.ActiveCount;
             lastGemAvailableCount = gemPool.AvailableCount;
-        }
-        
-        var cacheField = typeof(WaitForSecondsPool).GetField("cache", 
-            System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static);
-        if (cacheField != null)
-        {
-            var cache = cacheField.GetValue(null) as Dictionary<float, WaitForSeconds>;
-            lastWaitForSecondsCacheSize = cache != null ? cache.Count : 0;
         }
     }
     
@@ -111,16 +103,7 @@ public class PoolDebugger : MonoBehaviour
             return;
         }
         
-        var cacheField = typeof(WaitForSecondsPool).GetField("cache", 
-            System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static);
-        int waitForSecondsCacheSize = 0;
-        if (cacheField != null)
-        {
-            var cache = cacheField.GetValue(null) as Dictionary<float, WaitForSeconds>;
-            waitForSecondsCacheSize = cache != null ? cache.Count : 0;
-        }
-        
-        Debug.Log($"[PoolDebugger] Pool Status - Gems Active: {gemPool.ActiveCount}, Available: {gemPool.AvailableCount}, Total: {gemPool.ActiveCount + gemPool.AvailableCount}, WaitForSeconds Cache: {waitForSecondsCacheSize}");
+        Debug.Log($"[PoolDebugger] Pool Status - Gems Active: {gemPool.ActiveCount}, Available: {gemPool.AvailableCount}, Total: {gemPool.ActiveCount + gemPool.AvailableCount}");
         
 #if UNITY_EDITOR || DEVELOPMENT_BUILD
         PoolTracker.GetStats(out var active, out var gets, out var releases);

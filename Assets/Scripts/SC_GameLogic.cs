@@ -1,5 +1,6 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
+using Cysharp.Threading.Tasks;
 using TMPro;
 using UnityEngine;
 
@@ -103,10 +104,10 @@ public class SC_GameLogic : MonoBehaviour, IGameLogic
     }
     public void DestroyMatches()
     {
-        StartCoroutine(DestroyMatchesCo());
+        DestroyMatchesCo().Forget();
     }
 
-    private IEnumerator DestroyMatchesCo()
+    private async UniTask DestroyMatchesCo()
     {
         using var bombCreationPositions = matchService.CollectBombCreationPositions();
         using var newlyCreatedBombs = PooledHashSet<SC_Gem>.Get();
@@ -114,31 +115,31 @@ public class SC_GameLogic : MonoBehaviour, IGameLogic
         matchService.CollectAndDestroyMatchedGems(destroyService);
         bombService.CreateBombs(bombCreationPositions.Value, newlyCreatedBombs);
         
-        yield return DestroyExplosionsWithDelay(newlyCreatedBombs);
+        await DestroyExplosionsWithDelay(newlyCreatedBombs);
         
-        yield return DecreaseRowCo();
+        await DecreaseRowCo();
     }
 
-    private IEnumerator DestroyExplosionsWithDelay(PooledHashSet<SC_Gem> newlyCreatedBombs)
+    private async UniTask DestroyExplosionsWithDelay(PooledHashSet<SC_Gem> newlyCreatedBombs)
     {
         using var nonBombExplosions = matchService.CollectNonBombExplosions(newlyCreatedBombs);
         if (nonBombExplosions.Value.Count > 0)
         {
-            yield return WaitForSecondsPool.Get(Settings.bombNeighborDelay);
+            await UniTask.WaitForSeconds(Settings.bombNeighborDelay);
             destroyService.DestroyGems(nonBombExplosions.Value);
         }
         
         using var bombExplosions = matchService.CollectBombExplosions(newlyCreatedBombs);
         if (bombExplosions.Value.Count > 0)
         {
-            yield return WaitForSecondsPool.Get(Settings.bombSelfDelay);
+            await UniTask.WaitForSeconds(Settings.bombSelfDelay);
             destroyService.DestroyGems(bombExplosions.Value);
-            yield return WaitForSecondsPool.Get(Settings.bombPostSelfDelay);
+            await UniTask.WaitForSeconds(Settings.bombPostSelfDelay);
         }
     }
-    private IEnumerator DecreaseRowCo()
+    private async UniTask DecreaseRowCo()
     {
-        yield return WaitForSecondsPool.Get(Settings.decreaseRowDelay);
+        await UniTask.WaitForSeconds(Settings.decreaseRowDelay);
 
         bool hasActivity = true;
         while (hasActivity)
@@ -148,21 +149,21 @@ public class SC_GameLogic : MonoBehaviour, IGameLogic
 
             if (hasActivity)
             {
-                yield return WaitForSecondsPool.Get(Settings.decreaseSingleRowDelay);
+                await UniTask.WaitForSeconds(Settings.decreaseSingleRowDelay);
             }
         }
 
         CheckMisplacedGems();
-        yield return WaitForSecondsPool.Get(Settings.findAllMatchesDelay);
+        await UniTask.WaitForSeconds(Settings.findAllMatchesDelay);
         gameBoard.FindAllMatches();
         if (gameBoard.MatchInfoMap.Count > 0)
         {
-            yield return WaitForSecondsPool.Get(Settings.destroyMatchesDelay);
+            await UniTask.WaitForSeconds(Settings.destroyMatchesDelay);
             DestroyMatches();
         }
         else
         {
-            yield return WaitForSecondsPool.Get(Settings.changeStateDelay);
+            await UniTask.WaitForSeconds(Settings.changeStateDelay);
             currentState = GlobalEnums.GameState.move;
         }
     }

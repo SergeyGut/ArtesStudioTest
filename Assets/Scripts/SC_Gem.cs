@@ -1,4 +1,5 @@
 ﻿using System.Collections;
+using Cysharp.Threading.Tasks;
 using UnityEngine;
 
 public class SC_Gem : MonoBehaviour, IPoolable
@@ -242,14 +243,14 @@ public class SC_Gem : MonoBehaviour, IPoolable
         scBoardService.SetGem(posIndex, this);
         scBoardService.SetGem(otherGem.posIndex, otherGem);
 
-        StartCoroutine(CheckMoveCo());
+        CheckMoveCo().Forget();
     }
 
-    public IEnumerator CheckMoveCo()
+    public async UniTask CheckMoveCo()
     {
         scGameLogic.SetState(GlobalEnums.GameState.wait);
 
-        yield return WaitForSwapCompletion();
+        await WaitForSwapCompletion();
         scGameLogic.FindAllMatches(posIndex, otherGem.posIndex);
 
         if (otherGem != null)
@@ -264,7 +265,7 @@ public class SC_Gem : MonoBehaviour, IPoolable
                 scBoardService.SetGem(posIndex, this);
                 scBoardService.SetGem(otherGem.posIndex, otherGem);
 
-                yield return WaitForSwapCompletion();
+                await WaitForSwapCompletion();
                 scGameLogic.SetState(GlobalEnums.GameState.move);
             }
             else
@@ -274,12 +275,12 @@ public class SC_Gem : MonoBehaviour, IPoolable
         }
     }
 
-    private IEnumerator WaitForSwapCompletion()
+    private async UniTask WaitForSwapCompletion()
     {
         while (Vector2.Distance(transform.position, posIndex) > POSITION_THRESHOLD || 
                (otherGem != null && Vector2.Distance(otherGem.transform.position, otherGem.posIndex) > POSITION_THRESHOLD))
         {
-            yield return null;
+            await UniTask.Yield();
         }
     }
 }
