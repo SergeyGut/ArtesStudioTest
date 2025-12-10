@@ -93,7 +93,7 @@ public class GameBoard : IGameBoard
         foreach (var matchInfo in matchInfoMap)
         {
             if (matchInfo.MatchedGems != null)
-                HashSetPool<IPiece>.Release(matchInfo.MatchedGems);
+                CollectionPool<HashSet<IPiece>>.Release(matchInfo.MatchedGems);
         }
         matchInfoMap.Clear();
 
@@ -135,7 +135,7 @@ public class GameBoard : IGameBoard
                 matchInfoMap[i].MatchedGems.UnionWith(newMatch.MatchedGems);
                 matchInfoMap[i].UserActionPos ??= newMatch.UserActionPos;
                 if (newMatch.MatchedGems != matchInfoMap[i].MatchedGems)
-                    HashSetPool<IPiece>.Release(newMatch.MatchedGems);
+                    CollectionPool<HashSet<IPiece>>.Release(newMatch.MatchedGems);
                 return;
             }
         }
@@ -150,7 +150,7 @@ public class GameBoard : IGameBoard
         if (currentGem == null)
             return null;
 
-        var matches = HashSetPool<IPiece>.Get();
+        var matches = CollectionPool<HashSet<IPiece>>.Get();
         matches.Add(currentGem);
 
         foreach (var gem in GetMatchingGemsInDirection(x, y, deltaX, deltaY, currentGem.Type))
@@ -165,7 +165,7 @@ public class GameBoard : IGameBoard
 
         if (matches.Count < 3)
         {
-            HashSetPool<IPiece>.Release(matches);
+            CollectionPool<HashSet<IPiece>>.Release(matches);
             return null;
         }
 
