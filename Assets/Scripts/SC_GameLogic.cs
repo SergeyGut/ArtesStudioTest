@@ -147,13 +147,14 @@ public class SC_GameLogic : MonoBehaviour, IGameLogic
     {
         await UniTask.WaitForSeconds(Settings.decreaseRowDelay);
 
+        bool useColumnDelay = Settings.decreaseSingleColumnDelay > 0f;
         using var decreaseTasks = PooledList<UniTask>.Get();
         for (int x = 0; x < gameBoard.Width; x++)
         {
             var task = DecreaseColumn(x);
             decreaseTasks.Value.Add(task);
 
-            if (!task.GetAwaiter().IsCompleted)
+            if (useColumnDelay && !task.GetAwaiter().IsCompleted)
             {
                 await UniTask.WaitForSeconds(Settings.decreaseSingleColumnDelay);
             }
