@@ -1,20 +1,19 @@
-﻿using System.Collections;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using Cysharp.Threading.Tasks;
 using TMPro;
 using UnityEngine;
+using Zenject;
 
 public class SC_GameLogic : MonoBehaviour, IGameLogic
 {
     private Dictionary<string, GameObject> unityObjects;
     private float displayScore = 0;
-    private IGameBoard gameBoard;
     private GlobalEnums.GameState currentState = GlobalEnums.GameState.move;
-    public GlobalEnums.GameState CurrentState => currentState;
     private TextMeshProUGUI scoreText;
     private float scoreSpeed;
     private int lastDisplayedScoreInt = -1;
     
+    private IGameBoard gameBoard;
     private IGemPool gemPool;
     private IMatchService matchService;
     private ISpawnService spawnService;
@@ -23,15 +22,40 @@ public class SC_GameLogic : MonoBehaviour, IGameLogic
     private IBombService bombService;
     private IBoardService boardService;
 
+    public GlobalEnums.GameState CurrentState => currentState;
+
+    [Inject]
+    private void Construct(
+        IGameBoard gameBoard,
+        IGemPool gemPool,
+        IMatchService matchService,
+        ISpawnService spawnService,
+        IDestroyService destroyService,
+        IScoreService scoreService,
+        IBombService bombService,
+        IBoardService boardService,
+        Dictionary<string, GameObject> unityObjects)
+    {
+        this.gameBoard = gameBoard;
+        this.gemPool = gemPool;
+        this.matchService = matchService;
+        this.spawnService = spawnService;
+        this.destroyService = destroyService;
+        this.scoreService = scoreService;
+        this.bombService = bombService;
+        this.boardService = boardService;
+        this.unityObjects = unityObjects;
+    }
+    
     #region MonoBehaviour
     private void Awake()
     {
-        Init();
+        Setup();
     }
 
     private void Start()
     {
-        scoreText = unityObjects["Txt_Score"].GetComponent<TMPro.TextMeshProUGUI>();
+        scoreText = unityObjects["Txt_Score"].GetComponent<TextMeshProUGUI>();
         scoreSpeed = Settings.scoreSpeed;
         StartGame();
     }
@@ -55,25 +79,7 @@ public class SC_GameLogic : MonoBehaviour, IGameLogic
         [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
         get => SC_GameVariables.Instance;
     }
-    private void Init()
-    {
-        unityObjects = new Dictionary<string, GameObject>();
-        GameObject[] _obj = GameObject.FindGameObjectsWithTag("UnityObject");
-        foreach (GameObject g in _obj)
-            unityObjects.Add(g.name,g);
 
-        gameBoard = new GameBoard(7, 7);
-        gemPool = new GemPool(unityObjects["GemsHolder"].transform);
-        
-        scoreService = new ScoreService();
-        destroyService = new DestroyService(gameBoard, gemPool, scoreService);
-        matchService = new MatchService(gameBoard, Settings);
-        spawnService = new SpawnService(gameBoard, gemPool, Settings);
-        bombService = new BombService(gameBoard, this, gemPool, Settings);
-        boardService = new BoardService(gameBoard);
-        
-        Setup();
-    }
     private void Setup()
     {
         for (int x = 0; x < gameBoard.Width; x++)
