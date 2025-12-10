@@ -14,25 +14,25 @@ public class DestroyService : IDestroyService
         this.scoreService = scoreService;
     }
     
-    public void DestroyGems(IEnumerable<SC_Gem> gems)
+    public void DestroyGems(IEnumerable<IPiece> gems)
     {
         foreach (var gem in gems)
         {
             if (gem != null)
             {
-                scoreService.AddScore(gem.scoreValue);
+                scoreService.AddScore(gem.ScoreValue);
                 DestroyMatchedGemsAt(gem);
             }
         }
     }
     
-    private void DestroyMatchedGemsAt(SC_Gem gem)
+    private void DestroyMatchedGemsAt(IPiece gem)
     {
         if (gem != null)
         {
-            var position = gem.posIndex;
-            Object.Instantiate(gem.destroyEffect, new Vector2(position.x, position.y), Quaternion.identity);
-            gemPool.ReturnGem(gem);
+            var position = gem.Position;
+            gem.RunDestroyEffect();
+            gemPool.ReturnGem(gem as SC_Gem);
             
             if (gameBoard.GetGem(position) == gem)
             {

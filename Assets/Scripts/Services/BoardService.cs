@@ -14,8 +14,8 @@ public class BoardService : IBoardService
         
         for (int y = 1; y < gameBoard.Height; y++)
         {
-            SC_Gem currentGem = gameBoard.GetGem(x, y);
-            SC_Gem gemBelow = gameBoard.GetGem(x, y - 1);
+            IPiece currentGem = gameBoard.GetGem(x, y);
+            IPiece gemBelow = gameBoard.GetGem(x, y - 1);
 
             if (currentGem != null && (currentGem.IsMoving || currentGem.JustSpawned))
             {
@@ -25,7 +25,7 @@ public class BoardService : IBoardService
             
             if (currentGem != null && gemBelow == null)
             {
-                currentGem.posIndex.y--;
+                currentGem.Position.Y--;
                 gameBoard.SetGem(x, y - 1, currentGem);
                 gameBoard.SetGem(x, y, null);
                 anyDropped = true;

@@ -13,7 +13,7 @@ public class SpawnService : ISpawnService
         this.settings = settings;
     }
     
-    public SC_Gem SelectNonMatchingGem(Vector2Int position)
+    public SC_Gem SelectNonMatchingGem(GridPosition position)
     {
         using var validGems = PooledList<SC_Gem>.Get();
         using var matchCounts = PooledList<int>.Get();
@@ -50,8 +50,8 @@ public class SpawnService : ISpawnService
         
         return validGems.Value[Random.Range(0, validGems.Value.Count)];
     }
-    
-    public void SpawnGem(Vector2Int position, SC_Gem gemToSpawn, IGameLogic gameLogic, IGameBoard gameBoard)
+
+    public void SpawnGem(GridPosition position, SC_Gem gemToSpawn, IGameLogic gameLogic, IGameBoard gameBoard)
     {
         if (Random.Range(0, 100f) < settings.bombChance)
             gemToSpawn = settings.bomb;
@@ -63,12 +63,12 @@ public class SpawnService : ISpawnService
     public void SpawnTopX(int x, IGameLogic gameLogic, IGameBoard gameBoard)
     {
         int topY = gameBoard.Height - 1;
-        SC_Gem topGem = gameBoard.GetGem(x, topY);
+        IPiece topGem = gameBoard.GetGem(x, topY);
         
         if (topGem == null)
         {
-            SC_Gem gemToSpawn = SelectNonMatchingGem(new Vector2Int(x, topY));
-            SpawnGem(new Vector2Int(x, topY), gemToSpawn, gameLogic, gameBoard);
+            SC_Gem gemToSpawn = SelectNonMatchingGem(new GridPosition(x, topY));
+            SpawnGem(new GridPosition(x, topY), gemToSpawn, gameLogic, gameBoard);
         }
     }
 }

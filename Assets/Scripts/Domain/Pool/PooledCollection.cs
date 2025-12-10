@@ -1,6 +1,74 @@
 using System;
 using System.Collections.Generic;
-using UnityEngine.Pool;
+
+internal static class ListPool<T>
+{
+    private static readonly Queue<List<T>> pool = new Queue<List<T>>();
+
+    public static List<T> Get()
+    {
+        if (pool.Count > 0)
+        {
+            var list = pool.Dequeue();
+            list.Clear();
+            return list;
+        }
+        return new List<T>();
+    }
+
+    public static void Release(List<T> list)
+    {
+        if (list == null) return;
+        list.Clear();
+        pool.Enqueue(list);
+    }
+}
+
+internal static class DictionaryPool<TKey, TValue>
+{
+    private static readonly Queue<Dictionary<TKey, TValue>> pool = new Queue<Dictionary<TKey, TValue>>();
+
+    public static Dictionary<TKey, TValue> Get()
+    {
+        if (pool.Count > 0)
+        {
+            var dictionary = pool.Dequeue();
+            dictionary.Clear();
+            return dictionary;
+        }
+        return new Dictionary<TKey, TValue>();
+    }
+
+    public static void Release(Dictionary<TKey, TValue> dictionary)
+    {
+        if (dictionary == null) return;
+        dictionary.Clear();
+        pool.Enqueue(dictionary);
+    }
+}
+
+internal static class HashSetPool<T>
+{
+    private static readonly Queue<HashSet<T>> pool = new Queue<HashSet<T>>();
+
+    public static HashSet<T> Get()
+    {
+        if (pool.Count > 0)
+        {
+            var hashSet = pool.Dequeue();
+            hashSet.Clear();
+            return hashSet;
+        }
+        return new HashSet<T>();
+    }
+
+    public static void Release(HashSet<T> hashSet)
+    {
+        if (hashSet == null) return;
+        hashSet.Clear();
+        pool.Enqueue(hashSet);
+    }
+}
 
 #if UNITY_EDITOR || DEVELOPMENT_BUILD
 public static class PoolTracker

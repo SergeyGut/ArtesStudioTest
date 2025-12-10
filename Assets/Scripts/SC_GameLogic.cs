@@ -8,7 +8,7 @@ public class SC_GameLogic : MonoBehaviour, IGameLogic
 {
     private Dictionary<string, GameObject> unityObjects;
     private float displayScore = 0;
-    private GlobalEnums.GameState currentState = GlobalEnums.GameState.move;
+    private GameState currentState = GameState.move;
     private TextMeshProUGUI scoreText;
     private float scoreSpeed;
     private int lastDisplayedScoreInt = -1;
@@ -22,7 +22,7 @@ public class SC_GameLogic : MonoBehaviour, IGameLogic
     private IBombService bombService;
     private IBoardService boardService;
 
-    public GlobalEnums.GameState CurrentState => currentState;
+    public GameState CurrentState => currentState;
 
     [Inject]
     private void Construct(
@@ -90,8 +90,8 @@ public class SC_GameLogic : MonoBehaviour, IGameLogic
                 _bgTile.transform.SetParent(unityObjects["GemsHolder"].transform);
                 _bgTile.name = "BG Tile - " + x + ", " + y;
 
-                SC_Gem gemToSpawn = spawnService.SelectNonMatchingGem(new Vector2Int(x, y));
-                spawnService.SpawnGem(new Vector2Int(x, y), gemToSpawn, this, gameBoard);
+                SC_Gem gemToSpawn = spawnService.SelectNonMatchingGem(new GridPosition(x, y));
+                spawnService.SpawnGem(new GridPosition(x, y), gemToSpawn, this, gameBoard);
             }
     }
     
@@ -104,10 +104,11 @@ public class SC_GameLogic : MonoBehaviour, IGameLogic
         displayScore = scoreService.Score;
         lastDisplayedScoreInt = scoreService.Score;
     }
-    public void SetState(GlobalEnums.GameState _CurrentState)
+    public void SetState(GameState _CurrentState)
     {
         currentState = _CurrentState;
     }
+
     public void DestroyMatches()
     {
         DestroyMatchesCo().Forget();
@@ -116,7 +117,7 @@ public class SC_GameLogic : MonoBehaviour, IGameLogic
     private async UniTask DestroyMatchesCo()
     {
         using var bombCreationPositions = matchService.CollectBombCreationPositions();
-        using var newlyCreatedBombs = PooledHashSet<SC_Gem>.Get();
+        using var newlyCreatedBombs = PooledHashSet<IPiece>.Get();
         
         matchService.CollectAndDestroyMatchedGems(destroyService);
         bombService.CreateBombs(bombCreationPositions.Value, newlyCreatedBombs);
@@ -126,7 +127,7 @@ public class SC_GameLogic : MonoBehaviour, IGameLogic
         await DecreaseRowCo();
     }
 
-    private async UniTask DestroyExplosionsWithDelay(PooledHashSet<SC_Gem> newlyCreatedBombs)
+    private async UniTask DestroyExplosionsWithDelay(PooledHashSet<IPiece> newlyCreatedBombs)
     {
         using var nonBombExplosions = matchService.CollectNonBombExplosions(newlyCreatedBombs);
         if (nonBombExplosions.Value.Count > 0)
@@ -173,7 +174,7 @@ public class SC_GameLogic : MonoBehaviour, IGameLogic
         else
         {
             await UniTask.WaitForSeconds(Settings.changeStateDelay);
-            currentState = GlobalEnums.GameState.move;
+            currentState = GameState.move;
         }
     }
 
@@ -194,14 +195,14 @@ public class SC_GameLogic : MonoBehaviour, IGameLogic
     
     private void CheckMisplacedGems()
     {
-        using var foundGems = PooledHashSet<SC_Gem>.Get();
+        using var foundGems = PooledHashSet<IPiece>.Get();
         foundGems.Value.UnionWith(FindObjectsOfType<SC_Gem>());
         
         for (int x = 0; x < gameBoard.Width; x++)
         {
             for (int y = 0; y < gameBoard.Height; y++)
             {
-                SC_Gem _curGem = gameBoard.GetGem(x, y);
+                IPiece _curGem = gameBoard.GetGem(x, y);
                 if (_curGem != null)
                 {
                     foundGems.Value.Remove(_curGem);
@@ -212,7 +213,8 @@ public class SC_GameLogic : MonoBehaviour, IGameLogic
         foreach (SC_Gem g in foundGems.Value)
             gemPool.ReturnGem(g);
     }
-    public void FindAllMatches(Vector2Int? posIndex = null, Vector2Int? otherPosIndex = null)
+    
+    public void FindAllMatches(GridPosition? posIndex = null, GridPosition? otherPosIndex = null)
     {
         if (posIndex.HasValue)
             gameBoard.FindAllMatches(posIndex);

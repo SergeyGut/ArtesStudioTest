@@ -1,5 +1,4 @@
 using System.Collections.Generic;
-using UnityEngine;
 
 public class BombService : IBombService
 {
@@ -16,13 +15,13 @@ public class BombService : IBombService
         this.settings = settings;
     }
     
-    public void CreateBombs(Dictionary<Vector2Int, GlobalEnums.GemType> bombPositions, PooledHashSet<SC_Gem> newlyCreatedBombs)
+    public void CreateBombs(Dictionary<GridPosition, GemType> bombPositions, PooledHashSet<IPiece> newlyCreatedBombs)
     {
         foreach (var (pos, type) in bombPositions)
         {
             var bombPrefab = GetBombPrefabForType(type);
             var newBomb = gemPool.SpawnGem(bombPrefab, pos, gameLogic, gameBoard);
-            newBomb.transform.position = new Vector3(pos.x, pos.y, 0);
+            newBomb.transform.position = pos.ToVector3();
             gameBoard.SetGem(pos, newBomb);
             newlyCreatedBombs.Value.Add(newBomb);
             
@@ -30,7 +29,7 @@ public class BombService : IBombService
         }
     }
     
-    private SC_Gem GetBombPrefabForType(GlobalEnums.GemType type)
+    private SC_Gem GetBombPrefabForType(GemType type)
     {
         foreach (SC_Gem bomb in settings.gemBombs)
         {

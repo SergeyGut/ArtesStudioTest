@@ -14,13 +14,13 @@ public class GemPool : IGemPool
         pool = new GenericObjectPool<SC_Gem>(parent);
     }
 
-    public SC_Gem SpawnGem(SC_Gem prefab, Vector2Int position, IGameLogic gameLogic, IGameBoard gameBoard, float dropHeight = 0f)
+    public SC_Gem SpawnGem(SC_Gem prefab, GridPosition position, IGameLogic gameLogic, IGameBoard gameBoard, float dropHeight = 0f)
     {
         SC_Gem gem = pool.Get(prefab);
         
-        gem.transform.position = new Vector3(position.x, position.y + dropHeight, 0f);
+        gem.transform.position = new Vector3(position.X, position.Y + dropHeight, 0f);
         gem.transform.SetParent(parentTransform);
-        gem.name = "Gem - " + position.x + ", " + position.y;
+        gem.name = "Gem - " + position.X + ", " + position.Y;
         gem.SetupGem(gameLogic, gameBoard, position);
 
         return gem;

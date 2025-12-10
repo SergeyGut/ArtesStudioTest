@@ -2,10 +2,10 @@ using UnityEngine;
 
 public interface IGameLogic
 {
-    GlobalEnums.GameState CurrentState { get; }
+    GameState CurrentState { get; }
     
-    void SetState(GlobalEnums.GameState state);
-    void FindAllMatches(Vector2Int? posIndex = null, Vector2Int? otherPosIndex = null);
+    void SetState(GameState state);
+    void FindAllMatches(GridPosition? posIndex = null, GridPosition? otherPosIndex = null);
     void DestroyMatches();
 }
 

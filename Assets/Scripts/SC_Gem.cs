@@ -1,29 +1,28 @@
-﻿using System.Collections;
-using Cysharp.Threading.Tasks;
+﻿using Cysharp.Threading.Tasks;
 using UnityEngine;
 
-public class SC_Gem : MonoBehaviour, IPoolable
+public class SC_Gem : MonoBehaviour, IPoolable, IPiece
 {
     [HideInInspector]
-    public Vector2Int posIndex;
+    public GridPosition posIndex;
 
     private Vector2 firstTouchPosition;
     private Vector2 currentTouchPosition;
     private bool mousePressed;
     private bool swapTriggered = false;
     private float swipeAngle = 0;
-    private SC_Gem otherGem;
+    private IPiece otherGem;
 
-    public GlobalEnums.GemType type;
+    public GemType type;
     public bool isColorBomb = false;
     public bool isMatch = false;
-    private Vector2Int previousPos;
+    private GridPosition previousPos;
     public GameObject destroyEffect;
     public int scoreValue = 10;
 
     public int blastSize = 1;
     private IGameLogic scGameLogic;
-    private IGameBoard scBoardService;
+    private IGameBoard gameBoard;
     private Vector2 startPosition;
     private Vector2 previousTargetPos;
     private float moveStartTime;
@@ -33,6 +32,21 @@ public class SC_Gem : MonoBehaviour, IPoolable
     private bool isStopMovingReqiested = false;
     private const float POSITION_THRESHOLD = 0.01f;
 
+    public GemType Type => type;
+    public bool IsColorBomb => isColorBomb;
+    public int BlastSize => blastSize;
+    public bool IsMatch
+    {
+        get => isMatch;
+        set => isMatch = value;
+    }
+    public bool IsSwapMovement 
+    {
+        get => isSwapMovement;
+        set => isSwapMovement = value;
+    }
+    public int ScoreValue => scoreValue;
+    public ref GridPosition Position => ref posIndex;
     public bool JustSpawned => justSpawned;
     public bool IsMoving => isMoving;
     
@@ -47,19 +61,19 @@ public class SC_Gem : MonoBehaviour, IPoolable
         justSpawned = false;
         
         Vector2 currentPos = transform.position;
-        Vector2 targetPos = new Vector2(posIndex.x, posIndex.y);
+        Vector2 targetPos = new Vector2(posIndex.X, posIndex.Y);
         float sqrDistance = (currentPos - targetPos).sqrMagnitude;
         
         if (isMoving && sqrDistance <= POSITION_THRESHOLD)
         {
-            if (posIndex.y > 0 && scBoardService.GetGem(posIndex.x, posIndex.y - 1) == null)
+            if (posIndex.Y > 0 && gameBoard.GetGem(posIndex.X, posIndex.Y - 1) == null)
             {
-                scBoardService.SetGem(posIndex.x, posIndex.y - 1, this);
-                scBoardService.SetGem(posIndex.x, posIndex.y, null);
-                posIndex.y--;
+                gameBoard.SetGem(posIndex.X, posIndex.Y - 1, this);
+                gameBoard.SetGem(posIndex.X, posIndex.Y, null);
+                posIndex.Y--;
                 
                 currentPos = transform.position;
-                targetPos = new Vector2(posIndex.x, posIndex.y);
+                targetPos = new Vector2(posIndex.X, posIndex.Y);
                 sqrDistance = (currentPos - targetPos).sqrMagnitude;
             }
             
@@ -91,7 +105,7 @@ public class SC_Gem : MonoBehaviour, IPoolable
             }
             else
             {
-                var multiplier = Settings.gemDropSpeedCurve.Evaluate(distance / scBoardService.Height);
+                var multiplier = Settings.gemDropSpeedCurve.Evaluate(distance / gameBoard.Height);
                 speed = Settings.gemSpeed * multiplier * multiplier;
                 t = Mathf.Clamp01((elapsed * speed) / Mathf.Max(distance, 0.1f));
             }
@@ -115,12 +129,12 @@ public class SC_Gem : MonoBehaviour, IPoolable
     {
         if (isMoving)
         {
-            transform.position = new Vector3(posIndex.x, posIndex.y, 0);
-            scBoardService.SetGem(posIndex, this);
+            transform.position = new Vector3(posIndex.X, posIndex.Y, 0);
+            gameBoard.SetGem(posIndex, this);
             isMoving = false;
             isSwapMovement = false;
             isStopMovingReqiested = false;
-            previousTargetPos = new Vector2(posIndex.x, posIndex.y);
+            previousTargetPos = new Vector2(posIndex.X, posIndex.Y);
         }
     }
 
@@ -131,7 +145,7 @@ public class SC_Gem : MonoBehaviour, IPoolable
             if (Input.GetMouseButton(0))
             {
                 currentTouchPosition = Camera.main.ScreenToWorldPoint(Input.mousePosition);
-                if (!swapTriggered && scGameLogic.CurrentState == GlobalEnums.GameState.move)
+                if (!swapTriggered && scGameLogic.CurrentState == GameState.move)
                 {
                     CheckForBorderCross();
                 }
@@ -144,15 +158,15 @@ public class SC_Gem : MonoBehaviour, IPoolable
         }
     }
 
-    public void SetupGem(IGameLogic _ScGameLogic, IGameBoard _BoardService, Vector2Int _Position)
+    public void SetupGem(IGameLogic _ScGameLogic, IGameBoard _BoardService, GridPosition _Position)
     {
         posIndex = _Position;
         scGameLogic = _ScGameLogic;
-        scBoardService = _BoardService;
+        gameBoard = _BoardService;
         isMoving = false;
         isSwapMovement = false;
         isStopMovingReqiested = false;
-        previousTargetPos = new Vector2(posIndex.x, posIndex.y);
+        previousTargetPos = new Vector2(posIndex.X, posIndex.Y);
         justSpawned = true;
     }
 
@@ -174,7 +188,7 @@ public class SC_Gem : MonoBehaviour, IPoolable
         swapTriggered = false;
         otherGem = null;
         swipeAngle = 0;
-        previousPos = Vector2Int.zero;
+        previousPos = GridPosition.zero;
         isMoving = false;
         isSwapMovement = false;
         isStopMovingReqiested = false;
@@ -183,7 +197,7 @@ public class SC_Gem : MonoBehaviour, IPoolable
 
     private void OnMouseDown()
     {
-        if (scGameLogic.CurrentState == GlobalEnums.GameState.move)
+        if (scGameLogic.CurrentState == GameState.move)
         {
             firstTouchPosition = Camera.main.ScreenToWorldPoint(Input.mousePosition);
             currentTouchPosition = firstTouchPosition;
@@ -210,63 +224,62 @@ public class SC_Gem : MonoBehaviour, IPoolable
         previousPos = posIndex;
         isSwapMovement = true;
 
-        if (swipeAngle < 45 && swipeAngle > -45 && posIndex.x < Settings.rowsSize - 1)
+        if (swipeAngle < 45 && swipeAngle > -45 && posIndex.X < Settings.rowsSize - 1)
         {
-            otherGem = scBoardService.GetGem(posIndex.x + 1, posIndex.y);
-            otherGem.posIndex.x--;
-            posIndex.x++;
-            if (otherGem != null) otherGem.isSwapMovement = true;
+            otherGem = gameBoard.GetGem(posIndex.X + 1, posIndex.Y);
+            otherGem.Position.X--;
+            posIndex.X++;
+            if (otherGem != null) otherGem.IsSwapMovement = true;
+        }
+        else if (swipeAngle > 45 && swipeAngle <= 135 && posIndex.Y < Settings.colsSize - 1)
+        {
+            otherGem = gameBoard.GetGem(posIndex.X, posIndex.Y + 1);
+            otherGem.Position.Y--;
+            posIndex.Y++;
+            if (otherGem != null) otherGem.IsSwapMovement = true;
+        }
+        else if (swipeAngle < -45 && swipeAngle >= -135 && posIndex.Y > 0)
+        {
+            otherGem = gameBoard.GetGem(posIndex.X, posIndex.Y - 1);
+            otherGem.Position.Y++;
+            posIndex.Y--;
+            if (otherGem != null) otherGem.IsSwapMovement = true;
+        }
+        else if ((swipeAngle > 135 || swipeAngle < -135) && posIndex.X > 0)
+        {
+            otherGem = gameBoard.GetGem(posIndex.X - 1, posIndex.Y);
+            otherGem.Position.X++;
+            posIndex.X--;
+            if (otherGem != null) otherGem.IsSwapMovement = true;
+        }
 
-        }
-        else if (swipeAngle > 45 && swipeAngle <= 135 && posIndex.y < Settings.colsSize - 1)
-        {
-            otherGem = scBoardService.GetGem(posIndex.x, posIndex.y + 1);
-            otherGem.posIndex.y--;
-            posIndex.y++;
-            if (otherGem != null) otherGem.isSwapMovement = true;
-        }
-        else if (swipeAngle < -45 && swipeAngle >= -135 && posIndex.y > 0)
-        {
-            otherGem = scBoardService.GetGem(posIndex.x, posIndex.y - 1);
-            otherGem.posIndex.y++;
-            posIndex.y--;
-            if (otherGem != null) otherGem.isSwapMovement = true;
-        }
-        else if ((swipeAngle > 135 || swipeAngle < -135) && posIndex.x > 0)
-        {
-            otherGem = scBoardService.GetGem(posIndex.x - 1, posIndex.y);
-            otherGem.posIndex.x++;
-            posIndex.x--;
-            if (otherGem != null) otherGem.isSwapMovement = true;
-        }
-
-        scBoardService.SetGem(posIndex, this);
-        scBoardService.SetGem(otherGem.posIndex, otherGem);
+        gameBoard.SetGem(posIndex, this);
+        gameBoard.SetGem(otherGem.Position, otherGem);
 
         CheckMoveCo().Forget();
     }
 
     public async UniTask CheckMoveCo()
     {
-        scGameLogic.SetState(GlobalEnums.GameState.wait);
+        scGameLogic.SetState(GameState.wait);
 
         await WaitForSwapCompletion();
-        scGameLogic.FindAllMatches(posIndex, otherGem.posIndex);
+        scGameLogic.FindAllMatches(posIndex, otherGem.Position);
 
         if (otherGem != null)
         {
-            if (isMatch == false && otherGem.isMatch == false)
+            if (isMatch == false && otherGem.IsMatch == false)
             {
-                otherGem.posIndex = posIndex;
+                otherGem.Position = posIndex;
                 posIndex = previousPos;
                 isSwapMovement = true;
-                otherGem.isSwapMovement = true;
+                otherGem.IsSwapMovement = true;
 
-                scBoardService.SetGem(posIndex, this);
-                scBoardService.SetGem(otherGem.posIndex, otherGem);
+                gameBoard.SetGem(posIndex, this);
+                gameBoard.SetGem(otherGem.Position, otherGem);
 
                 await WaitForSwapCompletion();
-                scGameLogic.SetState(GlobalEnums.GameState.move);
+                scGameLogic.SetState(GameState.move);
             }
             else
             {
@@ -277,10 +290,17 @@ public class SC_Gem : MonoBehaviour, IPoolable
 
     private async UniTask WaitForSwapCompletion()
     {
-        while (Vector2.Distance(transform.position, posIndex) > POSITION_THRESHOLD || 
-               (otherGem != null && Vector2.Distance(otherGem.transform.position, otherGem.posIndex) > POSITION_THRESHOLD))
+        var other = otherGem as SC_Gem;
+        
+        while (Vector2.Distance(transform.position, posIndex.ToVector2()) > POSITION_THRESHOLD || 
+               (otherGem != null && Vector2.Distance(other.transform.position, otherGem.Position.ToVector2()) > POSITION_THRESHOLD))
         {
             await UniTask.Yield();
         }
+    }
+    
+    public void RunDestroyEffect()
+    {
+        Instantiate(destroyEffect, posIndex.ToVector3(), Quaternion.identity);
     }
 }

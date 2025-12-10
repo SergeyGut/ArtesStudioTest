@@ -1,23 +1,18 @@
 ﻿using System.Collections.Generic;
-using UnityEngine;
-using UnityEngine.Pool;
 
 public class GameBoard : IGameBoard
 {
     #region Variables
 
     private readonly int height = 0;
-    public int Height => height;
-
     private readonly int width = 0;
-    public int Width => width;
-
-    private SC_Gem[,] allGems;
-
-    private readonly HashSet<SC_Gem> explosions = new();
-    public HashSet<SC_Gem> Explosions => explosions;
-
+    private readonly HashSet<IPiece> explosions = new();
     private readonly List<MatchInfo> matchInfoMap = new();
+    private readonly IPiece[,] allGems;
+    
+    public int Width => width;
+    public int Height => height;
+    public HashSet<IPiece> Explosions => explosions;
     public List<MatchInfo> MatchInfoMap => matchInfoMap;
     #endregion
 
@@ -25,10 +20,10 @@ public class GameBoard : IGameBoard
     {
         height = _Height;
         width = _Width;
-        allGems = new SC_Gem[width, height];
+        allGems = new IPiece[width, height];
     }
     
-    public int GetMatchCountAt(Vector2Int _PositionToCheck, SC_Gem _GemToCheck)
+    public int GetMatchCountAt(GridPosition _PositionToCheck, IPiece _GemToCheck)
     {
         int horizontalMatches = CountHorizontalMatch(_PositionToCheck, _GemToCheck);
         int verticalMatches = CountVerticalMatch(_PositionToCheck, _GemToCheck);
@@ -36,29 +31,29 @@ public class GameBoard : IGameBoard
                (verticalMatches >= 2 ? verticalMatches : 0);
     }
     
-    private int CountHorizontalMatch(Vector2Int pos, SC_Gem gemToCheck)
+    private int CountHorizontalMatch(GridPosition pos, IPiece gemToCheck)
     {
-        int leftCount = CountMatchingGemsInDirection(pos, -1, 0, gemToCheck.type);
-        int rightCount = CountMatchingGemsInDirection(pos, 1, 0, gemToCheck.type);
+        int leftCount = CountMatchingGemsInDirection(pos, -1, 0, gemToCheck.Type);
+        int rightCount = CountMatchingGemsInDirection(pos, 1, 0, gemToCheck.Type);
         
         return leftCount + rightCount;
     }
 
-    private int CountVerticalMatch(Vector2Int pos, SC_Gem gemToCheck)
+    private int CountVerticalMatch(GridPosition pos, IPiece gemToCheck)
     {
-        int belowCount = CountMatchingGemsInDirection(pos, 0, -1, gemToCheck.type);
-        int aboveCount = CountMatchingGemsInDirection(pos, 0, 1, gemToCheck.type);
+        int belowCount = CountMatchingGemsInDirection(pos, 0, -1, gemToCheck.Type);
+        int aboveCount = CountMatchingGemsInDirection(pos, 0, 1, gemToCheck.Type);
         
         return belowCount + aboveCount;
     }
 
-    private int CountMatchingGemsInDirection(Vector2Int startPos, int deltaX, int deltaY, GlobalEnums.GemType typeToMatch)
+    private int CountMatchingGemsInDirection(GridPosition startPos, int deltaX, int deltaY, GemType typeToMatch)
     {
         int count = 0;
-        int x = startPos.x + deltaX;
-        int y = startPos.y + deltaY;
+        int x = startPos.X + deltaX;
+        int y = startPos.Y + deltaY;
 
-        while (IsValidPosition(x, y) && allGems[x, y] != null && allGems[x, y].type == typeToMatch)
+        while (IsValidPosition(x, y) && allGems[x, y] != null && allGems[x, y].Type == typeToMatch)
         {
             count++;
             x += deltaX;
@@ -73,43 +68,43 @@ public class GameBoard : IGameBoard
         return x >= 0 && x < width && y >= 0 && y < height;
     }
 
-    public void SetGem(int _X, int _Y, SC_Gem _Gem)
+    public void SetGem(int _X, int _Y, IPiece _Gem)
     {
         allGems[_X, _Y] = _Gem;
     }
-    public SC_Gem GetGem(int _X,int _Y)
+    public IPiece GetGem(int _X,int _Y)
     {
        return allGems[_X, _Y];
     }
 
-    public void SetGem(Vector2Int position, SC_Gem gem)
+    public void SetGem(GridPosition position, IPiece gem)
     {
-        SetGem(position.x, position.y, gem);
+        SetGem(position.X, position.Y, gem);
     }
 
-    public SC_Gem GetGem(Vector2Int position)
+    public IPiece GetGem(GridPosition position)
     {
-        return GetGem(position.x, position.y);
+        return GetGem(position.X, position.Y);
     }
 
-    public void FindAllMatches(Vector2Int? userActionPos = null)
+    public void FindAllMatches(GridPosition? userActionPos = null)
     {
         explosions.Clear();
         foreach (var matchInfo in matchInfoMap)
         {
             if (matchInfo.MatchedGems != null)
-                HashSetPool<SC_Gem>.Release(matchInfo.MatchedGems);
+                HashSetPool<IPiece>.Release(matchInfo.MatchedGems);
         }
         matchInfoMap.Clear();
 
         for (int x = 0; x < width; x++)
             for (int y = 0; y < height; y++)
             {
-                SC_Gem currentGem = allGems[x, y];
+                IPiece currentGem = allGems[x, y];
                 if (currentGem != null)
                 {
-                    HashSet<SC_Gem> horizontalMatches = CheckMatchesInDirection(x, y, 1, 0);
-                    HashSet<SC_Gem> verticalMatches = CheckMatchesInDirection(x, y, 0, 1);
+                    HashSet<IPiece> horizontalMatches = CheckMatchesInDirection(x, y, 1, 0);
+                    HashSet<IPiece> verticalMatches = CheckMatchesInDirection(x, y, 0, 1);
 
                     if (horizontalMatches != null)
                     {
@@ -140,7 +135,7 @@ public class GameBoard : IGameBoard
                 matchInfoMap[i].MatchedGems.UnionWith(newMatch.MatchedGems);
                 matchInfoMap[i].UserActionPos ??= newMatch.UserActionPos;
                 if (newMatch.MatchedGems != matchInfoMap[i].MatchedGems)
-                    HashSetPool<SC_Gem>.Release(newMatch.MatchedGems);
+                    HashSetPool<IPiece>.Release(newMatch.MatchedGems);
                 return;
             }
         }
@@ -148,41 +143,41 @@ public class GameBoard : IGameBoard
         matchInfoMap.Add(newMatch);
     }
 
-    private HashSet<SC_Gem> CheckMatchesInDirection(int x, int y, int deltaX, int deltaY)
+    private HashSet<IPiece> CheckMatchesInDirection(int x, int y, int deltaX, int deltaY)
     {
-        SC_Gem currentGem = allGems[x, y];
+        IPiece currentGem = allGems[x, y];
         
-        if (!currentGem)
+        if (currentGem == null)
             return null;
 
-        var matches = HashSetPool<SC_Gem>.Get();
+        var matches = HashSetPool<IPiece>.Get();
         matches.Add(currentGem);
 
-        foreach (var gem in GetMatchingGemsInDirection(x, y, deltaX, deltaY, currentGem.type))
+        foreach (var gem in GetMatchingGemsInDirection(x, y, deltaX, deltaY, currentGem.Type))
         {
             matches.Add(gem);
         }
 
-        foreach (var gem in GetMatchingGemsInDirection(x, y, -deltaX, -deltaY, currentGem.type))
+        foreach (var gem in GetMatchingGemsInDirection(x, y, -deltaX, -deltaY, currentGem.Type))
         {
             matches.Add(gem);
         }
 
         if (matches.Count < 3)
         {
-            HashSetPool<SC_Gem>.Release(matches);
+            HashSetPool<IPiece>.Release(matches);
             return null;
         }
 
         return matches;
     }
 
-    private IEnumerable<SC_Gem> GetMatchingGemsInDirection(int startX, int startY, int deltaX, int deltaY, GlobalEnums.GemType typeToMatch)
+    private IEnumerable<IPiece> GetMatchingGemsInDirection(int startX, int startY, int deltaX, int deltaY, GemType typeToMatch)
     {
         int x = startX + deltaX;
         int y = startY + deltaY;
 
-        while (IsValidPosition(x, y) && allGems[x, y] && allGems[x, y].type == typeToMatch)
+        while (IsValidPosition(x, y) && allGems[x, y] != null && allGems[x, y].Type == typeToMatch)
         {
             yield return allGems[x, y];
             x += deltaX;
@@ -190,45 +185,45 @@ public class GameBoard : IGameBoard
         }
     }
 
-    public void CheckForBombs()
+    private void CheckForBombs()
     {
         foreach (var matchInfo in MatchInfoMap)
         foreach (var gem in matchInfo.MatchedGems)
         {
-            int x = gem.posIndex.x;
-            int y = gem.posIndex.y;
+            int x = gem.Position.X;
+            int y = gem.Position.Y;
 
-            if (gem.posIndex.x > 0)
+            if (gem.Position.X > 0)
             {
-                if (allGems[x - 1, y] != null && allGems[x - 1, y].type == GlobalEnums.GemType.bomb)
-                    MarkBombArea(new Vector2Int(x - 1, y), allGems[x - 1, y].blastSize);
+                if (allGems[x - 1, y] != null && allGems[x - 1, y].Type == GemType.bomb)
+                    MarkBombArea(new GridPosition(x - 1, y), allGems[x - 1, y].BlastSize);
             }
 
-            if (gem.posIndex.x + 1 < width)
+            if (gem.Position.X + 1 < width)
             {
-                if (allGems[x + 1, y] != null && allGems[x + 1, y].type == GlobalEnums.GemType.bomb)
-                    MarkBombArea(new Vector2Int(x + 1, y), allGems[x + 1, y].blastSize);
+                if (allGems[x + 1, y] != null && allGems[x + 1, y].Type == GemType.bomb)
+                    MarkBombArea(new GridPosition(x + 1, y), allGems[x + 1, y].BlastSize);
             }
 
-            if (gem.posIndex.y > 0)
+            if (gem.Position.Y > 0)
             {
-                if (allGems[x, y - 1] != null && allGems[x, y - 1].type == GlobalEnums.GemType.bomb)
-                    MarkBombArea(new Vector2Int(x, y - 1), allGems[x, y - 1].blastSize);
+                if (allGems[x, y - 1] != null && allGems[x, y - 1].Type == GemType.bomb)
+                    MarkBombArea(new GridPosition(x, y - 1), allGems[x, y - 1].BlastSize);
             }
 
-            if (gem.posIndex.y + 1 < height)
+            if (gem.Position.Y + 1 < height)
             {
-                if (allGems[x, y + 1] != null && allGems[x, y + 1].type == GlobalEnums.GemType.bomb)
-                    MarkBombArea(new Vector2Int(x, y + 1), allGems[x, y + 1].blastSize);
+                if (allGems[x, y + 1] != null && allGems[x, y + 1].Type == GemType.bomb)
+                    MarkBombArea(new GridPosition(x, y + 1), allGems[x, y + 1].BlastSize);
             }
         }
     }
 
-    public void MarkBombArea(Vector2Int bombPos, int _BlastSize)
+    private void MarkBombArea(GridPosition bombPos, int _BlastSize)
     {
-        for (int x = bombPos.x - _BlastSize; x <= bombPos.x + _BlastSize; x++)
+        for (int x = bombPos.X - _BlastSize; x <= bombPos.X + _BlastSize; x++)
         {
-            for (int y = bombPos.y - _BlastSize; y <= bombPos.y + _BlastSize; y++)
+            for (int y = bombPos.Y - _BlastSize; y <= bombPos.Y + _BlastSize; y++)
             {
                 if (x >= 0 && x < width && y >= 0 && y < height)
                 {
@@ -243,13 +238,13 @@ public class GameBoard : IGameBoard
             }
         }
     }
-    
-    public void MarkColorBombArea(Vector2Int bombPos, int _BlastSize)
+
+    private void MarkColorBombArea(GridPosition bombPos, int _BlastSize)
     {
         int sqrBlastSize = _BlastSize * _BlastSize;
-        for (int x = bombPos.x - _BlastSize; x <= bombPos.x + _BlastSize; x++)
+        for (int x = bombPos.X - _BlastSize; x <= bombPos.X + _BlastSize; x++)
         {
-            for (int y = bombPos.y - _BlastSize; y <= bombPos.y + _BlastSize; y++)
+            for (int y = bombPos.Y - _BlastSize; y <= bombPos.Y + _BlastSize; y++)
             {
                 if (x >= 0 && x < width && y >= 0 && y < height)
                 {
@@ -257,8 +252,8 @@ public class GameBoard : IGameBoard
 
                     if (gem != null)
                     {
-                        int dx = x - bombPos.x;
-                        int dy = y - bombPos.y;
+                        int dx = x - bombPos.X;
+                        int dy = y - bombPos.Y;
                         int sqrDistance = dx * dx + dy * dy;
                         if (sqrDistance > sqrBlastSize)
                         {
@@ -273,21 +268,21 @@ public class GameBoard : IGameBoard
         }
     }
     
-    private void MarkGemAsMatched(SC_Gem gem)
+    private void MarkGemAsMatched(IPiece gem)
     {
-        if (gem != null && gem.isMatch == false)
+        if (gem != null && gem.IsMatch == false)
         {
-            gem.isMatch = true;
+            gem.IsMatch = true;
             
-            if (gem.isColorBomb)
+            if (gem.IsColorBomb)
             {
-                MarkColorBombArea(gem.posIndex, gem.blastSize);
+                MarkColorBombArea(gem.Position, gem.BlastSize);
                 return;
             }
 
-            if (gem.type == GlobalEnums.GemType.bomb)
+            if (gem.Type == GemType.bomb)
             {
-                MarkBombArea(gem.posIndex, gem.blastSize);
+                MarkBombArea(gem.Position, gem.BlastSize);
             }
         }
     }

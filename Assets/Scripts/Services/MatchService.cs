@@ -1,4 +1,3 @@
-using UnityEngine;
 
 public class MatchService : IMatchService
 {
@@ -11,15 +10,15 @@ public class MatchService : IMatchService
         this.settings = settings;
     }
     
-    public PooledDictionary<Vector2Int, GlobalEnums.GemType> CollectBombCreationPositions()
+    public PooledDictionary<GridPosition, GemType> CollectBombCreationPositions()
     {
-        var bombCreationPositions = PooledDictionary<Vector2Int, GlobalEnums.GemType>.Get();
+        var bombCreationPositions = PooledDictionary<GridPosition, GemType>.Get();
         
         foreach (var matchInfo in gameBoard.MatchInfoMap)
         {
             if (matchInfo.MatchedGems.Count >= settings.minMatchForBomb)
             {
-                SC_Gem firstGem = null;
+                IPiece firstGem = null;
                 foreach (var gem in matchInfo.MatchedGems)
                 {
                     firstGem = gem;
@@ -27,7 +26,7 @@ public class MatchService : IMatchService
                 }
                 if (firstGem != null)
                 {
-                    bombCreationPositions.Value.TryAdd(matchInfo.UserActionPos ?? firstGem.posIndex, firstGem.type);
+                    bombCreationPositions.Value.TryAdd(matchInfo.UserActionPos ?? firstGem.Position, firstGem.Type);
                 }
             }
         }
@@ -37,12 +36,12 @@ public class MatchService : IMatchService
     
     public void CollectAndDestroyMatchedGems(IDestroyService destroyService)
     {
-        using var matchedGems = PooledList<SC_Gem>.Get();
+        using var matchedGems = PooledList<IPiece>.Get();
         foreach (var matchInfo in gameBoard.MatchInfoMap)
         {
             foreach (var gem in matchInfo.MatchedGems)
             {
-                if (gem && !gem.isColorBomb && gem.type != GlobalEnums.GemType.bomb)
+                if (gem != null && !gem.IsColorBomb && gem.Type != GemType.bomb)
                 {
                     matchedGems.Value.Add(gem);
                 }
@@ -51,12 +50,12 @@ public class MatchService : IMatchService
         destroyService.DestroyGems(matchedGems.Value);
     }
     
-    public PooledList<SC_Gem> CollectNonBombExplosions(PooledHashSet<SC_Gem> newlyCreatedBombs)
+    public PooledList<IPiece> CollectNonBombExplosions(PooledHashSet<IPiece> newlyCreatedBombs)
     {
-        var nonBombExplosions = PooledList<SC_Gem>.Get();
+        var nonBombExplosions = PooledList<IPiece>.Get();
         foreach (var gem in gameBoard.Explosions)
         {
-            if (gem && !gem.isColorBomb && gem.type != GlobalEnums.GemType.bomb && !newlyCreatedBombs.Value.Contains(gem))
+            if (gem != null && !gem.IsColorBomb && gem.Type != GemType.bomb && !newlyCreatedBombs.Value.Contains(gem))
             {
                 nonBombExplosions.Value.Add(gem);
             }
@@ -64,12 +63,12 @@ public class MatchService : IMatchService
         return nonBombExplosions;
     }
     
-    public PooledList<SC_Gem> CollectBombExplosions(PooledHashSet<SC_Gem> newlyCreatedBombs)
+    public PooledList<IPiece> CollectBombExplosions(PooledHashSet<IPiece> newlyCreatedBombs)
     {
-        var bombExplosions = PooledList<SC_Gem>.Get();
+        var bombExplosions = PooledList<IPiece>.Get();
         foreach (var gem in gameBoard.Explosions)
         {
-            if (gem && (gem.isColorBomb || gem.type == GlobalEnums.GemType.bomb) && !newlyCreatedBombs.Value.Contains(gem))
+            if (gem != null && (gem.IsColorBomb || gem.Type == GemType.bomb) && !newlyCreatedBombs.Value.Contains(gem))
             {
                 bombExplosions.Value.Add(gem);
             }
