@@ -1,6 +1,6 @@
 using UnityEngine;
 
-public class GemPool : IGemPool
+public class GemPool : IGemPool<IPiece>
 {
     private readonly IObjectPool<SC_Gem> pool;
     private readonly Transform parentTransform;
@@ -14,8 +14,11 @@ public class GemPool : IGemPool
         pool = new GenericObjectPool<SC_Gem>(parent);
     }
 
-    public SC_Gem SpawnGem(SC_Gem prefab, GridPosition position, IGameLogic gameLogic, IGameBoard gameBoard, float dropHeight = 0f)
+    public IPiece SpawnGem(IPiece item, GridPosition position, IGameLogic gameLogic, IGameBoard gameBoard, float dropHeight = 0f)
     {
+        if (item is not SC_Gem prefab)
+            return null;
+
         SC_Gem gem = pool.Get(prefab);
         
         gem.transform.position = new Vector3(position.X, position.Y + dropHeight, 0f);
@@ -26,9 +29,9 @@ public class GemPool : IGemPool
         return gem;
     }
 
-    public void ReturnGem(SC_Gem gem)
+    public void ReturnGem(IPiece item)
     {
-        if (gem != null)
+        if (item is SC_Gem gem)
             pool.Return(gem);
     }
 

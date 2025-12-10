@@ -1,32 +1,34 @@
-using UnityEngine;
+using System;
 
 public class SpawnService : ISpawnService
 {
     private readonly IGameBoard gameBoard;
-    private readonly IGemPool gemPool;
-    private readonly SC_GameVariables settings;
+    private readonly IGemPool<IPiece> gemPool;
+    private readonly ISettings settings;
+    private readonly Random random = new();
     
-    public SpawnService(IGameBoard gameBoard, IGemPool gemPool, SC_GameVariables settings)
+    public SpawnService(IGameBoard gameBoard, IGemPool<IPiece> gemPool, ISettings settings)
     {
         this.gameBoard = gameBoard;
         this.gemPool = gemPool;
         this.settings = settings;
     }
     
-    public SC_Gem SelectNonMatchingGem(GridPosition position)
+    public IPiece SelectNonMatchingGem(GridPosition position)
     {
-        using var validGems = PooledList<SC_Gem>.Get();
+        using var validGems = PooledList<IPiece>.Get();
         using var matchCounts = PooledList<int>.Get();
         int lowestMatchCount = int.MaxValue;
+        var gems = settings.Gems;
         
-        for (int i = 0; i < settings.gems.Length; i++)
+        for (int i = 0; i < gems.Count; i++)
         {
-            int matchCount = gameBoard.GetMatchCountAt(position, settings.gems[i]);
+            int matchCount = gameBoard.GetMatchCountAt(position, gems[i]);
             matchCounts.Value.Add(matchCount);
             
             if (matchCount == 0)
             {
-                validGems.Value.Add(settings.gems[i]);
+                validGems.Value.Add(gems[i]);
             }
             else if (matchCount < lowestMatchCount)
             {
@@ -36,27 +38,27 @@ public class SpawnService : ISpawnService
         
         if (validGems.Value.Count > 0)
         {
-            return validGems.Value[Random.Range(0, validGems.Value.Count)];
+            return validGems.Value[random.Next(0, validGems.Value.Count)];
         }
         
         validGems.Value.Clear();
-        for (int i = 0; i < settings.gems.Length; i++)
+        for (int i = 0; i < gems.Count; i++)
         {
             if (matchCounts.Value[i] == lowestMatchCount)
             {
-                validGems.Value.Add(settings.gems[i]);
+                validGems.Value.Add(gems[i]);
             }
         }
         
-        return validGems.Value[Random.Range(0, validGems.Value.Count)];
+        return validGems.Value[random.Next(0, validGems.Value.Count)];
     }
 
-    public void SpawnGem(GridPosition position, SC_Gem gemToSpawn, IGameLogic gameLogic, IGameBoard gameBoard)
+    public void SpawnGem(GridPosition position, IPiece gemToSpawn, IGameLogic gameLogic, IGameBoard gameBoard)
     {
-        if (Random.Range(0, 100f) < settings.bombChance)
-            gemToSpawn = settings.bomb;
+        if (random.Next(0, 100) < settings.BombChance)
+            gemToSpawn = settings.Bomb;
 
-        SC_Gem gem = gemPool.SpawnGem(gemToSpawn, position, gameLogic, gameBoard, settings.dropHeight);
+        var gem = gemPool.SpawnGem(gemToSpawn, position, gameLogic, gameBoard, settings.DropHeight);
         gameBoard.SetGem(position, gem);
     }
     
@@ -67,7 +69,7 @@ public class SpawnService : ISpawnService
         
         if (topGem == null)
         {
-            SC_Gem gemToSpawn = SelectNonMatchingGem(new GridPosition(x, topY));
+            var gemToSpawn = SelectNonMatchingGem(new GridPosition(x, topY));
             SpawnGem(new GridPosition(x, topY), gemToSpawn, gameLogic, gameBoard);
         }
     }

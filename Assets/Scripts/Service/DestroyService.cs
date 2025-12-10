@@ -1,13 +1,12 @@
 using System.Collections.Generic;
-using UnityEngine;
 
 public class DestroyService : IDestroyService
 {
     private readonly IGameBoard gameBoard;
-    private readonly IGemPool gemPool;
+    private readonly IGemPool<IPiece> gemPool;
     private readonly IScoreService scoreService;
     
-    public DestroyService(IGameBoard gameBoard, IGemPool gemPool, IScoreService scoreService)
+    public DestroyService(IGameBoard gameBoard, IGemPool<IPiece> gemPool, IScoreService scoreService)
     {
         this.gameBoard = gameBoard;
         this.gemPool = gemPool;
@@ -32,7 +31,7 @@ public class DestroyService : IDestroyService
         {
             var position = gem.Position;
             gem.RunDestroyEffect();
-            gemPool.ReturnGem(gem as SC_Gem);
+            gemPool.ReturnGem(gem);
             
             if (gameBoard.GetGem(position) == gem)
             {

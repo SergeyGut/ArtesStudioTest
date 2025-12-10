@@ -14,7 +14,7 @@ public class PoolDebugger : MonoBehaviour
     private int lastGemAvailableCount;
     private int lastWaitForSecondsCacheSize;
     
-    private IGemPool gemPool;
+    private IGemPool<IPiece> gemPool;
     private SC_GameLogic gameLogic;
     
     private void Start()
@@ -30,7 +30,7 @@ public class PoolDebugger : MonoBehaviour
             System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
         if (gemPoolField != null)
         {
-            gemPool = gemPoolField.GetValue(gameLogic) as GemPool;
+            gemPool = gemPoolField.GetValue(gameLogic) as IGemPool<IPiece>;
         }
         
         if (gemPool == null)

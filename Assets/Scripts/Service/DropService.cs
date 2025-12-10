@@ -1,9 +1,9 @@
 
-public class BoardService : IBoardService
+public class DropService : IDropService
 {
     private readonly IGameBoard gameBoard;
     
-    public BoardService(IGameBoard gameBoard)
+    public DropService(IGameBoard gameBoard)
     {
         this.gameBoard = gameBoard;
     }

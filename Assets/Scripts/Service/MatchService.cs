@@ -2,9 +2,9 @@
 public class MatchService : IMatchService
 {
     private readonly IGameBoard gameBoard;
-    private readonly SC_GameVariables settings;
+    private readonly ISettings settings;
     
-    public MatchService(IGameBoard gameBoard, SC_GameVariables settings)
+    public MatchService(IGameBoard gameBoard, ISettings settings)
     {
         this.gameBoard = gameBoard;
         this.settings = settings;
@@ -16,7 +16,7 @@ public class MatchService : IMatchService
         
         foreach (var matchInfo in gameBoard.MatchInfoMap)
         {
-            if (matchInfo.MatchedGems.Count >= settings.minMatchForBomb)
+            if (matchInfo.MatchedGems.Count >= settings.MinMatchForBomb)
             {
                 IPiece firstGem = null;
                 foreach (var gem in matchInfo.MatchedGems)

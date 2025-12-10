@@ -1,5 +1,5 @@
 
-public interface IBoardService
+public interface IDropService
 {
     bool DropSingleX(int x);
 }

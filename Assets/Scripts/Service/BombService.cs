@@ -4,10 +4,10 @@ public class BombService : IBombService
 {
     private readonly IGameBoard gameBoard;
     private readonly IGameLogic gameLogic;
-    private readonly IGemPool gemPool;
-    private readonly SC_GameVariables settings;
+    private readonly IGemPool<IPiece> gemPool;
+    private readonly ISettings settings;
     
-    public BombService(IGameBoard gameBoard, IGameLogic gameLogic, IGemPool gemPool, SC_GameVariables settings)
+    public BombService(IGameBoard gameBoard, IGameLogic gameLogic, IGemPool<IPiece> gemPool, ISettings settings)
     {
         this.gameLogic = gameLogic;
         this.gameBoard = gameBoard;
@@ -21,7 +21,6 @@ public class BombService : IBombService
         {
             var bombPrefab = GetBombPrefabForType(type);
             var newBomb = gemPool.SpawnGem(bombPrefab, pos, gameLogic, gameBoard);
-            newBomb.transform.position = pos.ToVector3();
             gameBoard.SetGem(pos, newBomb);
             newlyCreatedBombs.Value.Add(newBomb);
             
@@ -29,11 +28,11 @@ public class BombService : IBombService
         }
     }
     
-    private SC_Gem GetBombPrefabForType(GemType type)
+    private IPiece GetBombPrefabForType(GemType type)
     {
-        foreach (SC_Gem bomb in settings.gemBombs)
+        foreach (var bomb in settings.GemBombs)
         {
-            if (bomb.type == type)
+            if (bomb.Type == type)
                 return bomb;
         }
         return null;

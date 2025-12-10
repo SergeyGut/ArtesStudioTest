@@ -15,24 +15,25 @@ public class SceneInstaller : MonoInstaller
         var gameLogic = FindObjectOfType<SC_GameLogic>();
         
         var gameBoard = new GameBoard(7, 7);
-        var gemPool = new GemPool(unityObjects["GemsHolder"].transform);
+        IGemPool<IPiece> gemPool = new GemPool(unityObjects["GemsHolder"].transform);
         
         var scoreService = new ScoreService();
         var destroyService = new DestroyService(gameBoard, gemPool, scoreService);
         var matchService = new MatchService(gameBoard, settings);
         var spawnService = new SpawnService(gameBoard, gemPool, settings);
         var bombService = new BombService(gameBoard, gameLogic, gemPool, settings);
-        var boardService = new BoardService(gameBoard);
+        var boardService = new DropService(gameBoard);
 
         Container.BindInstance(unityObjects).AsSingle();
+        Container.Bind<ISettings>().FromInstance(settings).AsSingle();
         Container.Bind<IGameLogic>().FromInstance(gameLogic).AsSingle();
         Container.Bind<IGameBoard>().FromInstance(gameBoard).AsSingle();
-        Container.Bind<IGemPool>().FromInstance(gemPool).AsSingle();
+        Container.Bind<IGemPool<IPiece>>().FromInstance(gemPool).AsSingle();
         Container.Bind<IMatchService>().FromInstance(matchService).AsSingle();
         Container.Bind<ISpawnService>().FromInstance(spawnService).AsSingle();
         Container.Bind<IDestroyService>().FromInstance(destroyService).AsSingle();
         Container.Bind<IScoreService>().FromInstance(scoreService).AsSingle();
         Container.Bind<IBombService>().FromInstance(bombService).AsSingle();
-        Container.Bind<IBoardService>().FromInstance(boardService).AsSingle();
+        Container.Bind<IDropService>().FromInstance(boardService).AsSingle();
     }
 }

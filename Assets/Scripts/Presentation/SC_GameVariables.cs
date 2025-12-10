@@ -1,6 +1,7 @@
-﻿using UnityEngine;
+﻿using System.Collections.Generic;
+using UnityEngine;
 
-public class SC_GameVariables : MonoBehaviour
+public class SC_GameVariables : MonoBehaviour, ISettings
 {
     public GameObject bgTilePrefabs;
     public SC_Gem bomb;
@@ -54,4 +55,11 @@ public class SC_GameVariables : MonoBehaviour
     }
 
     #endregion
+
+    public IReadOnlyList<IPiece> Gems => gems;
+    public float BombChance => bombChance;
+    public int DropHeight => dropHeight;
+    public IPiece Bomb => bomb;
+    public int MinMatchForBomb => minMatchForBomb;
+    public IReadOnlyList<IPiece> GemBombs => gemBombs;
 }

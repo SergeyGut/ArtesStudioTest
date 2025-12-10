@@ -14,26 +14,26 @@ public class SC_GameLogic : MonoBehaviour, IGameLogic
     private int lastDisplayedScoreInt = -1;
     
     private IGameBoard gameBoard;
-    private IGemPool gemPool;
+    private IGemPool<IPiece> gemPool;
     private IMatchService matchService;
     private ISpawnService spawnService;
     private IDestroyService destroyService;
     private IScoreService scoreService;
     private IBombService bombService;
-    private IBoardService boardService;
+    private IDropService dropService;
 
     public GameState CurrentState => currentState;
 
     [Inject]
     private void Construct(
         IGameBoard gameBoard,
-        IGemPool gemPool,
+        IGemPool<IPiece> gemPool,
         IMatchService matchService,
         ISpawnService spawnService,
         IDestroyService destroyService,
         IScoreService scoreService,
         IBombService bombService,
-        IBoardService boardService,
+        IDropService _DropService,
         Dictionary<string, GameObject> unityObjects)
     {
         this.gameBoard = gameBoard;
@@ -43,7 +43,7 @@ public class SC_GameLogic : MonoBehaviour, IGameLogic
         this.destroyService = destroyService;
         this.scoreService = scoreService;
         this.bombService = bombService;
-        this.boardService = boardService;
+        this.dropService = _DropService;
         this.unityObjects = unityObjects;
     }
     
@@ -90,7 +90,7 @@ public class SC_GameLogic : MonoBehaviour, IGameLogic
                 _bgTile.transform.SetParent(unityObjects["GemsHolder"].transform);
                 _bgTile.name = "BG Tile - " + x + ", " + y;
 
-                SC_Gem gemToSpawn = spawnService.SelectNonMatchingGem(new GridPosition(x, y));
+                var gemToSpawn = spawnService.SelectNonMatchingGem(new GridPosition(x, y));
                 spawnService.SpawnGem(new GridPosition(x, y), gemToSpawn, this, gameBoard);
             }
     }
@@ -184,7 +184,7 @@ public class SC_GameLogic : MonoBehaviour, IGameLogic
         while (hasActivity)
         {
             spawnService.SpawnTopX(x, this, gameBoard);
-            hasActivity = boardService.DropSingleX(x);
+            hasActivity = dropService.DropSingleX(x);
 
             if (hasActivity)
             {
@@ -210,7 +210,7 @@ public class SC_GameLogic : MonoBehaviour, IGameLogic
             }
         }
 
-        foreach (SC_Gem g in foundGems.Value)
+        foreach (var g in foundGems.Value)
             gemPool.ReturnGem(g);
     }
     
