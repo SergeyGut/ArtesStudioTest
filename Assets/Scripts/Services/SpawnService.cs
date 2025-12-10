@@ -60,18 +60,15 @@ public class SpawnService : ISpawnService
         gameBoard.SetGem(position, gem);
     }
     
-    public void SpawnTopRow(IGameLogic gameLogic, IGameBoard gameBoard)
+    public void SpawnTopX(int x, IGameLogic gameLogic, IGameBoard gameBoard)
     {
-        for (int x = 0; x < gameBoard.Width; x++)
+        int topY = gameBoard.Height - 1;
+        SC_Gem topGem = gameBoard.GetGem(x, topY);
+        
+        if (topGem == null)
         {
-            int topY = gameBoard.Height - 1;
-            SC_Gem topGem = gameBoard.GetGem(x, topY);
-            
-            if (topGem == null)
-            {
-                SC_Gem gemToSpawn = SelectNonMatchingGem(new Vector2Int(x, topY));
-                SpawnGem(new Vector2Int(x, topY), gemToSpawn, gameLogic, gameBoard);
-            }
+            SC_Gem gemToSpawn = SelectNonMatchingGem(new Vector2Int(x, topY));
+            SpawnGem(new Vector2Int(x, topY), gemToSpawn, gameLogic, gameBoard);
         }
     }
 }

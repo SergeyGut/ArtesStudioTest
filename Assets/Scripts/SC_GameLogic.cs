@@ -147,17 +147,19 @@ public class SC_GameLogic : MonoBehaviour, IGameLogic
     {
         await UniTask.WaitForSeconds(Settings.decreaseRowDelay);
 
-        bool hasActivity = true;
-        while (hasActivity)
+        using var decreaseTasks = PooledList<UniTask>.Get();
+        for (int x = 0; x < gameBoard.Width; x++)
         {
-            spawnService.SpawnTopRow(this, gameBoard);
-            hasActivity = boardService.DropSingleRow();
+            var task = DecreaseColumn(x);
+            decreaseTasks.Value.Add(task);
 
-            if (hasActivity)
+            if (!task.GetAwaiter().IsCompleted)
             {
-                await UniTask.WaitForSeconds(Settings.decreaseSingleRowDelay);
+                await UniTask.WaitForSeconds(Settings.decreaseSingleColumnDelay);
             }
         }
+
+        await UniTask.WhenAll(decreaseTasks.Value);
 
         CheckMisplacedGems();
         await UniTask.WaitForSeconds(Settings.findAllMatchesDelay);
@@ -174,6 +176,21 @@ public class SC_GameLogic : MonoBehaviour, IGameLogic
         }
     }
 
+    private async UniTask DecreaseColumn(int  x)
+    {
+        bool hasActivity = true;
+        while (hasActivity)
+        {
+            spawnService.SpawnTopX(x, this, gameBoard);
+            hasActivity = boardService.DropSingleX(x);
+
+            if (hasActivity)
+            {
+                await UniTask.WaitForSeconds(Settings.decreaseSingleRowDelay);
+            }
+        }
+    }
+    
     private void CheckMisplacedGems()
     {
         using var foundGems = PooledHashSet<SC_Gem>.Get();

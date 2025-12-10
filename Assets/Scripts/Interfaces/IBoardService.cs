@@ -1,5 +1,5 @@
 
 public interface IBoardService
 {
-    bool DropSingleRow();
+    bool DropSingleX(int x);
 }
