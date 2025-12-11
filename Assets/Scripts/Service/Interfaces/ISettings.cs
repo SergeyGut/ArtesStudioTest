@@ -1,6 +1,6 @@
 using System.Collections.Generic;
 
-public interface ISettings
+public interface ISettings : IBoardSettings
 {
     IReadOnlyList<IPiece> Gems { get; }
     IReadOnlyList<IPiece> GemBombs { get; }
@@ -20,8 +20,6 @@ public interface ISettings
     float ChangeStateDelay { get; }
     object TilePrefabs { get; }
     float GemSpeed { get; }
-    int RowsSize { get; }
-    int ColsSize { get; }
     float GemSwapEase(float t);
     float GemDropSpeedEase(float t);
 }

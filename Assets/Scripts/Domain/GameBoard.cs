@@ -2,8 +2,6 @@
 
 public class GameBoard : IGameBoard
 {
-    #region Variables
-
     private readonly int height = 0;
     private readonly int width = 0;
     private readonly HashSet<IPiece> explosions = new();
@@ -14,12 +12,11 @@ public class GameBoard : IGameBoard
     public int Height => height;
     public HashSet<IPiece> Explosions => explosions;
     public List<MatchInfo> MatchInfoMap => matchInfoMap;
-    #endregion
 
-    public GameBoard(int _Width, int _Height)
+    public GameBoard(IBoardSettings settings)
     {
-        height = _Height;
-        width = _Width;
+        height = settings.RowsSize;
+        width = settings.ColsSize;
         allGems = new IPiece[width, height];
     }
     

@@ -9,7 +9,7 @@ public class GameVariablesInstaller : ScriptableObjectInstaller<GameVariablesIns
     
     public override void InstallBindings()
     {
-        Container.Bind<ISettings>().FromInstance(gameVariables).AsSingle();
+        Container.BindInterfacesTo<SC_GameVariables>().FromInstance(gameVariables).AsSingle();
     }
 }
 

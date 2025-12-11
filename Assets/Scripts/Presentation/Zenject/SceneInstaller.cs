@@ -11,14 +11,12 @@ public class SceneInstaller : MonoInstaller
         foreach (GameObject g in obj)
             unityObjects.Add(g.name,g);
 
-        var settings = Container.Resolve<ISettings>();
-        var gameBoard = new GameBoard(settings.ColsSize, settings.RowsSize);
         IGemPool<IPiece> gemPool = new GemPool(unityObjects["GemsHolder"].transform, Container);
         
+        Container.Bind<IGameBoard>().To<GameBoard>().AsSingle();
         Container.Bind<IGameStateProvider>().To<GameStateProvider>().AsSingle();
         Container.Bind<IGameLogic>().To<GameLogic>().AsSingle();
         Container.BindInstance(unityObjects).AsSingle();
-        Container.Bind<IGameBoard>().FromInstance(gameBoard).AsSingle();
         Container.Bind<IGemPool<IPiece>>().FromInstance(gemPool).AsSingle();
         Container.Bind<IMatchService>().To<MatchService>().AsSingle();
         Container.Bind<ISpawnService>().To<SpawnService>().AsSingle();
