@@ -1,5 +1,6 @@
 ﻿using Cysharp.Threading.Tasks;
 using UnityEngine;
+using Zenject;
 
 public class SC_Gem : MonoBehaviour, IPoolable, IPiece
 {
@@ -9,20 +10,19 @@ public class SC_Gem : MonoBehaviour, IPoolable, IPiece
     private Vector2 firstTouchPosition;
     private Vector2 currentTouchPosition;
     private bool mousePressed;
-    private bool swapTriggered = false;
-    private float swipeAngle = 0;
+    private bool swapTriggered;
+    private float swipeAngle;
     private IPiece otherGem;
 
     public GemType type;
-    public bool isColorBomb = false;
-    public bool isMatch = false;
+    public bool isColorBomb;
+    public bool isMatch;
     private GridPosition previousPos;
     public GameObject destroyEffect;
     public int scoreValue = 10;
 
     public int blastSize = 1;
-    private IGameLogic scGameLogic;
-    private IGameBoard gameBoard;
+
     private Vector2 startPosition;
     private Vector2 previousTargetPos;
     private float moveStartTime;
@@ -31,6 +31,11 @@ public class SC_Gem : MonoBehaviour, IPoolable, IPiece
     private bool isSwapMovement = false;
     private bool isStopMovingReqiested = false;
     private const float POSITION_THRESHOLD = 0.01f;
+
+    private IGameStateProvider gameStateProvider;
+    private IGameLogic scGameLogic;
+    private IGameBoard gameBoard;
+    private ISettings settings;
 
     public GemType Type => type;
     public bool IsColorBomb => isColorBomb;
@@ -50,10 +55,17 @@ public class SC_Gem : MonoBehaviour, IPoolable, IPiece
     public bool JustSpawned => justSpawned;
     public bool IsMoving => isMoving;
     
-    private SC_GameVariables Settings
+    [Inject]
+    public void Construct(
+        IGameStateProvider gameStateProvider,
+        IGameLogic scGameLogic,
+        IGameBoard gameBoard,
+        ISettings settings)
     {
-        [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
-        get => SC_GameVariables.Instance;
+        this.gameStateProvider = gameStateProvider;
+        this.scGameLogic = scGameLogic;
+        this.gameBoard = gameBoard;
+        this.settings = settings;
     }
     
     public void Update()
@@ -96,17 +108,17 @@ public class SC_Gem : MonoBehaviour, IPoolable, IPiece
             float sqrStartDistance = (startPosition - targetPos).sqrMagnitude;
             float distance = Mathf.Sqrt(sqrStartDistance);
             float elapsed = Time.time - moveStartTime;
-            float speed = Settings.gemSpeed;
+            float speed = settings.GemSpeed;
             float t = Mathf.Clamp01((elapsed * speed) / Mathf.Max(distance, 0.1f));
             
             if (isSwapMovement)
             {
-                t = Settings.gemSwapEaseCurve.Evaluate(t);
+                t = settings.GemSwapEase(t);
             }
             else
             {
-                var multiplier = Settings.gemDropSpeedCurve.Evaluate(distance / gameBoard.Height);
-                speed = Settings.gemSpeed * multiplier * multiplier;
+                var multiplier = settings.GemDropSpeedEase(distance / gameBoard.Height);
+                speed = settings.GemSpeed * multiplier * multiplier;
                 t = Mathf.Clamp01((elapsed * speed) / Mathf.Max(distance, 0.1f));
             }
             
@@ -145,7 +157,7 @@ public class SC_Gem : MonoBehaviour, IPoolable, IPiece
             if (Input.GetMouseButton(0))
             {
                 currentTouchPosition = Camera.main.ScreenToWorldPoint(Input.mousePosition);
-                if (!swapTriggered && scGameLogic.CurrentState == GameState.move)
+                if (!swapTriggered && gameStateProvider.CurrentState == GameState.move)
                 {
                     CheckForBorderCross();
                 }
@@ -158,11 +170,10 @@ public class SC_Gem : MonoBehaviour, IPoolable, IPiece
         }
     }
 
-    public void SetupGem(IGameLogic _ScGameLogic, IGameBoard _BoardService, GridPosition _Position)
+    public void SetupGem(GridPosition position)
     {
-        posIndex = _Position;
-        scGameLogic = _ScGameLogic;
-        gameBoard = _BoardService;
+        posIndex = position;
+        
         isMoving = false;
         isSwapMovement = false;
         isStopMovingReqiested = false;
@@ -197,7 +208,7 @@ public class SC_Gem : MonoBehaviour, IPoolable, IPiece
 
     private void OnMouseDown()
     {
-        if (scGameLogic.CurrentState == GameState.move)
+        if (gameStateProvider.CurrentState == GameState.move)
         {
             firstTouchPosition = Camera.main.ScreenToWorldPoint(Input.mousePosition);
             currentTouchPosition = firstTouchPosition;
@@ -224,14 +235,14 @@ public class SC_Gem : MonoBehaviour, IPoolable, IPiece
         previousPos = posIndex;
         isSwapMovement = true;
 
-        if (swipeAngle < 45 && swipeAngle > -45 && posIndex.X < Settings.rowsSize - 1)
+        if (swipeAngle < 45 && swipeAngle > -45 && posIndex.X < settings.RowsSize - 1)
         {
             otherGem = gameBoard.GetGem(posIndex.X + 1, posIndex.Y);
             otherGem.Position.X--;
             posIndex.X++;
             if (otherGem != null) otherGem.IsSwapMovement = true;
         }
-        else if (swipeAngle > 45 && swipeAngle <= 135 && posIndex.Y < Settings.colsSize - 1)
+        else if (swipeAngle > 45 && swipeAngle <= 135 && posIndex.Y < settings.ColsSize - 1)
         {
             otherGem = gameBoard.GetGem(posIndex.X, posIndex.Y + 1);
             otherGem.Position.Y--;
@@ -261,7 +272,7 @@ public class SC_Gem : MonoBehaviour, IPoolable, IPiece
 
     public async UniTask CheckMoveCo()
     {
-        scGameLogic.SetState(GameState.wait);
+        gameStateProvider.SetState(GameState.wait);
 
         await WaitForSwapCompletion();
         scGameLogic.FindAllMatches(posIndex, otherGem.Position);
@@ -279,7 +290,7 @@ public class SC_Gem : MonoBehaviour, IPoolable, IPiece
                 gameBoard.SetGem(otherGem.Position, otherGem);
 
                 await WaitForSwapCompletion();
-                scGameLogic.SetState(GameState.move);
+                gameStateProvider.SetState(GameState.move);
             }
             else
             {

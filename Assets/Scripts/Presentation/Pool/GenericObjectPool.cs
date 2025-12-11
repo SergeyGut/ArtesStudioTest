@@ -1,12 +1,14 @@
 using System.Collections.Generic;
 using UnityEngine;
+using Zenject;
 
 public class GenericObjectPool<T> : IObjectPool<T> where T : Component
 {
-    private readonly Dictionary<T, Queue<T>> availableObjectsByPrefab = new Dictionary<T, Queue<T>>();
-    private readonly Dictionary<T, T> instanceToPrefabMap = new Dictionary<T, T>();
-    private readonly HashSet<T> activeObjects = new HashSet<T>();
+    private readonly Dictionary<T, Queue<T>> availableObjectsByPrefab = new();
+    private readonly Dictionary<T, T> instanceToPrefabMap = new();
+    private readonly HashSet<T> activeObjects = new();
     private readonly Transform parentTransform;
+    private readonly DiContainer container;
 
     public int AvailableCount
     {
@@ -21,9 +23,10 @@ public class GenericObjectPool<T> : IObjectPool<T> where T : Component
 
     public int ActiveCount => activeObjects.Count;
 
-    public GenericObjectPool(Transform parent = null)
+    public GenericObjectPool(Transform parent, DiContainer container)
     {
         parentTransform = parent;
+        this.container = container;
     }
 
     public T Get(T prefab)
@@ -41,7 +44,7 @@ public class GenericObjectPool<T> : IObjectPool<T> where T : Component
         }
         else
         {
-            instance = Object.Instantiate(prefab);
+            instance = container.InstantiatePrefab(prefab).GetComponent<T>();
             if (parentTransform != null)
                 instance.transform.SetParent(parentTransform);
             

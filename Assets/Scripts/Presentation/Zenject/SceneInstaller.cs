@@ -7,33 +7,27 @@ public class SceneInstaller : MonoInstaller
     public override void InstallBindings()
     {
         var unityObjects = new Dictionary<string, GameObject>();
-        GameObject[] _obj = GameObject.FindGameObjectsWithTag("UnityObject");
-        foreach (GameObject g in _obj)
+        GameObject[] obj = GameObject.FindGameObjectsWithTag("UnityObject");
+        foreach (GameObject g in obj)
             unityObjects.Add(g.name,g);
 
-        var settings = SC_GameVariables.Instance;
-        var gameLogic = FindObjectOfType<SC_GameLogic>();
+        var settings = Container.Resolve<ISettings>();
+        var gameBoard = new GameBoard(settings.ColsSize, settings.RowsSize);
+        IGemPool<IPiece> gemPool = new GemPool(unityObjects["GemsHolder"].transform, Container);
         
-        var gameBoard = new GameBoard(7, 7);
-        IGemPool<IPiece> gemPool = new GemPool(unityObjects["GemsHolder"].transform);
-        
-        var scoreService = new ScoreService();
-        var destroyService = new DestroyService(gameBoard, gemPool, scoreService);
-        var matchService = new MatchService(gameBoard, settings);
-        var spawnService = new SpawnService(gameBoard, gemPool, settings);
-        var bombService = new BombService(gameBoard, gameLogic, gemPool, settings);
-        var boardService = new DropService(gameBoard);
-
+        Container.Bind<IGameStateProvider>().To<GameStateProvider>().AsSingle();
+        Container.Bind<IGameLogic>().To<GameLogic>().AsSingle();
         Container.BindInstance(unityObjects).AsSingle();
-        Container.Bind<ISettings>().FromInstance(settings).AsSingle();
-        Container.Bind<IGameLogic>().FromInstance(gameLogic).AsSingle();
         Container.Bind<IGameBoard>().FromInstance(gameBoard).AsSingle();
         Container.Bind<IGemPool<IPiece>>().FromInstance(gemPool).AsSingle();
-        Container.Bind<IMatchService>().FromInstance(matchService).AsSingle();
-        Container.Bind<ISpawnService>().FromInstance(spawnService).AsSingle();
-        Container.Bind<IDestroyService>().FromInstance(destroyService).AsSingle();
-        Container.Bind<IScoreService>().FromInstance(scoreService).AsSingle();
-        Container.Bind<IBombService>().FromInstance(bombService).AsSingle();
-        Container.Bind<IDropService>().FromInstance(boardService).AsSingle();
+        Container.Bind<IMatchService>().To<MatchService>().AsSingle();
+        Container.Bind<ISpawnService>().To<SpawnService>().AsSingle();
+        Container.Bind<IDestroyService>().To<DestroyService>().AsSingle();
+        Container.Bind<IScoreService>().To<ScoreService>().AsSingle();
+        Container.Bind<IBombService>().To<BombService>().AsSingle();
+        Container.Bind<IDropService>().To<DropService>().AsSingle();
+
+        Container.BindInterfacesTo<ScoreUpdater>().AsSingle();
+        Container.BindInterfacesTo<BoardView>().AsSingle();
     }
 }

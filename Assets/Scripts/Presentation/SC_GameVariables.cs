@@ -1,28 +1,28 @@
 ﻿using System.Collections.Generic;
 using UnityEngine;
 
-public class SC_GameVariables : MonoBehaviour, ISettings
+[CreateAssetMenu(fileName = "GameVariables", menuName = "Game/GameVariables")]
+public class SC_GameVariables : ScriptableObject, ISettings
 {
     public GameObject bgTilePrefabs;
     public SC_Gem bomb;
     public SC_Gem[] gems;
     public SC_Gem[] gemBombs;
-    public float bonusAmount = 0.5f;
-    public float bombChance = 2f;
-    public int dropHeight = 0;
-    public float gemSpeed;
+    public float bombChance = 3f;
+    public int dropHeight = 1;
+    public float gemSpeed = 12;
     public AnimationCurve gemSwapEaseCurve = AnimationCurve.EaseInOut(0f, 0f, 1f, 1f);
     public AnimationCurve gemDropSpeedCurve = AnimationCurve.Linear(0f, 1f, 1f, 1f);
     public float scoreSpeed = 5;
-    public float bombNeighborDelay = 0.2f;
-    public float bombSelfDelay = 0.3f;
-    public float bombPostSelfDelay = 0.3f;
+    public float bombNeighborDelay = 0.3f;
+    public float bombSelfDelay = 0.2f;
+    public float bombPostSelfDelay = 0.1f;
     public float decreaseRowDelay = 0.2f;
     public float decreaseSingleRowDelay = 0.05f;
-    public float decreaseSingleColumnDelay = 0.05f;
-    public float findAllMatchesDelay = 0.5f;
-    public float destroyMatchesDelay = 0.5f;
-    public float changeStateDelay = 0.5f;
+    public float decreaseSingleColumnDelay = 0.03f;
+    public float findAllMatchesDelay = 0.2f;
+    public float destroyMatchesDelay = 0.1f;
+    public float changeStateDelay = 0f;
     public int minMatchForBomb = 4;
     
     [HideInInspector]
@@ -30,36 +30,34 @@ public class SC_GameVariables : MonoBehaviour, ISettings
     [HideInInspector]
     public int colsSize = 7;
 
-    #region Singleton
-
-    static SC_GameVariables instance;
-    public static SC_GameVariables Instance
-    {
-        get
-        {
-            if (instance == null)
-            {
-                instance = FindObjectOfType<SC_GameVariables>();
-            }
-
-            return instance;
-        }
-    }
-    
-    private void Awake()
-    {
-        if (instance == null)
-        {
-            instance = this;
-        }
-    }
-
-    #endregion
-
     public IReadOnlyList<IPiece> Gems => gems;
     public float BombChance => bombChance;
     public int DropHeight => dropHeight;
     public IPiece Bomb => bomb;
     public int MinMatchForBomb => minMatchForBomb;
+    public float ScoreSpeed => scoreSpeed;
+    public float BombNeighborDelay => bombNeighborDelay;
+    public float BombSelfDelay => bombSelfDelay;
+    public float BombPostSelfDelay => bombPostSelfDelay;
+    public float DecreaseRowDelay => decreaseRowDelay;
+    public float DecreaseSingleRowDelay => decreaseSingleRowDelay;
+    public float DecreaseSingleColumnDelay => decreaseSingleColumnDelay;
+    public float FindAllMatchesDelay => findAllMatchesDelay;
+    public float DestroyMatchesDelay => destroyMatchesDelay;
+    public float ChangeStateDelay => changeStateDelay;
     public IReadOnlyList<IPiece> GemBombs => gemBombs;
+    public object TilePrefabs => bgTilePrefabs;
+    public float GemSpeed => gemSpeed;
+    public int RowsSize => rowsSize;
+    public int ColsSize => colsSize;
+    
+    public float GemSwapEase(float t)
+    {
+        return gemSwapEaseCurve.Evaluate(t);
+    }
+
+    public float GemDropSpeedEase(float t)
+    {
+        return gemDropSpeedCurve.Evaluate(t);
+    }
 }

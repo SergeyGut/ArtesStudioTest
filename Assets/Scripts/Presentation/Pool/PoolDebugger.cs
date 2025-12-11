@@ -1,6 +1,4 @@
-using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.Pool;
 
 public class PoolDebugger : MonoBehaviour
 {
@@ -15,24 +13,9 @@ public class PoolDebugger : MonoBehaviour
     private int lastWaitForSecondsCacheSize;
     
     private IGemPool<IPiece> gemPool;
-    private SC_GameLogic gameLogic;
     
     private void Start()
     {
-        gameLogic = FindObjectOfType<SC_GameLogic>();
-        if (gameLogic == null)
-        {
-            Debug.LogWarning("[PoolDebugger] SC_GameLogic not found. Pool tracking may be limited.");
-            return;
-        }
-        
-        var gemPoolField = typeof(SC_GameLogic).GetField("gemPool", 
-            System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
-        if (gemPoolField != null)
-        {
-            gemPool = gemPoolField.GetValue(gameLogic) as IGemPool<IPiece>;
-        }
-        
         if (gemPool == null)
         {
             Debug.LogWarning("[PoolDebugger] GemPool not found.");

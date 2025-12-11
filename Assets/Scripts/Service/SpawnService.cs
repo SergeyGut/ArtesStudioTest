@@ -5,9 +5,13 @@ public class SpawnService : ISpawnService
     private readonly IGameBoard gameBoard;
     private readonly IGemPool<IPiece> gemPool;
     private readonly ISettings settings;
+    
     private readonly Random random = new();
     
-    public SpawnService(IGameBoard gameBoard, IGemPool<IPiece> gemPool, ISettings settings)
+    public SpawnService(
+        IGameBoard gameBoard, 
+        IGemPool<IPiece> gemPool, 
+        ISettings settings)
     {
         this.gameBoard = gameBoard;
         this.gemPool = gemPool;
@@ -53,16 +57,16 @@ public class SpawnService : ISpawnService
         return validGems.Value[random.Next(0, validGems.Value.Count)];
     }
 
-    public void SpawnGem(GridPosition position, IPiece gemToSpawn, IGameLogic gameLogic, IGameBoard gameBoard)
+    public void SpawnGem(GridPosition position, IPiece gemToSpawn)
     {
         if (random.Next(0, 100) < settings.BombChance)
             gemToSpawn = settings.Bomb;
 
-        var gem = gemPool.SpawnGem(gemToSpawn, position, gameLogic, gameBoard, settings.DropHeight);
+        var gem = gemPool.SpawnGem(gemToSpawn, position, settings.DropHeight);
         gameBoard.SetGem(position, gem);
     }
     
-    public void SpawnTopX(int x, IGameLogic gameLogic, IGameBoard gameBoard)
+    public void SpawnTopX(int x)
     {
         int topY = gameBoard.Height - 1;
         IPiece topGem = gameBoard.GetGem(x, topY);
@@ -70,7 +74,7 @@ public class SpawnService : ISpawnService
         if (topGem == null)
         {
             var gemToSpawn = SelectNonMatchingGem(new GridPosition(x, topY));
-            SpawnGem(new GridPosition(x, topY), gemToSpawn, gameLogic, gameBoard);
+            SpawnGem(new GridPosition(x, topY), gemToSpawn);
         }
     }
 }

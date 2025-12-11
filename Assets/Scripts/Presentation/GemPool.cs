@@ -1,4 +1,5 @@
 using UnityEngine;
+using Zenject;
 
 public class GemPool : IGemPool<IPiece>
 {
@@ -8,13 +9,13 @@ public class GemPool : IGemPool<IPiece>
     public int AvailableCount => pool.AvailableCount;
     public int ActiveCount => pool.ActiveCount;
 
-    public GemPool(Transform parent)
+    public GemPool(Transform parent, DiContainer container)
     {
         parentTransform = parent;
-        pool = new GenericObjectPool<SC_Gem>(parent);
+        pool = new GenericObjectPool<SC_Gem>(parent, container);
     }
 
-    public IPiece SpawnGem(IPiece item, GridPosition position, IGameLogic gameLogic, IGameBoard gameBoard, float dropHeight = 0f)
+    public IPiece SpawnGem(IPiece item, GridPosition position, float dropHeight = 0f)
     {
         if (item is not SC_Gem prefab)
             return null;
@@ -24,7 +25,7 @@ public class GemPool : IGemPool<IPiece>
         gem.transform.position = new Vector3(position.X, position.Y + dropHeight, 0f);
         gem.transform.SetParent(parentTransform);
         gem.name = "Gem - " + position.X + ", " + position.Y;
-        gem.SetupGem(gameLogic, gameBoard, position);
+        gem.SetupGem(position);
 
         return gem;
     }

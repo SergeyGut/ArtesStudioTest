@@ -3,13 +3,11 @@ using System.Collections.Generic;
 public class BombService : IBombService
 {
     private readonly IGameBoard gameBoard;
-    private readonly IGameLogic gameLogic;
     private readonly IGemPool<IPiece> gemPool;
     private readonly ISettings settings;
     
-    public BombService(IGameBoard gameBoard, IGameLogic gameLogic, IGemPool<IPiece> gemPool, ISettings settings)
+    public BombService(IGameBoard gameBoard, IGemPool<IPiece> gemPool, ISettings settings)
     {
-        this.gameLogic = gameLogic;
         this.gameBoard = gameBoard;
         this.gemPool = gemPool;
         this.settings = settings;
@@ -20,7 +18,7 @@ public class BombService : IBombService
         foreach (var (pos, type) in bombPositions)
         {
             var bombPrefab = GetBombPrefabForType(type);
-            var newBomb = gemPool.SpawnGem(bombPrefab, pos, gameLogic, gameBoard);
+            var newBomb = gemPool.SpawnGem(bombPrefab, pos);
             gameBoard.SetGem(pos, newBomb);
             newlyCreatedBombs.Value.Add(newBomb);
             
