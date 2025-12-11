@@ -15,10 +15,10 @@ public class SceneInstaller : MonoInstaller
         
         Container.Bind<IGameBoard>().To<GameBoard>().AsSingle();
         Container.Bind<IGameStateProvider>().To<GameStateProvider>().AsSingle();
-        Container.Bind<IGameLogic>().To<GameLogic>().AsSingle();
+        Container.Bind<IMatchDispatcher>().To<MatchDispatcher>().AsSingle();
         Container.BindInstance(unityObjects).AsSingle();
         Container.Bind<IGemPool<IPiece>>().FromInstance(gemPool).AsSingle();
-        Container.Bind<IMatchService>().To<MatchService>().AsSingle();
+        Container.Bind<IPathfinderService>().To<PathfinderService>().AsSingle();
         Container.Bind<ISpawnService>().To<SpawnService>().AsSingle();
         Container.Bind<IDestroyService>().To<DestroyService>().AsSingle();
         Container.Bind<IScoreService>().To<ScoreService>().AsSingle();

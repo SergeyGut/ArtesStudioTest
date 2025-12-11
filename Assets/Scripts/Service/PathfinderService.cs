@@ -1,10 +1,10 @@
 
-public class MatchService : IMatchService
+public class PathfinderService : IPathfinderService
 {
     private readonly IGameBoard gameBoard;
     private readonly ISettings settings;
     
-    public MatchService(IGameBoard gameBoard, ISettings settings)
+    public PathfinderService(IGameBoard gameBoard, ISettings settings)
     {
         this.gameBoard = gameBoard;
         this.settings = settings;
@@ -34,9 +34,9 @@ public class MatchService : IMatchService
         return bombCreationPositions;
     }
     
-    public void CollectAndDestroyMatchedGems(IDestroyService destroyService)
+    public PooledList<IPiece> CollectMatchedGems()
     {
-        using var matchedGems = PooledList<IPiece>.Get();
+        var matchedGems = PooledList<IPiece>.Get();
         foreach (var matchInfo in gameBoard.MatchInfoMap)
         {
             foreach (var gem in matchInfo.MatchedGems)
@@ -47,7 +47,8 @@ public class MatchService : IMatchService
                 }
             }
         }
-        destroyService.DestroyGems(matchedGems.Value);
+        
+        return matchedGems;
     }
     
     public PooledList<IPiece> CollectNonBombExplosions(PooledHashSet<IPiece> newlyCreatedBombs)

@@ -1,8 +1,8 @@
 
-public interface IMatchService
+public interface IPathfinderService
 {
     PooledDictionary<GridPosition, GemType> CollectBombCreationPositions();
-    void CollectAndDestroyMatchedGems(IDestroyService destroyService);
+    PooledList<IPiece> CollectMatchedGems();
     PooledList<IPiece> CollectNonBombExplosions(PooledHashSet<IPiece> newlyCreatedBombs);
     PooledList<IPiece> CollectBombExplosions(PooledHashSet<IPiece> newlyCreatedBombs);
 }

@@ -33,7 +33,7 @@ public class SC_Gem : MonoBehaviour, IPoolable, IPiece
     private const float POSITION_THRESHOLD = 0.01f;
 
     private IGameStateProvider gameStateProvider;
-    private IGameLogic scGameLogic;
+    private IMatchDispatcher matchDispatcher;
     private IGameBoard gameBoard;
     private ISettings settings;
 
@@ -58,12 +58,12 @@ public class SC_Gem : MonoBehaviour, IPoolable, IPiece
     [Inject]
     public void Construct(
         IGameStateProvider gameStateProvider,
-        IGameLogic scGameLogic,
+        IMatchDispatcher matchDispatcher,
         IGameBoard gameBoard,
         ISettings settings)
     {
         this.gameStateProvider = gameStateProvider;
-        this.scGameLogic = scGameLogic;
+        this.matchDispatcher = matchDispatcher;
         this.gameBoard = gameBoard;
         this.settings = settings;
     }
@@ -270,12 +270,12 @@ public class SC_Gem : MonoBehaviour, IPoolable, IPiece
         CheckMoveCo().Forget();
     }
 
-    public async UniTask CheckMoveCo()
+    private async UniTask CheckMoveCo()
     {
         gameStateProvider.SetState(GameState.wait);
 
         await WaitForSwapCompletion();
-        scGameLogic.FindAllMatches(posIndex, otherGem.Position);
+        matchDispatcher.FindAllMatches(posIndex, otherGem.Position);
 
         if (otherGem != null)
         {
@@ -294,7 +294,7 @@ public class SC_Gem : MonoBehaviour, IPoolable, IPiece
             }
             else
             {
-                scGameLogic.DestroyMatches();
+                matchDispatcher.DestroyMatches();
             }
         }
     }

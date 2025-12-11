@@ -1,10 +1,10 @@
 ﻿using Cysharp.Threading.Tasks;
 using Zenject;
 
-public class GameLogic : IGameLogic
+public class MatchDispatcher : IMatchDispatcher
 {
     private IGameBoard gameBoard;
-    private IMatchService matchService;
+    private IPathfinderService pathfinderService;
     private ISpawnService spawnService;
     private IDestroyService destroyService;
     private IBombService bombService;
@@ -16,7 +16,7 @@ public class GameLogic : IGameLogic
     [Inject]
     private void Construct(
         IGameBoard gameBoard,
-        IMatchService matchService,
+        IPathfinderService _PathfinderService,
         ISpawnService spawnService,
         IDestroyService destroyService,
         IBombService bombService,
@@ -26,7 +26,7 @@ public class GameLogic : IGameLogic
         IGameStateProvider gameStateProvider)
     {
         this.gameBoard = gameBoard;
-        this.matchService = matchService;
+        this.pathfinderService = _PathfinderService;
         this.spawnService = spawnService;
         this.destroyService = destroyService;
         this.bombService = bombService;
@@ -38,32 +38,32 @@ public class GameLogic : IGameLogic
 
     public void DestroyMatches()
     {
-        DestroyMatchesCo().Forget();
+        DestroyMatchesAsync().Forget();
     }
 
-    private async UniTask DestroyMatchesCo()
+    private async UniTask DestroyMatchesAsync()
     {
-        using var bombCreationPositions = matchService.CollectBombCreationPositions();
+        using var bombCreationPositions = pathfinderService.CollectBombCreationPositions();
         using var newlyCreatedBombs = PooledHashSet<IPiece>.Get();
         
-        matchService.CollectAndDestroyMatchedGems(destroyService);
+        using var matchedGems = pathfinderService.CollectMatchedGems();
+        destroyService.DestroyGems(matchedGems.Value);
         bombService.CreateBombs(bombCreationPositions.Value, newlyCreatedBombs);
         
-        await DestroyExplosionsWithDelay(newlyCreatedBombs);
-        
-        await DecreaseRowCo();
+        await DestroyExplosionsWithDelayAsync(newlyCreatedBombs);
+        await DecreaseRowAsync();
     }
 
-    private async UniTask DestroyExplosionsWithDelay(PooledHashSet<IPiece> newlyCreatedBombs)
+    private async UniTask DestroyExplosionsWithDelayAsync(PooledHashSet<IPiece> newlyCreatedBombs)
     {
-        using var nonBombExplosions = matchService.CollectNonBombExplosions(newlyCreatedBombs);
+        using var nonBombExplosions = pathfinderService.CollectNonBombExplosions(newlyCreatedBombs);
         if (nonBombExplosions.Value.Count > 0)
         {
             await UniTask.WaitForSeconds(settings.BombNeighborDelay);
             destroyService.DestroyGems(nonBombExplosions.Value);
         }
         
-        using var bombExplosions = matchService.CollectBombExplosions(newlyCreatedBombs);
+        using var bombExplosions = pathfinderService.CollectBombExplosions(newlyCreatedBombs);
         if (bombExplosions.Value.Count > 0)
         {
             await UniTask.WaitForSeconds(settings.BombSelfDelay);
@@ -71,7 +71,8 @@ public class GameLogic : IGameLogic
             await UniTask.WaitForSeconds(settings.BombPostSelfDelay);
         }
     }
-    private async UniTask DecreaseRowCo()
+    
+    private async UniTask DecreaseRowAsync()
     {
         await UniTask.WaitForSeconds(settings.DecreaseRowDelay);
 
@@ -79,7 +80,7 @@ public class GameLogic : IGameLogic
         using var decreaseTasks = PooledList<UniTask>.Get();
         for (int x = 0; x < gameBoard.Width; x++)
         {
-            var task = DecreaseColumn(x);
+            var task = DecreaseColumnAsync(x);
             decreaseTasks.Value.Add(task);
 
             if (useColumnDelay && !task.GetAwaiter().IsCompleted)
@@ -107,7 +108,7 @@ public class GameLogic : IGameLogic
         }
     }
 
-    private async UniTask DecreaseColumn(int  x)
+    private async UniTask DecreaseColumnAsync(int  x)
     {
         bool hasActivity = true;
         while (hasActivity)

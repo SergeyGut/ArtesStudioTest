@@ -2,11 +2,6 @@ using System.Collections.Generic;
 using UnityEngine;
 using Zenject;
 
-public interface IBoardView
-{
-    void CheckMisplacedGems();
-}
-
 public class BoardView : IBoardView, IInitializable
 {
     private IGameBoard gameBoard;

@@ -267,7 +267,7 @@ public class GameBoard : IGameBoard
     
     private void MarkGemAsMatched(IPiece gem)
     {
-        if (gem != null && gem.IsMatch == false)
+        if (gem is { IsMatch: false })
         {
             gem.IsMatch = true;
             
