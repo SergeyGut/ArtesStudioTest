@@ -3,17 +3,20 @@ using System;
 public class SpawnService : ISpawnService
 {
     private readonly IGameBoard gameBoard;
+    private readonly IMatchService matchService;
     private readonly IGemPool<IPiece> gemPool;
     private readonly ISettings settings;
     
     private readonly Random random = new();
     
     public SpawnService(
-        IGameBoard gameBoard, 
-        IGemPool<IPiece> gemPool, 
+        IGameBoard gameBoard,
+        IMatchService matchService,
+        IGemPool<IPiece> gemPool,
         ISettings settings)
     {
         this.gameBoard = gameBoard;
+        this.matchService = matchService;
         this.gemPool = gemPool;
         this.settings = settings;
     }
@@ -27,7 +30,7 @@ public class SpawnService : ISpawnService
         
         for (int i = 0; i < gems.Count; i++)
         {
-            int matchCount = gameBoard.GetMatchCountAt(position, gems[i]);
+            int matchCount = matchService.GetMatchCountAt(position, gems[i]);
             matchCounts.Value.Add(matchCount);
             
             if (matchCount == 0)

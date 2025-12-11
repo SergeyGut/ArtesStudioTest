@@ -1,12 +1,12 @@
 
 public class PathfinderService : IPathfinderService
 {
-    private readonly IGameBoard gameBoard;
+    private readonly IMatchService matchService;
     private readonly ISettings settings;
     
-    public PathfinderService(IGameBoard gameBoard, ISettings settings)
+    public PathfinderService(IMatchService matchService, ISettings settings)
     {
-        this.gameBoard = gameBoard;
+        this.matchService = matchService;
         this.settings = settings;
     }
     
@@ -14,7 +14,7 @@ public class PathfinderService : IPathfinderService
     {
         var bombCreationPositions = PooledDictionary<GridPosition, GemType>.Get();
         
-        foreach (var matchInfo in gameBoard.MatchInfoMap)
+        foreach (var matchInfo in matchService.MatchInfoMap)
         {
             if (matchInfo.MatchedGems.Count >= settings.MinMatchForBomb)
             {
@@ -37,7 +37,7 @@ public class PathfinderService : IPathfinderService
     public PooledList<IPiece> CollectMatchedGems()
     {
         var matchedGems = PooledList<IPiece>.Get();
-        foreach (var matchInfo in gameBoard.MatchInfoMap)
+        foreach (var matchInfo in matchService.MatchInfoMap)
         {
             foreach (var gem in matchInfo.MatchedGems)
             {
@@ -54,7 +54,7 @@ public class PathfinderService : IPathfinderService
     public PooledList<IPiece> CollectNonBombExplosions(PooledHashSet<IPiece> newlyCreatedBombs)
     {
         var nonBombExplosions = PooledList<IPiece>.Get();
-        foreach (var gem in gameBoard.Explosions)
+        foreach (var gem in matchService.Explosions)
         {
             if (gem != null && !gem.IsColorBomb && gem.Type != GemType.bomb && !newlyCreatedBombs.Value.Contains(gem))
             {
@@ -67,7 +67,7 @@ public class PathfinderService : IPathfinderService
     public PooledList<IPiece> CollectBombExplosions(PooledHashSet<IPiece> newlyCreatedBombs)
     {
         var bombExplosions = PooledList<IPiece>.Get();
-        foreach (var gem in gameBoard.Explosions)
+        foreach (var gem in matchService.Explosions)
         {
             if (gem != null && (gem.IsColorBomb || gem.Type == GemType.bomb) && !newlyCreatedBombs.Value.Contains(gem))
             {

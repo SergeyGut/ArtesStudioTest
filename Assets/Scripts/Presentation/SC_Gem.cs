@@ -33,6 +33,7 @@ public class SC_Gem : MonoBehaviour, IPoolable, IPiece
     private const float POSITION_THRESHOLD = 0.01f;
 
     private IGameStateProvider gameStateProvider;
+    private IMatchService matchService;
     private IMatchDispatcher matchDispatcher;
     private IGameBoard gameBoard;
     private ISettings settings;
@@ -58,11 +59,13 @@ public class SC_Gem : MonoBehaviour, IPoolable, IPiece
     [Inject]
     public void Construct(
         IGameStateProvider gameStateProvider,
+        IMatchService matchService,
         IMatchDispatcher matchDispatcher,
         IGameBoard gameBoard,
         ISettings settings)
     {
         this.gameStateProvider = gameStateProvider;
+        this.matchService = matchService;
         this.matchDispatcher = matchDispatcher;
         this.gameBoard = gameBoard;
         this.settings = settings;
@@ -275,7 +278,7 @@ public class SC_Gem : MonoBehaviour, IPoolable, IPiece
         gameStateProvider.SetState(GameState.wait);
 
         await WaitForSwapCompletion();
-        matchDispatcher.FindAllMatches(posIndex, otherGem.Position);
+        matchService.FindAllMatches(posIndex, otherGem.Position);
 
         if (otherGem != null)
         {

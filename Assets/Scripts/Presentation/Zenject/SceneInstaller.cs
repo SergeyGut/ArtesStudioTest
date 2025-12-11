@@ -14,6 +14,7 @@ public class SceneInstaller : MonoInstaller
         IGemPool<IPiece> gemPool = new GemPool(unityObjects["GemsHolder"].transform, Container);
         
         Container.Bind<IGameBoard>().To<GameBoard>().AsSingle();
+        Container.Bind<IMatchService>().To<MatchService>().AsSingle();
         Container.Bind<IGameStateProvider>().To<GameStateProvider>().AsSingle();
         Container.Bind<IMatchDispatcher>().To<MatchDispatcher>().AsSingle();
         Container.BindInstance(unityObjects).AsSingle();

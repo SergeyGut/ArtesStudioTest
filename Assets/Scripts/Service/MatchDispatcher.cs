@@ -4,6 +4,7 @@ using Zenject;
 public class MatchDispatcher : IMatchDispatcher
 {
     private IGameBoard gameBoard;
+    private IMatchService matchService;
     private IPathfinderService pathfinderService;
     private ISpawnService spawnService;
     private IDestroyService destroyService;
@@ -16,7 +17,8 @@ public class MatchDispatcher : IMatchDispatcher
     [Inject]
     private void Construct(
         IGameBoard gameBoard,
-        IPathfinderService _PathfinderService,
+        IMatchService matchService,
+        IPathfinderService pathfinderService,
         ISpawnService spawnService,
         IDestroyService destroyService,
         IBombService bombService,
@@ -26,7 +28,8 @@ public class MatchDispatcher : IMatchDispatcher
         IGameStateProvider gameStateProvider)
     {
         this.gameBoard = gameBoard;
-        this.pathfinderService = _PathfinderService;
+        this.matchService = matchService;
+        this.pathfinderService = pathfinderService;
         this.spawnService = spawnService;
         this.destroyService = destroyService;
         this.bombService = bombService;
@@ -95,8 +98,8 @@ public class MatchDispatcher : IMatchDispatcher
         
         await UniTask.WaitForSeconds(settings.FindAllMatchesDelay);
         
-        gameBoard.FindAllMatches();
-        if (gameBoard.MatchInfoMap.Count > 0)
+        matchService.FindAllMatches();
+        if (matchService.MatchInfoMap.Count > 0)
         {
             await UniTask.WaitForSeconds(settings.DestroyMatchesDelay);
             DestroyMatches();
@@ -121,15 +124,5 @@ public class MatchDispatcher : IMatchDispatcher
                 await UniTask.WaitForSeconds(settings.DecreaseSingleRowDelay);
             }
         }
-    }
-    
-    public void FindAllMatches(GridPosition? posIndex = null, GridPosition? otherPosIndex = null)
-    {
-        if (posIndex.HasValue)
-            gameBoard.FindAllMatches(posIndex);
-        else if (otherPosIndex.HasValue)
-            gameBoard.FindAllMatches(otherPosIndex);
-        else
-            gameBoard.FindAllMatches();
     }
 }
