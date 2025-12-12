@@ -1,5 +1,4 @@
-﻿using Cysharp.Threading.Tasks;
-using Domain;
+﻿using Domain;
 using Domain.Interfaces;
 using Service.Interfaces;
 using UnityEngine;
@@ -8,8 +7,10 @@ using IPoolable = Presentation.Pool.IPoolable;
 
 namespace Presentation
 {
-    public class SC_Gem : MonoBehaviour, IPoolable, IPiece
+    public class SC_Gem : MonoBehaviour, IPoolable, IPiece, IGemView
     {
+        private const float POSITION_THRESHOLD = 0.01f;
+
         [HideInInspector] public GridPosition posIndex;
 
         private Vector2 firstTouchPosition;
@@ -17,7 +18,6 @@ namespace Presentation
         private bool mousePressed;
         private bool swapTriggered;
         private float swipeAngle;
-        private IPiece otherGem;
 
         public GemType type;
         public bool isColorBomb;
@@ -25,25 +25,23 @@ namespace Presentation
         private GridPosition previousPos;
         public GameObject destroyEffect;
         public int scoreValue = 10;
-
         public int blastSize = 1;
 
         private Vector2 startPosition;
         private Vector2 previousTargetPos;
         private float moveStartTime;
-        private bool isMoving = false;
+        private bool isMoving;
         private bool justSpawned;
-        private bool isSwapMovement = false;
-        private bool isStopMovingReqiested = false;
-        private const float POSITION_THRESHOLD = 0.01f;
+        private bool isSwapMovement;
+        private bool isStopMovingReqiested;
 
         private IGameStateProvider gameStateProvider;
-        private IMatchService matchService;
-        private IMatchDispatcher matchDispatcher;
+        private ISwapService swapService;
         private IGameBoard gameBoard;
         private ISettings settings;
 
         public GemType Type => type;
+
         public bool IsColorBomb => isColorBomb;
         public int BlastSize => blastSize;
 
@@ -61,20 +59,19 @@ namespace Presentation
 
         public int ScoreValue => scoreValue;
         public ref GridPosition Position => ref posIndex;
+        public ref GridPosition PrevPosition => ref previousPos;
         public bool JustSpawned => justSpawned;
         public bool IsMoving => isMoving;
 
         [Inject]
         public void Construct(
             IGameStateProvider gameStateProvider,
-            IMatchService matchService,
-            IMatchDispatcher matchDispatcher,
+            ISwapService swapService,
             IGameBoard gameBoard,
             ISettings settings)
         {
             this.gameStateProvider = gameStateProvider;
-            this.matchService = matchService;
-            this.matchDispatcher = matchDispatcher;
+            this.swapService = swapService;
             this.gameBoard = gameBoard;
             this.settings = settings;
         }
@@ -199,7 +196,6 @@ namespace Presentation
 
         public void OnReturnToPool()
         {
-            ResetState();
             StopAllCoroutines();
         }
 
@@ -208,7 +204,6 @@ namespace Presentation
             isMatch = false;
             mousePressed = false;
             swapTriggered = false;
-            otherGem = null;
             swipeAngle = 0;
             previousPos = GridPosition.zero;
             isMoving = false;
@@ -236,95 +231,18 @@ namespace Presentation
             if (distance > 0.5f)
             {
                 swipeAngle = Mathf.Atan2(delta.y, delta.x) * Mathf.Rad2Deg;
-                MovePieces();
+                swapService.MovePieces(this);
                 swapTriggered = true;
             }
         }
-
-        private void MovePieces()
-        {
-            previousPos = posIndex;
-            isSwapMovement = true;
-
-            if (swipeAngle < 45 && swipeAngle > -45 && posIndex.X < settings.RowsSize - 1)
-            {
-                otherGem = gameBoard.GetGem(posIndex.X + 1, posIndex.Y);
-                otherGem.Position.X--;
-                posIndex.X++;
-                if (otherGem != null) otherGem.IsSwapMovement = true;
-            }
-            else if (swipeAngle > 45 && swipeAngle <= 135 && posIndex.Y < settings.ColsSize - 1)
-            {
-                otherGem = gameBoard.GetGem(posIndex.X, posIndex.Y + 1);
-                otherGem.Position.Y--;
-                posIndex.Y++;
-                if (otherGem != null) otherGem.IsSwapMovement = true;
-            }
-            else if (swipeAngle < -45 && swipeAngle >= -135 && posIndex.Y > 0)
-            {
-                otherGem = gameBoard.GetGem(posIndex.X, posIndex.Y - 1);
-                otherGem.Position.Y++;
-                posIndex.Y--;
-                if (otherGem != null) otherGem.IsSwapMovement = true;
-            }
-            else if ((swipeAngle > 135 || swipeAngle < -135) && posIndex.X > 0)
-            {
-                otherGem = gameBoard.GetGem(posIndex.X - 1, posIndex.Y);
-                otherGem.Position.X++;
-                posIndex.X--;
-                if (otherGem != null) otherGem.IsSwapMovement = true;
-            }
-
-            gameBoard.SetGem(posIndex, this);
-            gameBoard.SetGem(otherGem.Position, otherGem);
-
-            CheckMoveCo().Forget();
-        }
-
-        private async UniTask CheckMoveCo()
-        {
-            gameStateProvider.SetState(GameState.wait);
-
-            await WaitForSwapCompletion();
-            matchService.FindAllMatches(posIndex, otherGem.Position);
-
-            if (otherGem != null)
-            {
-                if (isMatch == false && otherGem.IsMatch == false)
-                {
-                    otherGem.Position = posIndex;
-                    posIndex = previousPos;
-                    isSwapMovement = true;
-                    otherGem.IsSwapMovement = true;
-
-                    gameBoard.SetGem(posIndex, this);
-                    gameBoard.SetGem(otherGem.Position, otherGem);
-
-                    await WaitForSwapCompletion();
-                    gameStateProvider.SetState(GameState.move);
-                }
-                else
-                {
-                    matchDispatcher.DestroyMatches();
-                }
-            }
-        }
-
-        private async UniTask WaitForSwapCompletion()
-        {
-            var other = otherGem as SC_Gem;
-
-            while (Vector2.Distance(transform.position, posIndex.ToVector2()) > POSITION_THRESHOLD ||
-                   (otherGem != null && Vector2.Distance(other.transform.position, otherGem.Position.ToVector2()) >
-                       POSITION_THRESHOLD))
-            {
-                await UniTask.Yield();
-            }
-        }
-
+        
         public void RunDestroyEffect()
         {
             Instantiate(destroyEffect, posIndex.ToVector3(), Quaternion.identity);
         }
+
+        public float SwapAngle => swipeAngle;
+
+        public float TargetPositionDistance => Vector2.Distance(transform.position, posIndex.ToVector2());
     }
 }

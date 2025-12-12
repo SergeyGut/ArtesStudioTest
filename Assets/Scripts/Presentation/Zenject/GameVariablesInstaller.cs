@@ -6,11 +6,11 @@ namespace Presentation.Installers
     [CreateAssetMenu(fileName = "GameVariablesInstaller", menuName = "Installers/GameVariablesInstaller")]
     public class GameVariablesInstaller : ScriptableObjectInstaller<GameVariablesInstaller>
     {
-        [SerializeField] private SC_GameVariables gameVariables;
+        [SerializeField] private GameVariables gameVariables;
 
         public override void InstallBindings()
         {
-            Container.BindInterfacesTo<SC_GameVariables>().FromInstance(gameVariables).AsSingle();
+            Container.BindInterfacesTo<GameVariables>().FromInstance(gameVariables).AsSingle();
         }
     }
 }

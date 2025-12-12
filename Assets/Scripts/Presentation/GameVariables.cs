@@ -6,7 +6,7 @@ using UnityEngine;
 namespace Presentation
 {
     [CreateAssetMenu(fileName = "GameVariables", menuName = "Game/GameVariables")]
-    public class SC_GameVariables : ScriptableObject, ISettings
+    public class GameVariables : ScriptableObject, ISettings
     {
         public GameObject bgTilePrefabs;
         public SC_Gem bomb;

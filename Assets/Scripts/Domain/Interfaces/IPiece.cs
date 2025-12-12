@@ -5,6 +5,7 @@ namespace Domain.Interfaces
     {
         GemType Type { get; }
         ref GridPosition Position { get; }
+        ref GridPosition PrevPosition { get; }
         bool IsColorBomb { get; }
         int BlastSize { get; }
         bool IsMatch { get; set; }

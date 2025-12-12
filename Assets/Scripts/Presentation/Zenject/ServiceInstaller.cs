@@ -15,6 +15,7 @@ namespace Presentation.Installers
             Container.Bind<IBombService>().To<BombService>().AsSingle();
             Container.Bind<IDropService>().To<DropService>().AsSingle();
             Container.Bind<IMatchDispatcher>().To<MatchDispatcher>().AsSingle();
+            Container.Bind<ISwapService>().To<SwapService>().AsSingle();
         }
     }
 }
