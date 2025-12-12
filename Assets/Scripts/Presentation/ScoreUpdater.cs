@@ -11,9 +11,9 @@ namespace Presentation
         private float scoreSpeed;
         private int lastDisplayedScoreInt = -1;
 
-        private TextMeshProUGUI scoreText;
-        private IScoreService scoreService;
-        private ISettings settings;
+        private readonly TextMeshProUGUI scoreText;
+        private readonly IScoreService scoreService;
+        private readonly ISettings settings;
 
         public ScoreUpdater(
             [Inject(Id = "ScoreText")] TextMeshProUGUI scoreText,

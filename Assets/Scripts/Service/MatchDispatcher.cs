@@ -8,19 +8,18 @@ namespace Service
 {
     public class MatchDispatcher : IMatchDispatcher
     {
-        private IGameBoard gameBoard;
-        private IMatchService matchService;
-        private IPathfinderService pathfinderService;
-        private ISpawnService spawnService;
-        private IDestroyService destroyService;
-        private IBombService bombService;
-        private IDropService dropService;
-        private ISettings settings;
-        private IBoardView boardView;
-        private IGameStateProvider gameStateProvider;
+        private readonly IGameBoard gameBoard;
+        private readonly IMatchService matchService;
+        private readonly IPathfinderService pathfinderService;
+        private readonly ISpawnService spawnService;
+        private readonly IDestroyService destroyService;
+        private readonly IBombService bombService;
+        private readonly IDropService dropService;
+        private readonly ISettings settings;
+        private readonly IBoardView boardView;
+        private readonly IGameStateProvider gameStateProvider;
 
-        [Inject]
-        private void Construct(
+        public MatchDispatcher(
             IGameBoard gameBoard,
             IMatchService matchService,
             IPathfinderService pathfinderService,

@@ -9,11 +9,11 @@ namespace Presentation
 {
     public class BoardView : IBoardView, IInitializable
     {
-        private IGameBoard gameBoard;
-        private ISettings settings;
-        private ISpawnService spawnService;
-        private IGemPool<IPiece> gemPool;
-        private Transform gemsHolder;
+        private readonly IGameBoard gameBoard;
+        private readonly ISettings settings;
+        private readonly ISpawnService spawnService;
+        private readonly IGemPool<IPiece> gemPool;
+        private readonly Transform gemsHolder;
 
         public BoardView(
             [Inject(Id = "GemsHolder")] Transform gemsHolder,
