@@ -14,8 +14,6 @@ public class SceneInstaller : MonoInstaller
 
         var gemsHolder = unityObjects["GemsHolder"].transform;
         var scoreText = unityObjects["Txt_Score"].GetComponent<TextMeshProUGUI>();
-
-        IGemPool<IPiece> gemPool = new GemPool(gemsHolder, Container);
         
         Container.Bind<IGameBoard>().To<GameBoard>().AsSingle();
         Container.Bind<IMatchService>().To<MatchService>().AsSingle();
@@ -23,7 +21,7 @@ public class SceneInstaller : MonoInstaller
         Container.Bind<IMatchDispatcher>().To<MatchDispatcher>().AsSingle();
         Container.Bind<Transform>().WithId("GemsHolder").FromInstance(gemsHolder).AsSingle();
         Container.Bind<TextMeshProUGUI>().WithId("ScoreText").FromInstance(scoreText).AsSingle();
-        Container.Bind<IGemPool<IPiece>>().FromInstance(gemPool).AsSingle();
+        Container.Bind<IGemPool<IPiece>>().To<GemPool>().AsSingle();
         Container.Bind<IPathfinderService>().To<PathfinderService>().AsSingle();
         Container.Bind<ISpawnService>().To<SpawnService>().AsSingle();
         Container.Bind<IDestroyService>().To<DestroyService>().AsSingle();

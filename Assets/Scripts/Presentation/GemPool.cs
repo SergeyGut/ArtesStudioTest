@@ -9,7 +9,7 @@ public class GemPool : IGemPool<IPiece>
     public int AvailableCount => pool.AvailableCount;
     public int ActiveCount => pool.ActiveCount;
 
-    public GemPool(Transform parent, DiContainer container)
+    public GemPool([Inject(Id = "GemsHolder")] Transform parent, DiContainer container)
     {
         parentTransform = parent;
         pool = new GenericObjectPool<SC_Gem>(parent, container);
