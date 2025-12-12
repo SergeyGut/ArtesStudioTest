@@ -1,0 +1,17 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 58a1bb4f6c5e46b4c8adf59f9d08ef6d, type: 3}
+  m_Name: BlueBombGem
+  m_EditorClassIdentifier: 
+  type: 0
+  gemViewPrefab: {fileID: -7932498854989450506, guid: 985dfcb6799096640a2d8d04f4a933b2,
+    type: 3}

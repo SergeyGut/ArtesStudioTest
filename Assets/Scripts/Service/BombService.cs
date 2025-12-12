@@ -41,10 +41,10 @@ namespace Service
 
         private IPiece GetBombPrefabForType(GemType type)
         {
-            foreach (var bomb in settings.GemBombs)
+            foreach (var gemData in settings.GemBombs)
             {
-                if (bomb.Type == type)
-                    return bomb;
+                if (gemData.Type == type)
+                    return gemData.GemViewPrefab;
             }
 
             return null;

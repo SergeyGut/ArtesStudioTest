@@ -3,15 +3,15 @@ using Domain.Interfaces;
 using Service.Interfaces;
 using UnityEngine;
 
-namespace Presentation
+namespace Presentation.Settings
 {
-    [CreateAssetMenu(fileName = "GameVariables", menuName = "Game/GameVariables")]
-    public class GameVariables : ScriptableObject, ISettings
+    [CreateAssetMenu(fileName = "GameSettings", menuName = "Game/GameSettings")]
+    public class GameSettings : ScriptableObject, ISettings
     {
         public GameObject bgTilePrefabs;
-        public SC_Gem bomb;
-        public SC_Gem[] gems;
-        public SC_Gem[] gemBombs;
+        public GemData bomb;
+        public GemData[] gems;
+        public GemData[] gemBombs;
         public float bombChance = 3f;
         public int dropHeight = 1;
         public float gemSpeed = 12;
@@ -32,10 +32,10 @@ namespace Presentation
         [HideInInspector] public int rowsSize = 7;
         [HideInInspector] public int colsSize = 7;
 
-        public IReadOnlyList<IPiece> Gems => gems;
+        public IReadOnlyList<IGemData> Gems => gems;
         public float BombChance => bombChance;
         public int DropHeight => dropHeight;
-        public IPiece Bomb => bomb;
+        public IGemData Bomb => bomb;
         public int MinMatchForBomb => minMatchForBomb;
         public float ScoreSpeed => scoreSpeed;
         public float BombNeighborDelay => bombNeighborDelay;
@@ -47,7 +47,7 @@ namespace Presentation
         public float FindAllMatchesDelay => findAllMatchesDelay;
         public float DestroyMatchesDelay => destroyMatchesDelay;
         public float ChangeStateDelay => changeStateDelay;
-        public IReadOnlyList<IPiece> GemBombs => gemBombs;
+        public IReadOnlyList<IGemData> GemBombs => gemBombs;
         public object TilePrefabs => bgTilePrefabs;
         public float GemSpeed => gemSpeed;
         public int RowsSize => rowsSize;

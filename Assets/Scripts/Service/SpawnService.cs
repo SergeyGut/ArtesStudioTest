@@ -36,12 +36,12 @@ namespace Service
 
             for (int i = 0; i < gems.Count; i++)
             {
-                int matchCount = matchCounterService.GetMatchCountAt(position, gems[i]);
+                int matchCount = matchCounterService.GetMatchCountAt(position, gems[i].GemViewPrefab);
                 matchCounts.Value.Add(matchCount);
 
                 if (matchCount == 0)
                 {
-                    validGems.Value.Add(gems[i]);
+                    validGems.Value.Add(gems[i].GemViewPrefab);
                 }
                 else if (matchCount < lowestMatchCount)
                 {
@@ -59,7 +59,7 @@ namespace Service
             {
                 if (matchCounts.Value[i] == lowestMatchCount)
                 {
-                    validGems.Value.Add(gems[i]);
+                    validGems.Value.Add(gems[i].GemViewPrefab);
                 }
             }
 
@@ -69,7 +69,7 @@ namespace Service
         public void SpawnGem(GridPosition position, IPiece gemToSpawn)
         {
             if (random.Next(0, 100) < settings.BombChance)
-                gemToSpawn = settings.Bomb;
+                gemToSpawn = settings.Bomb.GemViewPrefab;
 
             var gem = gemPool.SpawnGem(gemToSpawn, position, settings.DropHeight);
             gameBoard.SetGem(position, gem);

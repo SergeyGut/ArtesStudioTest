@@ -9,7 +9,9 @@ MonoBehaviour:
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: ab094f00b7d708f438976a2d08a30dfe, type: 3}
-  m_Name: GameVariablesInstaller
+  m_Script: {fileID: 11500000, guid: 58a1bb4f6c5e46b4c8adf59f9d08ef6d, type: 3}
+  m_Name: RedGem
   m_EditorClassIdentifier: 
-  gameVariables: {fileID: 11400000, guid: a7b2ce8f672e034469ab1a8692e053eb, type: 2}
+  type: 2
+  gemViewPrefab: {fileID: 8289337781777951430, guid: 473855e3d0d3c8143836b678c9a1b8b5,
+    type: 3}

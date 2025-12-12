@@ -10,23 +10,23 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 3b3b891bcdf21df4ab82ea34c3afc99e, type: 3}
-  m_Name: GameVariables
+  m_Name: GameSettings
   m_EditorClassIdentifier: 
   bgTilePrefabs: {fileID: 2914066502361773997, guid: 3f39182b81f944a4d93213431acb41c3,
     type: 3}
-  bomb: {fileID: 7728721766547317714, guid: aa0291e650b382941875040db9e8a232, type: 3}
+  bomb: {fileID: 11400000, guid: 4c61ec3b0a4ea894f9b4394bccf9f17f, type: 2}
   gems:
-  - {fileID: -7932498854989450506, guid: 724e93e48c6cc0b4ab3d44e5ea34f2ec, type: 3}
-  - {fileID: 1972979191936378847, guid: 784323496d719684cb6201b200b95864, type: 3}
-  - {fileID: 3416069867743778491, guid: 93bd623174244c047af9ce43cc254c32, type: 3}
-  - {fileID: 8289337781777951430, guid: 473855e3d0d3c8143836b678c9a1b8b5, type: 3}
-  - {fileID: 4372168081761593873, guid: 91ba2370328500d4db689dad894b1602, type: 3}
+  - {fileID: 11400000, guid: 3fdae8b71b540d64ea54b4bcf6848799, type: 2}
+  - {fileID: 11400000, guid: 52949f594d79a4e4a9e6c00c03e53427, type: 2}
+  - {fileID: 11400000, guid: c9bfca4e5a3fa954598c739baae7e57a, type: 2}
+  - {fileID: 11400000, guid: 277d24794297a674798c1893f38e808e, type: 2}
+  - {fileID: 11400000, guid: 03c332dd2939e6c429d9093a22cdd407, type: 2}
   gemBombs:
-  - {fileID: -7932498854989450506, guid: 985dfcb6799096640a2d8d04f4a933b2, type: 3}
-  - {fileID: 751781516295390964, guid: b83ec96311a74394db64f8ebe1d7a8ea, type: 3}
-  - {fileID: 8032419562884992098, guid: 372d74508fc3f8e44907a9a730aa8b2b, type: 3}
-  - {fileID: 5292812064730294580, guid: 62f28e376f1b9e945ab9655c97ccf4a1, type: 3}
-  - {fileID: 4551078947347368410, guid: cef7e32ba43060b44b54bd4ce4e3cb25, type: 3}
+  - {fileID: 11400000, guid: 4e490f2e44e989d488735bcc9623aff3, type: 2}
+  - {fileID: 11400000, guid: 30e122856ccbc2848a5c2bca7e686444, type: 2}
+  - {fileID: 11400000, guid: a9a17587c3e6a384680359b076c02c2f, type: 2}
+  - {fileID: 11400000, guid: a2d6d754c0568a84786effe1c9739aba, type: 2}
+  - {fileID: 11400000, guid: db439d16343c2fc47ab988a36543a0cd, type: 2}
   bombChance: 3
   dropHeight: 1
   gemSpeed: 12
