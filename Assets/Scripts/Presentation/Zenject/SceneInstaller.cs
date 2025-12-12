@@ -17,6 +17,7 @@ public class SceneInstaller : MonoInstaller
         
         Container.Bind<IGameBoard>().To<GameBoard>().AsSingle();
         Container.Bind<IMatchService>().To<MatchService>().AsSingle();
+        Container.Bind<IMatchCounterService>().To<MatchCounterService>().AsSingle();
         Container.Bind<IGameStateProvider>().To<GameStateProvider>().AsSingle();
         Container.Bind<IMatchDispatcher>().To<MatchDispatcher>().AsSingle();
         Container.Bind<Transform>().WithId("GemsHolder").FromInstance(gemsHolder).AsSingle();

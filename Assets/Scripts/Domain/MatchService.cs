@@ -1,4 +1,3 @@
-
 using System.Collections.Generic;
 
 public class MatchService : IMatchService
@@ -16,47 +15,7 @@ public class MatchService : IMatchService
         this.gameBoard = gameBoard;
     }
     
-    public int GetMatchCountAt(GridPosition _PositionToCheck, IPiece _GemToCheck)
-    {
-        int horizontalMatches = CountHorizontalMatch(_PositionToCheck, _GemToCheck);
-        int verticalMatches = CountVerticalMatch(_PositionToCheck, _GemToCheck);
-        return (horizontalMatches >= 2 ? horizontalMatches : 0) + 
-               (verticalMatches >= 2 ? verticalMatches : 0);
-    }
-    
-    private int CountHorizontalMatch(GridPosition pos, IPiece gemToCheck)
-    {
-        int leftCount = CountMatchingGemsInDirection(pos, -1, 0, gemToCheck.Type);
-        int rightCount = CountMatchingGemsInDirection(pos, 1, 0, gemToCheck.Type);
-        
-        return leftCount + rightCount;
-    }
-
-    private int CountVerticalMatch(GridPosition pos, IPiece gemToCheck)
-    {
-        int belowCount = CountMatchingGemsInDirection(pos, 0, -1, gemToCheck.Type);
-        int aboveCount = CountMatchingGemsInDirection(pos, 0, 1, gemToCheck.Type);
-        
-        return belowCount + aboveCount;
-    }
-
-    private int CountMatchingGemsInDirection(GridPosition startPos, int deltaX, int deltaY, GemType typeToMatch)
-    {
-        int count = 0;
-        int x = startPos.X + deltaX;
-        int y = startPos.Y + deltaY;
-
-        while (gameBoard.IsValidPosition(x, y) && gameBoard.GetGem(x, y)?.Type == typeToMatch)
-        {
-            count++;
-            x += deltaX;
-            y += deltaY;
-        }
-
-        return count;
-    }
-
-    public void FindAllMatches(GridPosition? userActionPos = null)
+    public void FindAllMatches(GridPosition? userActionPos = null, GridPosition? otherUserActionPos = null)
     {
         explosions.Clear();
         foreach (var matchInfo in matchInfoMap)
@@ -77,12 +36,14 @@ public class MatchService : IMatchService
 
                     if (horizontalMatches != null)
                     {
-                        AddMatch(new MatchInfo { MatchedGems = horizontalMatches, UserActionPos = userActionPos });
+                        var pos = GetUserActionPosForMatch(horizontalMatches, userActionPos, otherUserActionPos);
+                        AddMatch(new MatchInfo { MatchedGems = horizontalMatches, UserActionPos = pos });
                     }
 
                     if (verticalMatches != null)
                     {
-                        AddMatch(new MatchInfo { MatchedGems = verticalMatches, UserActionPos = userActionPos });
+                        var pos = GetUserActionPosForMatch(verticalMatches, userActionPos, otherUserActionPos);
+                        AddMatch(new MatchInfo { MatchedGems = verticalMatches, UserActionPos = pos });
                     }
                 }
             }
@@ -90,6 +51,27 @@ public class MatchService : IMatchService
         CheckForBombs();
     }
 
+    private GridPosition? GetUserActionPosForMatch(HashSet<IPiece> matchedGems, GridPosition? userActionPos = null, GridPosition? otherUserActionPos = null)
+    {
+        if (!userActionPos.HasValue || !otherUserActionPos.HasValue)
+            return null;
+        
+        foreach (var matchedGem in matchedGems)
+        {
+            if (matchedGem.Position == userActionPos.Value)
+            {
+                return userActionPos;
+            }
+            
+            if (matchedGem.Position == otherUserActionPos.Value)
+            {
+                return otherUserActionPos;
+            }
+        }
+
+        return null;
+    }
+    
     private void AddMatch(MatchInfo newMatch)
     {
         foreach (var gem in newMatch.MatchedGems)
@@ -253,15 +235,5 @@ public class MatchService : IMatchService
                 MarkBombArea(gem.Position, gem.BlastSize);
             }
         }
-    }
-    
-    public void FindAllMatches(GridPosition? posIndex, GridPosition? otherPosIndex)
-    {
-        if (posIndex.HasValue)
-            FindAllMatches(posIndex);
-        else if (otherPosIndex.HasValue)
-            FindAllMatches(otherPosIndex);
-        else
-            FindAllMatches();
     }
 }

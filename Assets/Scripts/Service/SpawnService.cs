@@ -3,7 +3,7 @@ using System;
 public class SpawnService : ISpawnService
 {
     private readonly IGameBoard gameBoard;
-    private readonly IMatchService matchService;
+    private readonly IMatchCounterService matchCounterService;
     private readonly IGemPool<IPiece> gemPool;
     private readonly ISettings settings;
     
@@ -11,12 +11,12 @@ public class SpawnService : ISpawnService
     
     public SpawnService(
         IGameBoard gameBoard,
-        IMatchService matchService,
+        IMatchCounterService matchCounterService,
         IGemPool<IPiece> gemPool,
         ISettings settings)
     {
         this.gameBoard = gameBoard;
-        this.matchService = matchService;
+        this.matchCounterService = matchCounterService;
         this.gemPool = gemPool;
         this.settings = settings;
     }
@@ -30,7 +30,7 @@ public class SpawnService : ISpawnService
         
         for (int i = 0; i < gems.Count; i++)
         {
-            int matchCount = matchService.GetMatchCountAt(position, gems[i]);
+            int matchCount = matchCounterService.GetMatchCountAt(position, gems[i]);
             matchCounts.Value.Add(matchCount);
             
             if (matchCount == 0)
