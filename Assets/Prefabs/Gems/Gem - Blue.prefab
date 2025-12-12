@@ -11,6 +11,7 @@ GameObject:
   - component: {fileID: 7667143225876670887}
   - component: {fileID: 7667143225876670884}
   - component: {fileID: -7932498854989450506}
+  - component: {fileID: 2452796413145528900}
   - component: {fileID: -4313073739878660840}
   m_Layer: 0
   m_Name: Gem - Blue
@@ -98,7 +99,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c5d1e13e319aa044e9776fbd351e9d03, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  posIndex: {x: 0, y: 0}
   type: 0
   isColorBomb: 0
   isMatch: 0
@@ -106,8 +106,18 @@ MonoBehaviour:
     type: 3}
   scoreValue: 10
   blastSize: 1
-  isMoving: 0
-  justSpawned: 0
+--- !u!114 &2452796413145528900
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7667143225876670874}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5b95da2ceb3e953499ff2dae23c20c55, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!61 &-4313073739878660840
 BoxCollider2D:
   m_ObjectHideFlags: 0

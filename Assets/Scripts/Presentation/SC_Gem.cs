@@ -13,11 +13,7 @@ namespace Presentation
 
         [HideInInspector] public GridPosition posIndex;
 
-        private Vector2 firstTouchPosition;
-        private Vector2 currentTouchPosition;
-        private bool mousePressed;
-        private bool swapTriggered;
-        private float swipeAngle;
+        private GemInputHandler inputHandler;
 
         public GemType type;
         public bool isColorBomb;
@@ -35,8 +31,6 @@ namespace Presentation
         private bool isSwapMovement;
         private bool isStopMovingReqiested;
 
-        private IGameStateProvider gameStateProvider;
-        private ISwapService swapService;
         private IGameBoard gameBoard;
         private ISettings settings;
 
@@ -63,15 +57,16 @@ namespace Presentation
         public bool JustSpawned => justSpawned;
         public bool IsMoving => isMoving;
 
+        private void Awake()
+        {
+            inputHandler = GetComponent<GemInputHandler>();
+        }
+
         [Inject]
         public void Construct(
-            IGameStateProvider gameStateProvider,
-            ISwapService swapService,
             IGameBoard gameBoard,
             ISettings settings)
         {
-            this.gameStateProvider = gameStateProvider;
-            this.swapService = swapService;
             this.gameBoard = gameBoard;
             this.settings = settings;
         }
@@ -137,7 +132,6 @@ namespace Presentation
                 RequestStopMoving();
             }
 
-            HandleInput();
         }
 
         private void RequestStopMoving()
@@ -155,26 +149,6 @@ namespace Presentation
                 isSwapMovement = false;
                 isStopMovingReqiested = false;
                 previousTargetPos = new Vector2(posIndex.X, posIndex.Y);
-            }
-        }
-
-        private void HandleInput()
-        {
-            if (mousePressed)
-            {
-                if (Input.GetMouseButton(0))
-                {
-                    currentTouchPosition = Camera.main.ScreenToWorldPoint(Input.mousePosition);
-                    if (!swapTriggered && gameStateProvider.CurrentState == GameState.move)
-                    {
-                        CheckForBorderCross();
-                    }
-                }
-                else if (Input.GetMouseButtonUp(0))
-                {
-                    mousePressed = false;
-                    swapTriggered = false;
-                }
             }
         }
 
@@ -196,43 +170,21 @@ namespace Presentation
 
         public void OnReturnToPool()
         {
-            StopAllCoroutines();
+            // TODO: Stop all async operations
         }
 
         private void ResetState()
         {
             isMatch = false;
-            mousePressed = false;
-            swapTriggered = false;
-            swipeAngle = 0;
             previousPos = GridPosition.zero;
             isMoving = false;
             isSwapMovement = false;
             isStopMovingReqiested = false;
             previousTargetPos = Vector2.zero;
-        }
-
-        private void OnMouseDown()
-        {
-            if (gameStateProvider.CurrentState == GameState.move)
+            
+            if (inputHandler != null)
             {
-                firstTouchPosition = Camera.main.ScreenToWorldPoint(Input.mousePosition);
-                currentTouchPosition = firstTouchPosition;
-                mousePressed = true;
-                swapTriggered = false;
-            }
-        }
-
-        private void CheckForBorderCross()
-        {
-            Vector2 delta = currentTouchPosition - firstTouchPosition;
-            float distance = delta.magnitude;
-
-            if (distance > 0.5f)
-            {
-                swipeAngle = Mathf.Atan2(delta.y, delta.x) * Mathf.Rad2Deg;
-                swapService.MovePieces(this);
-                swapTriggered = true;
+                inputHandler.ResetState();
             }
         }
         
@@ -241,7 +193,7 @@ namespace Presentation
             Instantiate(destroyEffect, posIndex.ToVector3(), Quaternion.identity);
         }
 
-        public float SwapAngle => swipeAngle;
+        public float SwapAngle => inputHandler != null ? inputHandler.SwapAngle : 0;
 
         public float TargetPositionDistance => Vector2.Distance(transform.position, posIndex.ToVector2());
     }
