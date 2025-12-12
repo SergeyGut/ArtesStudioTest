@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using TMPro;
 using UnityEngine;
 using Zenject;
 
@@ -11,13 +12,17 @@ public class SceneInstaller : MonoInstaller
         foreach (GameObject g in obj)
             unityObjects.Add(g.name,g);
 
-        IGemPool<IPiece> gemPool = new GemPool(unityObjects["GemsHolder"].transform, Container);
+        var gemsHolder = unityObjects["GemsHolder"].transform;
+        var scoreText = unityObjects["Txt_Score"].GetComponent<TextMeshProUGUI>();
+
+        IGemPool<IPiece> gemPool = new GemPool(gemsHolder, Container);
         
         Container.Bind<IGameBoard>().To<GameBoard>().AsSingle();
         Container.Bind<IMatchService>().To<MatchService>().AsSingle();
         Container.Bind<IGameStateProvider>().To<GameStateProvider>().AsSingle();
         Container.Bind<IMatchDispatcher>().To<MatchDispatcher>().AsSingle();
-        Container.BindInstance(unityObjects).AsSingle();
+        Container.Bind<Transform>().WithId("GemsHolder").FromInstance(gemsHolder).AsSingle();
+        Container.Bind<TextMeshProUGUI>().WithId("ScoreText").FromInstance(scoreText).AsSingle();
         Container.Bind<IGemPool<IPiece>>().FromInstance(gemPool).AsSingle();
         Container.Bind<IPathfinderService>().To<PathfinderService>().AsSingle();
         Container.Bind<ISpawnService>().To<SpawnService>().AsSingle();

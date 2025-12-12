@@ -1,4 +1,3 @@
-using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
 using Zenject;
@@ -10,16 +9,15 @@ public class ScoreUpdater : ITickable, IInitializable
     private int lastDisplayedScoreInt = -1;
 
     private TextMeshProUGUI scoreText;
-    private Dictionary<string, GameObject> unityObjects;
     private IScoreService scoreService;
     private ISettings settings;
 
     public ScoreUpdater(
-        Dictionary<string, GameObject> unityObjects,
+        [Inject(Id = "ScoreText")] TextMeshProUGUI scoreText,
         IScoreService scoreService,
         ISettings settings)
     {
-        this.unityObjects = unityObjects;
+        this.scoreText = scoreText;
         this.scoreService = scoreService;
         this.settings = settings;
     }
@@ -38,8 +36,6 @@ public class ScoreUpdater : ITickable, IInitializable
 
     public void Initialize()
     {
-        scoreText = unityObjects["Txt_Score"].GetComponent<TextMeshProUGUI>();
-        
         var score = scoreService.Score;
         scoreText.text = score.ToString();
         

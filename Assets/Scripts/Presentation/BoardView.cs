@@ -1,4 +1,3 @@
-using System.Collections.Generic;
 using UnityEngine;
 using Zenject;
 
@@ -8,18 +7,16 @@ public class BoardView : IBoardView, IInitializable
     private ISettings settings;
     private ISpawnService spawnService;
     private IGemPool<IPiece> gemPool;
-    private Dictionary<string, GameObject> unityObjects;
-    
-    private Transform GemsHolder => unityObjects["GemsHolder"].transform;
+    private Transform gemsHolder;
 
     public BoardView(
-        Dictionary<string, GameObject> unityObjects,
+        [Inject(Id = "GemsHolder")] Transform gemsHolder,
         IGameBoard gameBoard,
         ISpawnService spawnService,
         ISettings settings,
         IGemPool<IPiece> gemPool)
     {
-        this.unityObjects = unityObjects;
+        this.gemsHolder = gemsHolder;
         this.gameBoard = gameBoard;
         this.settings = settings;
         this.spawnService = spawnService;
@@ -28,7 +25,7 @@ public class BoardView : IBoardView, IInitializable
     
     public void Initialize()
     {
-        var parent = GemsHolder;
+        var parent = gemsHolder;
         
         for (int x = 0; x < gameBoard.Width; x++)
         for (int y = 0; y < gameBoard.Height; y++)
