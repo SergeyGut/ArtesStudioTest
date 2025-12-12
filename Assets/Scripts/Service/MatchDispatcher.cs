@@ -1,127 +1,133 @@
 ﻿using Cysharp.Threading.Tasks;
+using Domain.Interfaces;
+using Domain.Pool;
+using Service.Interfaces;
 using Zenject;
 
-public class MatchDispatcher : IMatchDispatcher
+namespace Service
 {
-    private IGameBoard gameBoard;
-    private IMatchService matchService;
-    private IPathfinderService pathfinderService;
-    private ISpawnService spawnService;
-    private IDestroyService destroyService;
-    private IBombService bombService;
-    private IDropService dropService;
-    private ISettings settings;
-    private IBoardView boardView;
-    private IGameStateProvider gameStateProvider;
-    
-    [Inject]
-    private void Construct(
-        IGameBoard gameBoard,
-        IMatchService matchService,
-        IPathfinderService pathfinderService,
-        ISpawnService spawnService,
-        IDestroyService destroyService,
-        IBombService bombService,
-        IDropService dropService,
-        ISettings settings,
-        IBoardView boardView,
-        IGameStateProvider gameStateProvider)
+    public class MatchDispatcher : IMatchDispatcher
     {
-        this.gameBoard = gameBoard;
-        this.matchService = matchService;
-        this.pathfinderService = pathfinderService;
-        this.spawnService = spawnService;
-        this.destroyService = destroyService;
-        this.bombService = bombService;
-        this.dropService = dropService;
-        this.settings = settings;
-        this.boardView = boardView;
-        this.gameStateProvider = gameStateProvider;
-    }
+        private IGameBoard gameBoard;
+        private IMatchService matchService;
+        private IPathfinderService pathfinderService;
+        private ISpawnService spawnService;
+        private IDestroyService destroyService;
+        private IBombService bombService;
+        private IDropService dropService;
+        private ISettings settings;
+        private IBoardView boardView;
+        private IGameStateProvider gameStateProvider;
 
-    public void DestroyMatches()
-    {
-        DestroyMatchesAsync().Forget();
-    }
-
-    private async UniTask DestroyMatchesAsync()
-    {
-        using var bombCreationPositions = pathfinderService.CollectBombCreationPositions();
-        using var newlyCreatedBombs = PooledHashSet<IPiece>.Get();
-        
-        using var matchedGems = pathfinderService.CollectMatchedGems();
-        destroyService.DestroyGems(matchedGems.Value);
-        bombService.CreateBombs(bombCreationPositions.Value, newlyCreatedBombs);
-        
-        await DestroyExplosionsWithDelayAsync(newlyCreatedBombs);
-        await DecreaseRowAsync();
-    }
-
-    private async UniTask DestroyExplosionsWithDelayAsync(PooledHashSet<IPiece> newlyCreatedBombs)
-    {
-        using var nonBombExplosions = pathfinderService.CollectNonBombExplosions(newlyCreatedBombs);
-        if (nonBombExplosions.Value.Count > 0)
+        [Inject]
+        private void Construct(
+            IGameBoard gameBoard,
+            IMatchService matchService,
+            IPathfinderService pathfinderService,
+            ISpawnService spawnService,
+            IDestroyService destroyService,
+            IBombService bombService,
+            IDropService dropService,
+            ISettings settings,
+            IBoardView boardView,
+            IGameStateProvider gameStateProvider)
         {
-            await UniTask.WaitForSeconds(settings.BombNeighborDelay);
-            destroyService.DestroyGems(nonBombExplosions.Value);
+            this.gameBoard = gameBoard;
+            this.matchService = matchService;
+            this.pathfinderService = pathfinderService;
+            this.spawnService = spawnService;
+            this.destroyService = destroyService;
+            this.bombService = bombService;
+            this.dropService = dropService;
+            this.settings = settings;
+            this.boardView = boardView;
+            this.gameStateProvider = gameStateProvider;
         }
-        
-        using var bombExplosions = pathfinderService.CollectBombExplosions(newlyCreatedBombs);
-        if (bombExplosions.Value.Count > 0)
+
+        public void DestroyMatches()
         {
-            await UniTask.WaitForSeconds(settings.BombSelfDelay);
-            destroyService.DestroyGems(bombExplosions.Value);
-            await UniTask.WaitForSeconds(settings.BombPostSelfDelay);
+            DestroyMatchesAsync().Forget();
         }
-    }
-    
-    private async UniTask DecreaseRowAsync()
-    {
-        await UniTask.WaitForSeconds(settings.DecreaseRowDelay);
 
-        bool useColumnDelay = settings.DecreaseSingleColumnDelay > 0f;
-        using var decreaseTasks = PooledList<UniTask>.Get();
-        for (int x = 0; x < gameBoard.Width; x++)
+        private async UniTask DestroyMatchesAsync()
         {
-            var task = DecreaseColumnAsync(x);
-            decreaseTasks.Value.Add(task);
+            using var bombCreationPositions = pathfinderService.CollectBombCreationPositions();
+            using var newlyCreatedBombs = PooledHashSet<IPiece>.Get();
 
-            if (useColumnDelay && !task.GetAwaiter().IsCompleted)
+            using var matchedGems = pathfinderService.CollectMatchedGems();
+            destroyService.DestroyGems(matchedGems.Value);
+            bombService.CreateBombs(bombCreationPositions.Value, newlyCreatedBombs);
+
+            await DestroyExplosionsWithDelayAsync(newlyCreatedBombs);
+            await DecreaseRowAsync();
+        }
+
+        private async UniTask DestroyExplosionsWithDelayAsync(PooledHashSet<IPiece> newlyCreatedBombs)
+        {
+            using var nonBombExplosions = pathfinderService.CollectNonBombExplosions(newlyCreatedBombs);
+            if (nonBombExplosions.Value.Count > 0)
             {
-                await UniTask.WaitForSeconds(settings.DecreaseSingleColumnDelay);
+                await UniTask.WaitForSeconds(settings.BombNeighborDelay);
+                destroyService.DestroyGems(nonBombExplosions.Value);
+            }
+
+            using var bombExplosions = pathfinderService.CollectBombExplosions(newlyCreatedBombs);
+            if (bombExplosions.Value.Count > 0)
+            {
+                await UniTask.WaitForSeconds(settings.BombSelfDelay);
+                destroyService.DestroyGems(bombExplosions.Value);
+                await UniTask.WaitForSeconds(settings.BombPostSelfDelay);
             }
         }
 
-        await UniTask.WhenAll(decreaseTasks.Value);
-
-        boardView.CheckMisplacedGems();
-        
-        await UniTask.WaitForSeconds(settings.FindAllMatchesDelay);
-        
-        matchService.FindAllMatches();
-        if (matchService.MatchInfoMap.Count > 0)
+        private async UniTask DecreaseRowAsync()
         {
-            await UniTask.WaitForSeconds(settings.DestroyMatchesDelay);
-            DestroyMatches();
-        }
-        else
-        {
-            await UniTask.WaitForSeconds(settings.ChangeStateDelay);
-            gameStateProvider.SetState(GameState.move);
-        }
-    }
+            await UniTask.WaitForSeconds(settings.DecreaseRowDelay);
 
-    private async UniTask DecreaseColumnAsync(int  x)
-    {
-        bool hasActivity = true;
-        while (hasActivity)
-        {
-            spawnService.SpawnTopX(x);
-            hasActivity = dropService.DropSingleX(x);
-
-            if (hasActivity)
+            bool useColumnDelay = settings.DecreaseSingleColumnDelay > 0f;
+            using var decreaseTasks = PooledList<UniTask>.Get();
+            for (int x = 0; x < gameBoard.Width; x++)
             {
-                await UniTask.WaitForSeconds(settings.DecreaseSingleRowDelay);
+                var task = DecreaseColumnAsync(x);
+                decreaseTasks.Value.Add(task);
+
+                if (useColumnDelay && !task.GetAwaiter().IsCompleted)
+                {
+                    await UniTask.WaitForSeconds(settings.DecreaseSingleColumnDelay);
+                }
+            }
+
+            await UniTask.WhenAll(decreaseTasks.Value);
+
+            boardView.CheckMisplacedGems();
+
+            await UniTask.WaitForSeconds(settings.FindAllMatchesDelay);
+
+            matchService.FindAllMatches();
+            if (matchService.MatchInfoMap.Count > 0)
+            {
+                await UniTask.WaitForSeconds(settings.DestroyMatchesDelay);
+                DestroyMatches();
+            }
+            else
+            {
+                await UniTask.WaitForSeconds(settings.ChangeStateDelay);
+                gameStateProvider.SetState(GameState.move);
+            }
+        }
+
+        private async UniTask DecreaseColumnAsync(int x)
+        {
+            bool hasActivity = true;
+            while (hasActivity)
+            {
+                spawnService.SpawnTopX(x);
+                hasActivity = dropService.DropSingleX(x);
+
+                if (hasActivity)
+                {
+                    await UniTask.WaitForSeconds(settings.DecreaseSingleRowDelay);
+                }
             }
         }
     }

@@ -1,7 +1,11 @@
 using System.Collections.Generic;
+using Domain.Interfaces;
 
-public class MatchInfo
+namespace Domain
 {
-    public HashSet<IPiece> MatchedGems;
-    public GridPosition? UserActionPos;
+    public class MatchInfo
+    {
+        public HashSet<IPiece> MatchedGems;
+        public GridPosition? UserActionPos;
+    }
 }

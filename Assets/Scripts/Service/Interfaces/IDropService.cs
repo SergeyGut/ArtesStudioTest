@@ -1,5 +1,8 @@
 
-public interface IDropService
+namespace Service.Interfaces
 {
-    bool DropSingleX(int x);
+    public interface IDropService
+    {
+        bool DropSingleX(int x);
+    }
 }

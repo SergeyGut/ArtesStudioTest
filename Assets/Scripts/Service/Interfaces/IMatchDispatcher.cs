@@ -1,6 +1,8 @@
 
-public interface IMatchDispatcher
+namespace Service.Interfaces
 {
-    void DestroyMatches();
+    public interface IMatchDispatcher
+    {
+        void DestroyMatches();
+    }
 }
-

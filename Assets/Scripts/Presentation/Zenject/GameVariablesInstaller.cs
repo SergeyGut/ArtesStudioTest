@@ -1,15 +1,16 @@
 using UnityEngine;
 using Zenject;
 
-[CreateAssetMenu(fileName = "GameVariablesInstaller", menuName = "Installers/GameVariablesInstaller")]
-public class GameVariablesInstaller : ScriptableObjectInstaller<GameVariablesInstaller>
+namespace Presentation.Installers
 {
-    [SerializeField]
-    private SC_GameVariables gameVariables;
-    
-    public override void InstallBindings()
+    [CreateAssetMenu(fileName = "GameVariablesInstaller", menuName = "Installers/GameVariablesInstaller")]
+    public class GameVariablesInstaller : ScriptableObjectInstaller<GameVariablesInstaller>
     {
-        Container.BindInterfacesTo<SC_GameVariables>().FromInstance(gameVariables).AsSingle();
+        [SerializeField] private SC_GameVariables gameVariables;
+
+        public override void InstallBindings()
+        {
+            Container.BindInterfacesTo<SC_GameVariables>().FromInstance(gameVariables).AsSingle();
+        }
     }
 }
-

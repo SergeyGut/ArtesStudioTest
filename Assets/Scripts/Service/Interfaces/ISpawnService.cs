@@ -1,8 +1,13 @@
 
-public interface ISpawnService
-{
-    IPiece SelectNonMatchingGem(GridPosition position);
-    void SpawnGem(GridPosition position, IPiece gemToSpawn);
-    void SpawnTopX(int x);
-}
+using Domain;
+using Domain.Interfaces;
 
+namespace Service.Interfaces
+{
+    public interface ISpawnService
+    {
+        IPiece SelectNonMatchingGem(GridPosition position);
+        void SpawnGem(GridPosition position, IPiece gemToSpawn);
+        void SpawnTopX(int x);
+    }
+}

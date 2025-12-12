@@ -1,5 +1,8 @@
 
-public interface IBoardView
+namespace Service.Interfaces
 {
-    void CheckMisplacedGems();
+    public interface IBoardView
+    {
+        void CheckMisplacedGems();
+    }
 }

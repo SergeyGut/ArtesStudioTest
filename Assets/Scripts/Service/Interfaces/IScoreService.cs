@@ -1,6 +1,9 @@
 
-public interface IScoreService
+namespace Service.Interfaces
 {
-    void AddScore(int points);
-    int Score { get; }
+    public interface IScoreService
+    {
+        void AddScore(int points);
+        int Score { get; }
+    }
 }

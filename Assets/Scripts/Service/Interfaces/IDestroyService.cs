@@ -1,6 +1,10 @@
 using System.Collections.Generic;
+using Domain.Interfaces;
 
-public interface IDestroyService
+namespace Service.Interfaces
 {
-    void DestroyGems(IEnumerable<IPiece> gems);
+    public interface IDestroyService
+    {
+        void DestroyGems(IEnumerable<IPiece> gems);
+    }
 }

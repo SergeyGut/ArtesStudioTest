@@ -1,6 +1,11 @@
 
-public interface IGameStateProvider
+using Domain.Interfaces;
+
+namespace Service.Interfaces
 {
-    GameState CurrentState { get; }
-    void SetState(GameState state);
+    public interface IGameStateProvider
+    {
+        GameState CurrentState { get; }
+        void SetState(GameState state);
+    }
 }

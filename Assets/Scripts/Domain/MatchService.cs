@@ -1,31 +1,36 @@
 using System.Collections.Generic;
+using Domain.Interfaces;
+using Domain.Pool;
 
-public class MatchService : IMatchService
+namespace Domain
 {
-    private readonly HashSet<IPiece> explosions = new();
-    private readonly List<MatchInfo> matchInfoMap = new();
-    
-    private readonly IGameBoard gameBoard;
-    
-    public HashSet<IPiece> Explosions => explosions;
-    public List<MatchInfo> MatchInfoMap => matchInfoMap;
-    
-    public MatchService(IGameBoard gameBoard)
+    public class MatchService : IMatchService
     {
-        this.gameBoard = gameBoard;
-    }
-    
-    public void FindAllMatches(GridPosition? userActionPos = null, GridPosition? otherUserActionPos = null)
-    {
-        explosions.Clear();
-        foreach (var matchInfo in matchInfoMap)
-        {
-            if (matchInfo.MatchedGems != null)
-                CollectionPool<HashSet<IPiece>>.Release(matchInfo.MatchedGems);
-        }
-        matchInfoMap.Clear();
+        private readonly HashSet<IPiece> explosions = new();
+        private readonly List<MatchInfo> matchInfoMap = new();
 
-        for (int x = 0; x < gameBoard.Width; x++)
+        private readonly IGameBoard gameBoard;
+
+        public HashSet<IPiece> Explosions => explosions;
+        public List<MatchInfo> MatchInfoMap => matchInfoMap;
+
+        public MatchService(IGameBoard gameBoard)
+        {
+            this.gameBoard = gameBoard;
+        }
+
+        public void FindAllMatches(GridPosition? userActionPos = null, GridPosition? otherUserActionPos = null)
+        {
+            explosions.Clear();
+            foreach (var matchInfo in matchInfoMap)
+            {
+                if (matchInfo.MatchedGems != null)
+                    CollectionPool<HashSet<IPiece>>.Release(matchInfo.MatchedGems);
+            }
+
+            matchInfoMap.Clear();
+
+            for (int x = 0; x < gameBoard.Width; x++)
             for (int y = 0; y < gameBoard.Height; y++)
             {
                 IPiece currentGem = gameBoard.GetGem(x, y);
@@ -48,191 +53,195 @@ public class MatchService : IMatchService
                 }
             }
 
-        CheckForBombs();
-    }
-
-    private GridPosition? GetUserActionPosForMatch(HashSet<IPiece> matchedGems, GridPosition? userActionPos = null, GridPosition? otherUserActionPos = null)
-    {
-        if (!userActionPos.HasValue || !otherUserActionPos.HasValue)
-            return null;
-        
-        foreach (var matchedGem in matchedGems)
-        {
-            if (matchedGem.Position == userActionPos.Value)
-            {
-                return userActionPos;
-            }
-            
-            if (matchedGem.Position == otherUserActionPos.Value)
-            {
-                return otherUserActionPos;
-            }
+            CheckForBombs();
         }
 
-        return null;
-    }
-    
-    private void AddMatch(MatchInfo newMatch)
-    {
-        foreach (var gem in newMatch.MatchedGems)
+        private GridPosition? GetUserActionPosForMatch(HashSet<IPiece> matchedGems, GridPosition? userActionPos = null,
+            GridPosition? otherUserActionPos = null)
         {
-            MarkGemAsMatched(gem);
-        }
-        
-        for (int i = 0; i < matchInfoMap.Count; ++i)
-        {
-            if (matchInfoMap[i].MatchedGems.Overlaps(newMatch.MatchedGems))
+            if (!userActionPos.HasValue || !otherUserActionPos.HasValue)
+                return null;
+
+            foreach (var matchedGem in matchedGems)
             {
-                matchInfoMap[i].MatchedGems.UnionWith(newMatch.MatchedGems);
-                matchInfoMap[i].UserActionPos ??= newMatch.UserActionPos;
-                if (newMatch.MatchedGems != matchInfoMap[i].MatchedGems)
+                if (matchedGem.Position == userActionPos.Value)
                 {
-                    CollectionPool<HashSet<IPiece>>.Release(newMatch.MatchedGems);
+                    return userActionPos;
                 }
-                return;
+
+                if (matchedGem.Position == otherUserActionPos.Value)
+                {
+                    return otherUserActionPos;
+                }
             }
-        }
-        
-        matchInfoMap.Add(newMatch);
-    }
 
-    private HashSet<IPiece> CheckMatchesInDirection(int x, int y, int deltaX, int deltaY)
-    {
-        IPiece currentGem = gameBoard.GetGem(x, y);
-        
-        if (currentGem == null)
-            return null;
-
-        var matches = CollectionPool<HashSet<IPiece>>.Get();
-        matches.Add(currentGem);
-
-        foreach (var gem in GetMatchingGemsInDirection(x, y, deltaX, deltaY, currentGem.Type))
-        {
-            matches.Add(gem);
-        }
-
-        foreach (var gem in GetMatchingGemsInDirection(x, y, -deltaX, -deltaY, currentGem.Type))
-        {
-            matches.Add(gem);
-        }
-
-        if (matches.Count < 3)
-        {
-            CollectionPool<HashSet<IPiece>>.Release(matches);
             return null;
         }
 
-        return matches;
-    }
-
-    private IEnumerable<IPiece> GetMatchingGemsInDirection(int startX, int startY, int deltaX, int deltaY, GemType typeToMatch)
-    {
-        int x = startX + deltaX;
-        int y = startY + deltaY;
-
-        while (gameBoard.IsValidPosition(x, y) && gameBoard.GetGem(x, y)?.Type == typeToMatch)
+        private void AddMatch(MatchInfo newMatch)
         {
-            yield return gameBoard.GetGem(x, y);
-            x += deltaX;
-            y += deltaY;
-        }
-    }
-
-    private void CheckForBombs()
-    {
-        foreach (var matchInfo in MatchInfoMap)
-        foreach (var gem in matchInfo.MatchedGems)
-        {
-            int x = gem.Position.X;
-            int y = gem.Position.Y;
-
-            if (gem.Position.X > 0)
+            foreach (var gem in newMatch.MatchedGems)
             {
-                var otherGem = gameBoard.GetGem(x - 1, y);
-                if (otherGem?.Type == GemType.bomb)
-                    MarkBombArea(new GridPosition(x - 1, y), otherGem.BlastSize);
+                MarkGemAsMatched(gem);
             }
 
-            if (gem.Position.X + 1 < gameBoard.Width)
+            for (int i = 0; i < matchInfoMap.Count; ++i)
             {
-                var otherGem = gameBoard.GetGem(x + 1, y);
-                if (otherGem?.Type == GemType.bomb)
-                    MarkBombArea(new GridPosition(x + 1, y), otherGem.BlastSize);
-            }
-
-            if (gem.Position.Y > 0)
-            {
-                var otherGem = gameBoard.GetGem(x, y - 1);
-                if (otherGem?.Type == GemType.bomb)
-                    MarkBombArea(new GridPosition(x, y - 1), otherGem.BlastSize);
-            }
-
-            if (gem.Position.Y + 1 < gameBoard.Height)
-            {
-                var otherGem = gameBoard.GetGem(x, y + 1);
-                if (otherGem?.Type == GemType.bomb)
-                    MarkBombArea(new GridPosition(x, y + 1), otherGem.BlastSize);
-            }
-        }
-    }
-
-    private void MarkBombArea(GridPosition bombPos, int _BlastSize)
-    {
-        for (int x = bombPos.X - _BlastSize; x <= bombPos.X + _BlastSize; x++)
-        {
-            for (int y = bombPos.Y - _BlastSize; y <= bombPos.Y + _BlastSize; y++)
-            {
-                if (x >= 0 && x < gameBoard.Width && y >= 0 && y < gameBoard.Height)
+                if (matchInfoMap[i].MatchedGems.Overlaps(newMatch.MatchedGems))
                 {
-                    var gem = gameBoard.GetGem(x, y);
-                    if (gem == null) continue;
-                    
-                    MarkGemAsMatched(gem);
-                    explosions.Add(gem);
+                    matchInfoMap[i].MatchedGems.UnionWith(newMatch.MatchedGems);
+                    matchInfoMap[i].UserActionPos ??= newMatch.UserActionPos;
+                    if (newMatch.MatchedGems != matchInfoMap[i].MatchedGems)
+                    {
+                        CollectionPool<HashSet<IPiece>>.Release(newMatch.MatchedGems);
+                    }
+
+                    return;
+                }
+            }
+
+            matchInfoMap.Add(newMatch);
+        }
+
+        private HashSet<IPiece> CheckMatchesInDirection(int x, int y, int deltaX, int deltaY)
+        {
+            IPiece currentGem = gameBoard.GetGem(x, y);
+
+            if (currentGem == null)
+                return null;
+
+            var matches = CollectionPool<HashSet<IPiece>>.Get();
+            matches.Add(currentGem);
+
+            foreach (var gem in GetMatchingGemsInDirection(x, y, deltaX, deltaY, currentGem.Type))
+            {
+                matches.Add(gem);
+            }
+
+            foreach (var gem in GetMatchingGemsInDirection(x, y, -deltaX, -deltaY, currentGem.Type))
+            {
+                matches.Add(gem);
+            }
+
+            if (matches.Count < 3)
+            {
+                CollectionPool<HashSet<IPiece>>.Release(matches);
+                return null;
+            }
+
+            return matches;
+        }
+
+        private IEnumerable<IPiece> GetMatchingGemsInDirection(int startX, int startY, int deltaX, int deltaY,
+            GemType typeToMatch)
+        {
+            int x = startX + deltaX;
+            int y = startY + deltaY;
+
+            while (gameBoard.IsValidPosition(x, y) && gameBoard.GetGem(x, y)?.Type == typeToMatch)
+            {
+                yield return gameBoard.GetGem(x, y);
+                x += deltaX;
+                y += deltaY;
+            }
+        }
+
+        private void CheckForBombs()
+        {
+            foreach (var matchInfo in MatchInfoMap)
+            foreach (var gem in matchInfo.MatchedGems)
+            {
+                int x = gem.Position.X;
+                int y = gem.Position.Y;
+
+                if (gem.Position.X > 0)
+                {
+                    var otherGem = gameBoard.GetGem(x - 1, y);
+                    if (otherGem?.Type == GemType.bomb)
+                        MarkBombArea(new GridPosition(x - 1, y), otherGem.BlastSize);
+                }
+
+                if (gem.Position.X + 1 < gameBoard.Width)
+                {
+                    var otherGem = gameBoard.GetGem(x + 1, y);
+                    if (otherGem?.Type == GemType.bomb)
+                        MarkBombArea(new GridPosition(x + 1, y), otherGem.BlastSize);
+                }
+
+                if (gem.Position.Y > 0)
+                {
+                    var otherGem = gameBoard.GetGem(x, y - 1);
+                    if (otherGem?.Type == GemType.bomb)
+                        MarkBombArea(new GridPosition(x, y - 1), otherGem.BlastSize);
+                }
+
+                if (gem.Position.Y + 1 < gameBoard.Height)
+                {
+                    var otherGem = gameBoard.GetGem(x, y + 1);
+                    if (otherGem?.Type == GemType.bomb)
+                        MarkBombArea(new GridPosition(x, y + 1), otherGem.BlastSize);
                 }
             }
         }
-    }
 
-    private void MarkColorBombArea(GridPosition bombPos, int _BlastSize)
-    {
-        int sqrBlastSize = _BlastSize * _BlastSize;
-        for (int x = bombPos.X - _BlastSize; x <= bombPos.X + _BlastSize; x++)
+        private void MarkBombArea(GridPosition bombPos, int _BlastSize)
         {
-            for (int y = bombPos.Y - _BlastSize; y <= bombPos.Y + _BlastSize; y++)
+            for (int x = bombPos.X - _BlastSize; x <= bombPos.X + _BlastSize; x++)
             {
-                if (x >= 0 && x < gameBoard.Width && y >= 0 && y < gameBoard.Height)
+                for (int y = bombPos.Y - _BlastSize; y <= bombPos.Y + _BlastSize; y++)
                 {
-                    var gem = gameBoard.GetGem(x, y);
-                    if (gem == null) continue;
-                    
-                    int dx = x - bombPos.X;
-                    int dy = y - bombPos.Y;
-                    int sqrDistance = dx * dx + dy * dy;
-                    if (sqrDistance > sqrBlastSize) continue;
+                    if (x >= 0 && x < gameBoard.Width && y >= 0 && y < gameBoard.Height)
+                    {
+                        var gem = gameBoard.GetGem(x, y);
+                        if (gem == null) continue;
 
-                    MarkGemAsMatched(gem);
-                    explosions.Add(gem);
+                        MarkGemAsMatched(gem);
+                        explosions.Add(gem);
+                    }
                 }
             }
         }
-    }
-    
-    private void MarkGemAsMatched(IPiece gem)
-    {
-        if (gem is { IsMatch: false })
-        {
-            gem.IsMatch = true;
-            
-            if (gem.IsColorBomb)
-            {
-                MarkColorBombArea(gem.Position, gem.BlastSize);
-                return;
-            }
 
-            if (gem.Type == GemType.bomb)
+        private void MarkColorBombArea(GridPosition bombPos, int _BlastSize)
+        {
+            int sqrBlastSize = _BlastSize * _BlastSize;
+            for (int x = bombPos.X - _BlastSize; x <= bombPos.X + _BlastSize; x++)
             {
-                MarkBombArea(gem.Position, gem.BlastSize);
+                for (int y = bombPos.Y - _BlastSize; y <= bombPos.Y + _BlastSize; y++)
+                {
+                    if (x >= 0 && x < gameBoard.Width && y >= 0 && y < gameBoard.Height)
+                    {
+                        var gem = gameBoard.GetGem(x, y);
+                        if (gem == null) continue;
+
+                        int dx = x - bombPos.X;
+                        int dy = y - bombPos.Y;
+                        int sqrDistance = dx * dx + dy * dy;
+                        if (sqrDistance > sqrBlastSize) continue;
+
+                        MarkGemAsMatched(gem);
+                        explosions.Add(gem);
+                    }
+                }
+            }
+        }
+
+        private void MarkGemAsMatched(IPiece gem)
+        {
+            if (gem is { IsMatch: false })
+            {
+                gem.IsMatch = true;
+
+                if (gem.IsColorBomb)
+                {
+                    MarkColorBombArea(gem.Position, gem.BlastSize);
+                    return;
+                }
+
+                if (gem.Type == GemType.bomb)
+                {
+                    MarkBombArea(gem.Position, gem.BlastSize);
+                }
             }
         }
     }

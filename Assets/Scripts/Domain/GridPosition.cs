@@ -1,40 +1,43 @@
 using System;
 
-public struct GridPosition : IEquatable<GridPosition>
+namespace Domain
 {
-    public static readonly GridPosition zero = new(0, 0);
-
-    public int X;
-    public int Y;
-
-    public GridPosition(int x, int y)
+    public struct GridPosition : IEquatable<GridPosition>
     {
-        X = x;
-        Y = y;
-    }
+        public static readonly GridPosition zero = new(0, 0);
 
-    public override bool Equals(object obj)
-    {
-        return obj is GridPosition other && Equals(other);
-    }
+        public int X;
+        public int Y;
 
-    public override int GetHashCode()
-    {
-        return HashCode.Combine(X, Y);
-    }
+        public GridPosition(int x, int y)
+        {
+            X = x;
+            Y = y;
+        }
 
-    public static bool operator ==(GridPosition left, GridPosition right)
-    {
-        return left.Equals(right);
-    }
+        public override bool Equals(object obj)
+        {
+            return obj is GridPosition other && Equals(other);
+        }
 
-    public static bool operator !=(GridPosition left, GridPosition right)
-    {
-        return !(left == right);
-    }
+        public override int GetHashCode()
+        {
+            return HashCode.Combine(X, Y);
+        }
 
-    public bool Equals(GridPosition other)
-    {
-        return X == other.X && Y == other.Y;
+        public static bool operator ==(GridPosition left, GridPosition right)
+        {
+            return left.Equals(right);
+        }
+
+        public static bool operator !=(GridPosition left, GridPosition right)
+        {
+            return !(left == right);
+        }
+
+        public bool Equals(GridPosition other)
+        {
+            return X == other.X && Y == other.Y;
+        }
     }
 }

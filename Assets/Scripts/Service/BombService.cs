@@ -1,45 +1,53 @@
 using System.Collections.Generic;
+using Domain;
+using Domain.Interfaces;
+using Domain.Pool;
+using Service.Interfaces;
 
-public class BombService : IBombService
+namespace Service
 {
-    private readonly IGameBoard gameBoard;
-    private readonly IMatchService matchService;
-    private readonly IGemPool<IPiece> gemPool;
-    private readonly ISettings settings;
-    
-    public BombService(
-        IGameBoard gameBoard, 
-        IMatchService matchService, 
-        IGemPool<IPiece> gemPool, 
-        ISettings settings)
+    public class BombService : IBombService
     {
-        this.gameBoard = gameBoard;
-        this.matchService = matchService;
-        this.gemPool = gemPool;
-        this.settings = settings;
-    }
-    
-    public void CreateBombs(Dictionary<GridPosition, GemType> bombPositions, PooledHashSet<IPiece> newlyCreatedBombs)
-    {
-        foreach (var (pos, type) in bombPositions)
+        private readonly IGameBoard gameBoard;
+        private readonly IMatchService matchService;
+        private readonly IGemPool<IPiece> gemPool;
+        private readonly ISettings settings;
+
+        public BombService(
+            IGameBoard gameBoard,
+            IMatchService matchService,
+            IGemPool<IPiece> gemPool,
+            ISettings settings)
         {
-            var bombPrefab = GetBombPrefabForType(type);
-            var newBomb = gemPool.SpawnGem(bombPrefab, pos);
-            gameBoard.SetGem(pos, newBomb);
-            newlyCreatedBombs.Value.Add(newBomb);
-            
-            matchService.Explosions.Remove(newBomb);
+            this.gameBoard = gameBoard;
+            this.matchService = matchService;
+            this.gemPool = gemPool;
+            this.settings = settings;
         }
-    }
-    
-    private IPiece GetBombPrefabForType(GemType type)
-    {
-        foreach (var bomb in settings.GemBombs)
+
+        public void CreateBombs(Dictionary<GridPosition, GemType> bombPositions,
+            PooledHashSet<IPiece> newlyCreatedBombs)
         {
-            if (bomb.Type == type)
-                return bomb;
+            foreach (var (pos, type) in bombPositions)
+            {
+                var bombPrefab = GetBombPrefabForType(type);
+                var newBomb = gemPool.SpawnGem(bombPrefab, pos);
+                gameBoard.SetGem(pos, newBomb);
+                newlyCreatedBombs.Value.Add(newBomb);
+
+                matchService.Explosions.Remove(newBomb);
+            }
         }
-        return null;
+
+        private IPiece GetBombPrefabForType(GemType type)
+        {
+            foreach (var bomb in settings.GemBombs)
+            {
+                if (bomb.Type == type)
+                    return bomb;
+            }
+
+            return null;
+        }
     }
 }
-

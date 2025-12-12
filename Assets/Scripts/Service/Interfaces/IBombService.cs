@@ -1,6 +1,12 @@
 using System.Collections.Generic;
+using Domain;
+using Domain.Interfaces;
+using Domain.Pool;
 
-public interface IBombService
+namespace Service.Interfaces
 {
-    void CreateBombs(Dictionary<GridPosition, GemType> bombPositions, PooledHashSet<IPiece> newlyCreatedBombs);
+    public interface IBombService
+    {
+        void CreateBombs(Dictionary<GridPosition, GemType> bombPositions, PooledHashSet<IPiece> newlyCreatedBombs);
+    }
 }

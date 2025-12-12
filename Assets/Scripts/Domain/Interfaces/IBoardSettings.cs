@@ -1,6 +1,9 @@
 
-public interface IBoardSettings
+namespace Domain.Interfaces
 {
-    int RowsSize { get; }
-    int ColsSize { get; }
+    public interface IBoardSettings
+    {
+        int RowsSize { get; }
+        int ColsSize { get; }
+    }    
 }

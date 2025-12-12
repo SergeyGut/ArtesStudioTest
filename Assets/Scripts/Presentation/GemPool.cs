@@ -1,44 +1,50 @@
+using Domain;
+using Domain.Interfaces;
+using Presentation.Pool;
+using Service.Interfaces;
 using UnityEngine;
 using Zenject;
 
-public class GemPool : IGemPool<IPiece>
+namespace Presentation
 {
-    private readonly IObjectPool<SC_Gem> pool;
-    private readonly Transform parentTransform;
-
-    public int AvailableCount => pool.AvailableCount;
-    public int ActiveCount => pool.ActiveCount;
-
-    public GemPool([Inject(Id = "GemsHolder")] Transform parent, DiContainer container)
+    public class GemPool : IGemPool<IPiece>
     {
-        parentTransform = parent;
-        pool = new GenericObjectPool<SC_Gem>(parent, container);
-    }
+        private readonly IObjectPool<SC_Gem> pool;
+        private readonly Transform parentTransform;
 
-    public IPiece SpawnGem(IPiece item, GridPosition position, float dropHeight = 0f)
-    {
-        if (item is not SC_Gem prefab)
-            return null;
+        public int AvailableCount => pool.AvailableCount;
+        public int ActiveCount => pool.ActiveCount;
 
-        SC_Gem gem = pool.Get(prefab);
-        
-        gem.transform.position = new Vector3(position.X, position.Y + dropHeight, 0f);
-        gem.transform.SetParent(parentTransform);
-        gem.name = "Gem - " + position.X + ", " + position.Y;
-        gem.SetupGem(position);
+        public GemPool([Inject(Id = "GemsHolder")] Transform parent, DiContainer container)
+        {
+            parentTransform = parent;
+            pool = new GenericObjectPool<SC_Gem>(parent, container);
+        }
 
-        return gem;
-    }
+        public IPiece SpawnGem(IPiece item, GridPosition position, float dropHeight = 0f)
+        {
+            if (item is not SC_Gem prefab)
+                return null;
 
-    public void ReturnGem(IPiece item)
-    {
-        if (item is SC_Gem gem)
-            pool.Return(gem);
-    }
+            SC_Gem gem = pool.Get(prefab);
 
-    public void ClearPool()
-    {
-        pool.Clear();
+            gem.transform.position = new Vector3(position.X, position.Y + dropHeight, 0f);
+            gem.transform.SetParent(parentTransform);
+            gem.name = "Gem - " + position.X + ", " + position.Y;
+            gem.SetupGem(position);
+
+            return gem;
+        }
+
+        public void ReturnGem(IPiece item)
+        {
+            if (item is SC_Gem gem)
+                pool.Return(gem);
+        }
+
+        public void ClearPool()
+        {
+            pool.Clear();
+        }
     }
 }
-

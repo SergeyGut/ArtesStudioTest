@@ -1,5 +1,9 @@
 ﻿
-public interface IMatchCounterService
+namespace Domain.Interfaces
 {
-    int GetMatchCountAt(GridPosition positionToCheck, IPiece gemToCheck);
+    public interface IMatchCounterService
+    {
+        int GetMatchCountAt(GridPosition positionToCheck, IPiece gemToCheck);
+    }    
 }
+
