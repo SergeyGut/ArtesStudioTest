@@ -1,7 +1,5 @@
 using System.Collections.Generic;
-using Domain;
 using Domain.Interfaces;
-using Service;
 using Service.Interfaces;
 using TMPro;
 using UnityEngine;
@@ -11,7 +9,19 @@ namespace Presentation.Installers
 {
     public class SceneInstaller : MonoInstaller
     {
+        private DiContainer domainContainer;
+        private DiContainer serviceContainer;
+
         public override void InstallBindings()
+        {
+            InstallUnityBindings();
+            InstallPresentationBindings();
+            InstallDomainBindings();
+            InstallServiceBindings();
+            InstallPresentationComponents();
+        }
+
+        private void InstallUnityBindings()
         {
             var unityObjects = new Dictionary<string, GameObject>();
             GameObject[] obj = GameObject.FindGameObjectsWithTag("UnityObject");
@@ -21,23 +31,44 @@ namespace Presentation.Installers
             var gemsHolder = unityObjects["GemsHolder"].transform;
             var scoreText = unityObjects["Txt_Score"].GetComponent<TextMeshProUGUI>();
 
-            Container.Bind<IGameBoard>().To<GameBoard>().AsSingle();
-            Container.Bind<IMatchService>().To<MatchService>().AsSingle();
-            Container.Bind<IMatchCounterService>().To<MatchCounterService>().AsSingle();
-            Container.Bind<IGameStateProvider>().To<GameStateProvider>().AsSingle();
-            Container.Bind<IMatchDispatcher>().To<MatchDispatcher>().AsSingle();
             Container.Bind<Transform>().WithId("GemsHolder").FromInstance(gemsHolder).AsSingle();
             Container.Bind<TextMeshProUGUI>().WithId("ScoreText").FromInstance(scoreText).AsSingle();
-            Container.Bind<IGemPool<IPiece>>().To<GemPool>().AsSingle();
-            Container.Bind<IPathfinderService>().To<PathfinderService>().AsSingle();
-            Container.Bind<ISpawnService>().To<SpawnService>().AsSingle();
-            Container.Bind<IDestroyService>().To<DestroyService>().AsSingle();
-            Container.Bind<IScoreService>().To<ScoreService>().AsSingle();
-            Container.Bind<IBombService>().To<BombService>().AsSingle();
-            Container.Bind<IDropService>().To<DropService>().AsSingle();
+        }
 
-            Container.BindInterfacesTo<ScoreUpdater>().AsSingle();
+        private void InstallPresentationBindings()
+        {
+            Container.Bind<IGameStateProvider>().To<GameStateProvider>().AsSingle();
+            Container.Bind<IGemPool<IPiece>>().To<GemPool>().AsSingle();
             Container.BindInterfacesTo<BoardView>().AsSingle();
+        }
+
+        private void InstallDomainBindings()
+        {
+            domainContainer = Container.CreateSubContainer();
+            DomainInstaller.Install(domainContainer);
+
+            Container.Bind<IGameBoard>().FromMethod(ctx => domainContainer.Resolve<IGameBoard>()).AsSingle();
+            Container.Bind<IMatchService>().FromMethod(ctx => domainContainer.Resolve<IMatchService>()).AsSingle();
+            Container.Bind<IMatchCounterService>().FromMethod(ctx => domainContainer.Resolve<IMatchCounterService>()).AsSingle();
+        }
+
+        private void InstallServiceBindings()
+        {
+            serviceContainer = domainContainer.CreateSubContainer();
+            ServiceInstaller.Install(serviceContainer);
+
+            Container.Bind<IPathfinderService>().FromMethod(ctx => serviceContainer.Resolve<IPathfinderService>()).AsSingle();
+            Container.Bind<ISpawnService>().FromMethod(ctx => serviceContainer.Resolve<ISpawnService>()).AsSingle();
+            Container.Bind<IDestroyService>().FromMethod(ctx => serviceContainer.Resolve<IDestroyService>()).AsSingle();
+            Container.Bind<IScoreService>().FromMethod(ctx => serviceContainer.Resolve<IScoreService>()).AsSingle();
+            Container.Bind<IBombService>().FromMethod(ctx => serviceContainer.Resolve<IBombService>()).AsSingle();
+            Container.Bind<IDropService>().FromMethod(ctx => serviceContainer.Resolve<IDropService>()).AsSingle();
+            Container.Bind<IMatchDispatcher>().FromMethod(ctx => serviceContainer.Resolve<IMatchDispatcher>()).AsSingle();
+        }
+
+        private void InstallPresentationComponents()
+        {
+            Container.BindInterfacesTo<ScoreUpdater>().AsSingle();
         }
     }
 }
