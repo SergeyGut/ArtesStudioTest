@@ -27,21 +27,21 @@ namespace Service
             this.settings = settings;
         }
 
-        public IPiece SelectNonMatchingGem(GridPosition position)
+        public IGemData SelectNonMatchingGem(GridPosition position)
         {
-            using var validGems = PooledList<IPiece>.Get();
+            using var validGems = PooledList<IGemData>.Get();
             using var matchCounts = PooledList<int>.Get();
             int lowestMatchCount = int.MaxValue;
             var gems = settings.Gems;
 
             for (int i = 0; i < gems.Count; i++)
             {
-                int matchCount = matchCounterService.GetMatchCountAt(position, gems[i].GemViewPrefab);
+                int matchCount = matchCounterService.GetMatchCountAt(position, gems[i].Type);
                 matchCounts.Value.Add(matchCount);
 
                 if (matchCount == 0)
                 {
-                    validGems.Value.Add(gems[i].GemViewPrefab);
+                    validGems.Value.Add(gems[i]);
                 }
                 else if (matchCount < lowestMatchCount)
                 {
@@ -59,19 +59,19 @@ namespace Service
             {
                 if (matchCounts.Value[i] == lowestMatchCount)
                 {
-                    validGems.Value.Add(gems[i].GemViewPrefab);
+                    validGems.Value.Add(gems[i]);
                 }
             }
 
             return validGems.Value[random.Next(0, validGems.Value.Count)];
         }
 
-        public void SpawnGem(GridPosition position, IPiece gemToSpawn)
+        public void SpawnGem(GridPosition position, IGemData gemToSpawn)
         {
             if (random.Next(0, 100) < settings.BombChance)
-                gemToSpawn = settings.Bomb.GemViewPrefab;
+                gemToSpawn = settings.Bomb;
 
-            var gem = gemPool.SpawnGem(gemToSpawn, position, settings.DropHeight);
+            var gem = gemPool.SpawnGem(gemToSpawn.GemView, position, settings.DropHeight);
             gameBoard.SetGem(position, gem);
         }
 

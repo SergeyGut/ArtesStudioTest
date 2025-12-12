@@ -11,10 +11,10 @@ namespace Domain
             this.gameBoard = gameBoard;
         }
 
-        public int GetMatchCountAt(GridPosition _PositionToCheck, IPiece gemToCheck)
+        public int GetMatchCountAt(GridPosition _PositionToCheck, GemType typeToMatch)
         {
-            int horizontalMatches = CountHorizontalMatch(_PositionToCheck, gemToCheck.Type);
-            int verticalMatches = CountVerticalMatch(_PositionToCheck, gemToCheck.Type);
+            int horizontalMatches = CountHorizontalMatch(_PositionToCheck, typeToMatch);
+            int verticalMatches = CountVerticalMatch(_PositionToCheck, typeToMatch);
             return (horizontalMatches >= 2 ? horizontalMatches : 0) +
                    (verticalMatches >= 2 ? verticalMatches : 0);
         }

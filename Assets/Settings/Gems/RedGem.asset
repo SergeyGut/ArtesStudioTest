@@ -13,5 +13,8 @@ MonoBehaviour:
   m_Name: RedGem
   m_EditorClassIdentifier: 
   type: 2
+  isColorBomb: 0
+  blastSize: 1
+  scoreValue: 10
   gemViewPrefab: {fileID: 8289337781777951430, guid: 473855e3d0d3c8143836b678c9a1b8b5,
     type: 3}

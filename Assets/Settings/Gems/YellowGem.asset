@@ -13,5 +13,8 @@ MonoBehaviour:
   m_Name: YellowGem
   m_EditorClassIdentifier: 
   type: 3
+  isColorBomb: 0
+  blastSize: 1
+  scoreValue: 10
   gemViewPrefab: {fileID: 4372168081761593873, guid: 91ba2370328500d4db689dad894b1602,
     type: 3}

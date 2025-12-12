@@ -13,5 +13,8 @@ MonoBehaviour:
   m_Name: PurpleBombGem
   m_EditorClassIdentifier: 
   type: 4
+  isColorBomb: 1
+  blastSize: 2
+  scoreValue: 10
   gemViewPrefab: {fileID: 8032419562884992098, guid: 372d74508fc3f8e44907a9a730aa8b2b,
     type: 3}

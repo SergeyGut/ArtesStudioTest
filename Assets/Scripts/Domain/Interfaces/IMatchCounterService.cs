@@ -3,7 +3,7 @@ namespace Domain.Interfaces
 {
     public interface IMatchCounterService
     {
-        int GetMatchCountAt(GridPosition positionToCheck, IPiece gemToCheck);
+        int GetMatchCountAt(GridPosition positionToCheck, GemType typeToMatch);
     }    
 }
 

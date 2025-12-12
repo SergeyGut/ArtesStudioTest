@@ -44,7 +44,7 @@ namespace Service
             foreach (var gemData in settings.GemBombs)
             {
                 if (gemData.Type == type)
-                    return gemData.GemViewPrefab;
+                    return gemData.GemView;
             }
 
             return null;

@@ -13,5 +13,8 @@ MonoBehaviour:
   m_Name: BlueGem
   m_EditorClassIdentifier: 
   type: 0
+  isColorBomb: 0
+  blastSize: 1
+  scoreValue: 10
   gemViewPrefab: {fileID: -7932498854989450506, guid: 724e93e48c6cc0b4ab3d44e5ea34f2ec,
     type: 3}
