@@ -6,10 +6,10 @@ namespace Domain.Interfaces
         int Width { get; }
         int Height { get; }
 
-        void SetGem(int x, int y, IPiece gem);
-        IPiece GetGem(int x, int y);
-        void SetGem(GridPosition position, IPiece gem);
-        IPiece GetGem(GridPosition position);
+        void SetPiece(int x, int y, IPiece piece);
+        IPiece GetPiece(int x, int y);
+        void SetPiece(GridPosition position, IPiece piece);
+        IPiece GetPiece(GridPosition position);
         bool IsValidPosition(int x, int y);
     }
 }

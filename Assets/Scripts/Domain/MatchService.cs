@@ -24,8 +24,8 @@ namespace Domain
             explosions.Clear();
             foreach (var matchInfo in matchInfoMap)
             {
-                if (matchInfo.MatchedGems != null)
-                    CollectionPool<HashSet<IPiece>>.Release(matchInfo.MatchedGems);
+                if (matchInfo.MatchedPieces != null)
+                    CollectionPool<HashSet<IPiece>>.Release(matchInfo.MatchedPieces);
             }
 
             matchInfoMap.Clear();
@@ -33,8 +33,8 @@ namespace Domain
             for (int x = 0; x < gameBoard.Width; x++)
             for (int y = 0; y < gameBoard.Height; y++)
             {
-                IPiece currentGem = gameBoard.GetGem(x, y);
-                if (currentGem != null)
+                IPiece currentPiece = gameBoard.GetPiece(x, y);
+                if (currentPiece != null)
                 {
                     HashSet<IPiece> horizontalMatches = CheckMatchesInDirection(x, y, 1, 0);
                     HashSet<IPiece> verticalMatches = CheckMatchesInDirection(x, y, 0, 1);
@@ -42,13 +42,13 @@ namespace Domain
                     if (horizontalMatches != null)
                     {
                         var pos = GetUserActionPosForMatch(horizontalMatches, userActionPos, otherUserActionPos);
-                        AddMatch(new MatchInfo { MatchedGems = horizontalMatches, UserActionPos = pos });
+                        AddMatch(new MatchInfo { MatchedPieces = horizontalMatches, UserActionPos = pos });
                     }
 
                     if (verticalMatches != null)
                     {
                         var pos = GetUserActionPosForMatch(verticalMatches, userActionPos, otherUserActionPos);
-                        AddMatch(new MatchInfo { MatchedGems = verticalMatches, UserActionPos = pos });
+                        AddMatch(new MatchInfo { MatchedPieces = verticalMatches, UserActionPos = pos });
                     }
                 }
             }
@@ -56,20 +56,20 @@ namespace Domain
             CheckForBombs();
         }
 
-        private GridPosition? GetUserActionPosForMatch(HashSet<IPiece> matchedGems, GridPosition? userActionPos = null,
+        private GridPosition? GetUserActionPosForMatch(HashSet<IPiece> matchedPieces, GridPosition? userActionPos = null,
             GridPosition? otherUserActionPos = null)
         {
             if (!userActionPos.HasValue || !otherUserActionPos.HasValue)
                 return null;
 
-            foreach (var matchedGem in matchedGems)
+            foreach (var matchedPiece in matchedPieces)
             {
-                if (matchedGem.Position == userActionPos.Value)
+                if (matchedPiece.Position == userActionPos.Value)
                 {
                     return userActionPos;
                 }
 
-                if (matchedGem.Position == otherUserActionPos.Value)
+                if (matchedPiece.Position == otherUserActionPos.Value)
                 {
                     return otherUserActionPos;
                 }
@@ -80,20 +80,20 @@ namespace Domain
 
         private void AddMatch(MatchInfo newMatch)
         {
-            foreach (var gem in newMatch.MatchedGems)
+            foreach (var piece in newMatch.MatchedPieces)
             {
-                MarkGemAsMatched(gem);
+                MarkPieceAsMatched(piece);
             }
 
             for (int i = 0; i < matchInfoMap.Count; ++i)
             {
-                if (matchInfoMap[i].MatchedGems.Overlaps(newMatch.MatchedGems))
+                if (matchInfoMap[i].MatchedPieces.Overlaps(newMatch.MatchedPieces))
                 {
-                    matchInfoMap[i].MatchedGems.UnionWith(newMatch.MatchedGems);
+                    matchInfoMap[i].MatchedPieces.UnionWith(newMatch.MatchedPieces);
                     matchInfoMap[i].UserActionPos ??= newMatch.UserActionPos;
-                    if (newMatch.MatchedGems != matchInfoMap[i].MatchedGems)
+                    if (newMatch.MatchedPieces != matchInfoMap[i].MatchedPieces)
                     {
-                        CollectionPool<HashSet<IPiece>>.Release(newMatch.MatchedGems);
+                        CollectionPool<HashSet<IPiece>>.Release(newMatch.MatchedPieces);
                     }
 
                     return;
@@ -105,22 +105,22 @@ namespace Domain
 
         private HashSet<IPiece> CheckMatchesInDirection(int x, int y, int deltaX, int deltaY)
         {
-            IPiece currentGem = gameBoard.GetGem(x, y);
+            IPiece currentPiece = gameBoard.GetPiece(x, y);
 
-            if (currentGem == null)
+            if (currentPiece == null)
                 return null;
 
             var matches = CollectionPool<HashSet<IPiece>>.Get();
-            matches.Add(currentGem);
+            matches.Add(currentPiece);
 
-            foreach (var gem in GetMatchingGemsInDirection(x, y, deltaX, deltaY, currentGem.Type))
+            foreach (var piece in GetMatchingPiecesInDirection(x, y, deltaX, deltaY, currentPiece.Type))
             {
-                matches.Add(gem);
+                matches.Add(piece);
             }
 
-            foreach (var gem in GetMatchingGemsInDirection(x, y, -deltaX, -deltaY, currentGem.Type))
+            foreach (var piece in GetMatchingPiecesInDirection(x, y, -deltaX, -deltaY, currentPiece.Type))
             {
-                matches.Add(gem);
+                matches.Add(piece);
             }
 
             if (matches.Count < 3)
@@ -132,15 +132,15 @@ namespace Domain
             return matches;
         }
 
-        private IEnumerable<IPiece> GetMatchingGemsInDirection(int startX, int startY, int deltaX, int deltaY,
+        private IEnumerable<IPiece> GetMatchingPiecesInDirection(int startX, int startY, int deltaX, int deltaY,
             PieceType typeToMatch)
         {
             int x = startX + deltaX;
             int y = startY + deltaY;
 
-            while (gameBoard.IsValidPosition(x, y) && gameBoard.GetGem(x, y)?.Type == typeToMatch)
+            while (gameBoard.IsValidPosition(x, y) && gameBoard.GetPiece(x, y)?.Type == typeToMatch)
             {
-                yield return gameBoard.GetGem(x, y);
+                yield return gameBoard.GetPiece(x, y);
                 x += deltaX;
                 y += deltaY;
             }
@@ -149,37 +149,37 @@ namespace Domain
         private void CheckForBombs()
         {
             foreach (var matchInfo in MatchInfoMap)
-            foreach (var gem in matchInfo.MatchedGems)
+            foreach (var piece in matchInfo.MatchedPieces)
             {
-                int x = gem.Position.X;
-                int y = gem.Position.Y;
+                int x = piece.Position.X;
+                int y = piece.Position.Y;
 
-                if (gem.Position.X > 0)
+                if (piece.Position.X > 0)
                 {
-                    var otherGem = gameBoard.GetGem(x - 1, y);
-                    if (otherGem?.Type == PieceType.bomb)
-                        MarkBombArea(new GridPosition(x - 1, y), otherGem.BlastSize);
+                    var otherPiece = gameBoard.GetPiece(x - 1, y);
+                    if (otherPiece?.Type == PieceType.bomb)
+                        MarkBombArea(new GridPosition(x - 1, y), otherPiece.BlastSize);
                 }
 
-                if (gem.Position.X + 1 < gameBoard.Width)
+                if (piece.Position.X + 1 < gameBoard.Width)
                 {
-                    var otherGem = gameBoard.GetGem(x + 1, y);
-                    if (otherGem?.Type == PieceType.bomb)
-                        MarkBombArea(new GridPosition(x + 1, y), otherGem.BlastSize);
+                    var otherPiece = gameBoard.GetPiece(x + 1, y);
+                    if (otherPiece?.Type == PieceType.bomb)
+                        MarkBombArea(new GridPosition(x + 1, y), otherPiece.BlastSize);
                 }
 
-                if (gem.Position.Y > 0)
+                if (piece.Position.Y > 0)
                 {
-                    var otherGem = gameBoard.GetGem(x, y - 1);
-                    if (otherGem?.Type == PieceType.bomb)
-                        MarkBombArea(new GridPosition(x, y - 1), otherGem.BlastSize);
+                    var otherPiece = gameBoard.GetPiece(x, y - 1);
+                    if (otherPiece?.Type == PieceType.bomb)
+                        MarkBombArea(new GridPosition(x, y - 1), otherPiece.BlastSize);
                 }
 
-                if (gem.Position.Y + 1 < gameBoard.Height)
+                if (piece.Position.Y + 1 < gameBoard.Height)
                 {
-                    var otherGem = gameBoard.GetGem(x, y + 1);
-                    if (otherGem?.Type == PieceType.bomb)
-                        MarkBombArea(new GridPosition(x, y + 1), otherGem.BlastSize);
+                    var otherPiece = gameBoard.GetPiece(x, y + 1);
+                    if (otherPiece?.Type == PieceType.bomb)
+                        MarkBombArea(new GridPosition(x, y + 1), otherPiece.BlastSize);
                 }
             }
         }
@@ -192,11 +192,11 @@ namespace Domain
                 {
                     if (x >= 0 && x < gameBoard.Width && y >= 0 && y < gameBoard.Height)
                     {
-                        var gem = gameBoard.GetGem(x, y);
-                        if (gem == null) continue;
+                        var piece = gameBoard.GetPiece(x, y);
+                        if (piece == null) continue;
 
-                        MarkGemAsMatched(gem);
-                        explosions.Add(gem);
+                        MarkPieceAsMatched(piece);
+                        explosions.Add(piece);
                     }
                 }
             }
@@ -211,36 +211,36 @@ namespace Domain
                 {
                     if (x >= 0 && x < gameBoard.Width && y >= 0 && y < gameBoard.Height)
                     {
-                        var gem = gameBoard.GetGem(x, y);
-                        if (gem == null) continue;
+                        var piece = gameBoard.GetPiece(x, y);
+                        if (piece == null) continue;
 
                         int dx = x - bombPos.X;
                         int dy = y - bombPos.Y;
                         int sqrDistance = dx * dx + dy * dy;
                         if (sqrDistance > sqrBlastSize) continue;
 
-                        MarkGemAsMatched(gem);
-                        explosions.Add(gem);
+                        MarkPieceAsMatched(piece);
+                        explosions.Add(piece);
                     }
                 }
             }
         }
 
-        private void MarkGemAsMatched(IPiece gem)
+        private void MarkPieceAsMatched(IPiece piece)
         {
-            if (gem is { IsMatch: false })
+            if (piece is { IsMatch: false })
             {
-                gem.IsMatch = true;
+                piece.IsMatch = true;
 
-                if (gem.IsColorBomb)
+                if (piece.IsColorBomb)
                 {
-                    MarkColorBombArea(gem.Position, gem.BlastSize);
+                    MarkColorBombArea(piece.Position, piece.BlastSize);
                     return;
                 }
 
-                if (gem.Type == PieceType.bomb)
+                if (piece.Type == PieceType.bomb)
                 {
-                    MarkBombArea(gem.Position, gem.BlastSize);
+                    MarkBombArea(piece.Position, piece.BlastSize);
                 }
             }
         }

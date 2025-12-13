@@ -22,18 +22,18 @@ namespace Service
         {
             foreach (var (pos, type) in bombPositions)
             {
-                var gemData = GetBombPrefabForType(type);
-                spawnService.SpawnGem(pos, gemData);
+                var pieceData = GetBombPrefabForType(type);
+                spawnService.SpawnPiece(pos, pieceData);
             }
         }
 
         private IPieceData GetBombPrefabForType(PieceType type)
         {
-            foreach (var gemData in settings.GemBombs)
+            foreach (var pieceData in settings.PieceBombs)
             {
-                if (gemData.Type == type)
+                if (pieceData.Type == type)
                 {
-                    return gemData;
+                    return pieceData;
                 }
             }
 

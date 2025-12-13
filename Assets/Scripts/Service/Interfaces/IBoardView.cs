@@ -7,6 +7,6 @@ namespace Service.Interfaces
         void AddPieceView(IPieceView pieceView);
         IPieceView RemovePieceView(IPiece piece);
         IPieceView GetPieceView(IPiece piece);
-        void CheckMisplacedGems();
+        void CheckMisplacedPieces();
     }
 }

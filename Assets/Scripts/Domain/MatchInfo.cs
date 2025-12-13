@@ -5,7 +5,7 @@ namespace Domain
 {
     public class MatchInfo
     {
-        public HashSet<IPiece> MatchedGems;
+        public HashSet<IPiece> MatchedPieces;
         public GridPosition? UserActionPos;
     }
 }

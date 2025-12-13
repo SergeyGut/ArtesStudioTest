@@ -8,43 +8,43 @@ namespace Service
     {
         private readonly IGameBoard gameBoard;
         private readonly IBoardView boardView;
-        private readonly IGemPool<IPieceView> gemPool;
+        private readonly IPiecePool<IPieceView> piecePool;
         private readonly IScoreService scoreService;
 
         public DestroyService(
             IGameBoard gameBoard,
             IBoardView boardView,
-            IGemPool<IPieceView> gemPool,
+            IPiecePool<IPieceView> piecePool,
             IScoreService scoreService)
         {
             this.gameBoard = gameBoard;
             this.boardView = boardView;
-            this.gemPool = gemPool;
+            this.piecePool = piecePool;
             this.scoreService = scoreService;
         }
 
-        public void DestroyMatchedGems(IEnumerable<IPiece> gems)
+        public void DestroyMatchedPieces(IEnumerable<IPiece> pieces)
         {
-            foreach (var gem in gems)
+            foreach (var piece in pieces)
             {
-                if (gem == null) continue;
+                if (piece == null) continue;
                 
-                scoreService.AddScore(gem.ScoreValue);
-                DestroyGem(gem);
+                scoreService.AddScore(piece.ScoreValue);
+                DestroyPiece(piece);
             }
         }
 
-        private void DestroyGem(IPiece piece)
+        private void DestroyPiece(IPiece piece)
         {
             if (piece == null) return;
             
             var pieceView = boardView.RemovePieceView(piece);
             pieceView.RunDestroyEffect();
-            gemPool.ReturnGem(pieceView);
+            piecePool.ReturnPiece(pieceView);
 
-            if (gameBoard.GetGem(piece.Position) == piece)
+            if (gameBoard.GetPiece(piece.Position) == piece)
             {
-                gameBoard.SetGem(piece.Position, null);
+                gameBoard.SetPiece(piece.Position, null);
             }
             
             piece.Dispose();

@@ -6,6 +6,6 @@ namespace Service.Interfaces
     public interface IDropService
     {
         bool DropSingleX(int x);
-        UniTask RunDropAsync(IPiece gem);
+        UniTask RunDropAsync(IPiece piece);
     }
 }

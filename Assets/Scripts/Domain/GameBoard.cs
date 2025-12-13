@@ -7,7 +7,7 @@ namespace Domain
     {
         private readonly int height;
         private readonly int width;
-        private readonly IPiece[,] allGems;
+        private readonly IPiece[,] allPieces;
 
         public int Width => width;
         public int Height => height;
@@ -16,7 +16,7 @@ namespace Domain
         {
             height = settings.RowsSize;
             width = settings.ColsSize;
-            allGems = new IPiece[width, height];
+            allPieces = new IPiece[width, height];
         }
 
         public bool IsValidPosition(int x, int y)
@@ -24,34 +24,34 @@ namespace Domain
             return x >= 0 && x < width && y >= 0 && y < height;
         }
 
-        public void SetGem(int x, int y, IPiece gem)
+        public void SetPiece(int x, int y, IPiece piece)
         {
             if (!IsValidPosition(x, y))
             {
-                throw new ArgumentException($"SetGem: Position ({x}, {y}) is out of bounds.");
+                throw new ArgumentException($"SetPiece: Position ({x}, {y}) is out of bounds.");
             }
 
-            allGems[x, y] = gem;
+            allPieces[x, y] = piece;
         }
 
-        public IPiece GetGem(int x, int y)
+        public IPiece GetPiece(int x, int y)
         {
             if (!IsValidPosition(x, y))
             {
-                throw new ArgumentException($"GetGem: Position ({x}, {y}) is out of bounds.");
+                throw new ArgumentException($"GetPiece: Position ({x}, {y}) is out of bounds.");
             }
 
-            return allGems[x, y];
+            return allPieces[x, y];
         }
 
-        public void SetGem(GridPosition position, IPiece gem)
+        public void SetPiece(GridPosition position, IPiece piece)
         {
-            SetGem(position.X, position.Y, gem);
+            SetPiece(position.X, position.Y, piece);
         }
 
-        public IPiece GetGem(GridPosition position)
+        public IPiece GetPiece(GridPosition position)
         {
-            return GetGem(position.X, position.Y);
+            return GetPiece(position.X, position.Y);
         }
     }
 }

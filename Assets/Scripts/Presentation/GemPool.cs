@@ -7,7 +7,7 @@ using Zenject;
 
 namespace Presentation
 {
-    public class GemPool : IGemPool<IPieceView>, IDisposable
+    public class GemPool : IPiecePool<IPieceView>, IDisposable
     {
         private readonly IObjectPool<GemView> pool;
         private readonly Transform parentTransform;
@@ -21,7 +21,7 @@ namespace Presentation
             pool = new GenericObjectPool<GemView>(parent, container);
         }
 
-        public IPieceView SpawnGem(IPieceView item, IPiece piece)
+        public IPieceView SpawnPiece(IPieceView item, IPiece piece)
         {
             if (item is not GemView prefab)
                 return null;
@@ -36,7 +36,7 @@ namespace Presentation
             return gem;
         }
 
-        public void ReturnGem(IPieceView item)
+        public void ReturnPiece(IPieceView item)
         {
             if (item is GemView gem)
                 pool.Return(gem);

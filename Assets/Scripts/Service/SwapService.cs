@@ -39,23 +39,23 @@ namespace Service
         {
             piece = pieceView.Piece as IPiece;
             
-            GetOtherGem(pieceView);
+            GetOtherPiece(pieceView);
 
-            gameBoard.SetGem(piece.Position, piece);
-            gameBoard.SetGem(otherPiece.Position, otherPiece);
+            gameBoard.SetPiece(piece.Position, piece);
+            gameBoard.SetPiece(otherPiece.Position, otherPiece);
 
-            var otherGemView = boardView.GetPieceView(otherPiece);
+            var otherPieceView = boardView.GetPieceView(otherPiece);
             
-            CheckMoveAsync(pieceView, otherGemView).Forget();
+            CheckMoveAsync(pieceView, otherPieceView).Forget();
         }
         
-        private void GetOtherGem(IPieceView gemView)
+        private void GetOtherPiece(IPieceView pieceView)
         {
-            switch (gemView.SwapAngle)
+            switch (pieceView.SwapAngle)
             {
                 case < 45 and > -45 when piece.Position.X < settings.RowsSize - 1:
                 {
-                    otherPiece = gameBoard.GetGem(piece.Position.X + 1, piece.Position.Y);
+                    otherPiece = gameBoard.GetPiece(piece.Position.X + 1, piece.Position.Y);
                     otherPiece.Position.X--;
                     piece.PrevPosition = piece.Position;
                     piece.Position.X++;
@@ -63,7 +63,7 @@ namespace Service
                 }
                 case > 45 and <= 135 when piece.Position.Y < settings.ColsSize - 1:
                 {
-                    otherPiece = gameBoard.GetGem(piece.Position.X, piece.Position.Y + 1);
+                    otherPiece = gameBoard.GetPiece(piece.Position.X, piece.Position.Y + 1);
                     otherPiece.Position.Y--;
                     piece.PrevPosition = piece.Position;
                     piece.Position.Y++;
@@ -71,7 +71,7 @@ namespace Service
                 }
                 case < -45 and >= -135 when piece.Position.Y > 0:
                 {
-                    otherPiece = gameBoard.GetGem(piece.Position.X, piece.Position.Y - 1);
+                    otherPiece = gameBoard.GetPiece(piece.Position.X, piece.Position.Y - 1);
                     otherPiece.Position.Y++;
                     piece.PrevPosition = piece.Position;
                     piece.Position.Y--;
@@ -79,7 +79,7 @@ namespace Service
                 }
                 case > 135 or < -135 when piece.Position.X > 0:
                 {
-                    otherPiece = gameBoard.GetGem(piece.Position.X - 1, piece.Position.Y);
+                    otherPiece = gameBoard.GetPiece(piece.Position.X - 1, piece.Position.Y);
                     otherPiece.Position.X++;
                     piece.PrevPosition = piece.Position;
                     piece.Position.X--;
@@ -115,8 +115,8 @@ namespace Service
                     piece.IsSwap = true;
                     otherPiece.IsSwap = true;
 
-                    gameBoard.SetGem(piece.Position, piece);
-                    gameBoard.SetGem(otherPiece.Position, otherPiece);
+                    gameBoard.SetPiece(piece.Position, piece);
+                    gameBoard.SetPiece(otherPiece.Position, otherPiece);
 
                     await WaitForSwapCompletion(pieceView, otherPieceView);
                     
@@ -137,9 +137,9 @@ namespace Service
             }
         }
 
-        private async UniTask WaitForSwapCompletion(IPieceView gemView, IPieceView otherGemView)
+        private async UniTask WaitForSwapCompletion(IPieceView pieceView, IPieceView otherPieceView)
         {
-            while (!gemView.TargetPositionArrived || !otherGemView.TargetPositionArrived)
+            while (!pieceView.TargetPositionArrived || !otherPieceView.TargetPositionArrived)
             {
                 if (IsAnyCancellationRequested)
                 {

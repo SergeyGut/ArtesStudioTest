@@ -40,12 +40,12 @@ namespace Presentation
                 float sqrStartDistance = (startPosition - targetPos).sqrMagnitude;
                 float distance = Mathf.Sqrt(sqrStartDistance);
                 float elapsed = Time.time - moveStartTime;
-                float speed = settings.GemSpeed;
+                float speed = settings.PieceSpeed;
                 float t = Mathf.Clamp01(elapsed * speed / Mathf.Max(distance, POSITION_THRESHOLD));
 
                 if (piece.IsSwap)
                 {
-                    t = settings.GemSwapEase(t);
+                    t = settings.PieceSwapEase(t);
                 }
 
                 transform.position = Vector2.Lerp(startPosition, targetPos, t);

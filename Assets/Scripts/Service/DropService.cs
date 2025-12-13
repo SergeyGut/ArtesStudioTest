@@ -23,22 +23,22 @@ namespace Service
 
             for (int y = 1; y < gameBoard.Height; y++)
             {
-                IPiece gem = gameBoard.GetGem(x, y);
+                IPiece piece = gameBoard.GetPiece(x, y);
 
-                if (gem == null)
+                if (piece == null)
                 {
                     continue;
                 }
                 
-                if (gem is { IsMoving: true })
+                if (piece is { IsMoving: true })
                 {
                     anyDropped = true;
                     continue;
                 }
 
-                RunDropAsync(gem).Forget();
+                RunDropAsync(piece).Forget();
 
-                if (gem.IsMoving)
+                if (piece.IsMoving)
                 {
                     anyDropped = true;
                     break;
@@ -48,43 +48,43 @@ namespace Service
             return anyDropped;
         }
         
-        public async UniTask RunDropAsync(IPiece gem)
+        public async UniTask RunDropAsync(IPiece piece)
         {
-            while (gem.Position.Y > 0)
+            while (piece.Position.Y > 0)
             {
-                int x = gem.Position.X;
-                int y = gem.Position.Y;
+                int x = piece.Position.X;
+                int y = piece.Position.Y;
 
-                IPiece gemBelow = gameBoard.GetGem(x, y - 1);
+                IPiece pieceBelow = gameBoard.GetPiece(x, y - 1);
 
-                if (gemBelow == null)
+                if (pieceBelow == null)
                 {
-                    gem.IsMoving = true;
-                    gem.Position.Y--;
+                    piece.IsMoving = true;
+                    piece.Position.Y--;
                     
-                    gameBoard.SetGem(x, y - 1, gem);
+                    gameBoard.SetPiece(x, y - 1, piece);
                     if (gameBoard.IsValidPosition(x, y))
                     {
-                        gameBoard.SetGem(x, y, null);
+                        gameBoard.SetPiece(x, y, null);
                     }
                     
                     await UniTask.
-                        WaitForSeconds(1f / settings.GemSpeed, cancellationToken: gem.Token).
+                        WaitForSeconds(1f / settings.PieceSpeed, cancellationToken: piece.Token).
                         SuppressCancellationThrow();
                     
-                    if (gem.Token.IsCancellationRequested)
+                    if (piece.Token.IsCancellationRequested)
                     {
                         return;
                     }
                 }
                 else
                 {
-                    gem.IsMoving = false;
+                    piece.IsMoving = false;
                     return;
                 }
             }
             
-            gem.IsMoving = false;
+            piece.IsMoving = false;
         }
     }
 }

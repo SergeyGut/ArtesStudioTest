@@ -24,69 +24,69 @@ namespace Service
 
             foreach (MatchInfo matchInfo in matchService.MatchInfoMap)
             {
-                if (matchInfo.MatchedGems.Count < settings.MinMatchForBomb)
+                if (matchInfo.MatchedPieces.Count < settings.MinMatchForBomb)
                 {
                     continue;
                 }
                 
-                IPiece firstGem = null;
-                foreach (IPiece gem in matchInfo.MatchedGems)
+                IPiece firstPiece = null;
+                foreach (IPiece piece in matchInfo.MatchedPieces)
                 {
-                    firstGem = gem;
+                    firstPiece = piece;
                     break;
                 }
 
-                if (firstGem != null)
+                if (firstPiece != null)
                 {
-                    bombCreationPositions.Value.TryAdd(matchInfo.UserActionPos ?? firstGem.Position, firstGem.Type);
+                    bombCreationPositions.Value.TryAdd(matchInfo.UserActionPos ?? firstPiece.Position, firstPiece.Type);
                 }
             }
 
             return bombCreationPositions;
         }
 
-        public PooledHashSet<IPiece> CollectMatchedGems()
+        public PooledHashSet<IPiece> CollectMatchedPieces()
         {
-            PooledHashSet<IPiece> matchedGems = PooledHashSet<IPiece>.Get();
+            PooledHashSet<IPiece> matchedPieces = PooledHashSet<IPiece>.Get();
             
             foreach (MatchInfo matchInfo in matchService.MatchInfoMap)
             {
-                foreach (IPiece gem in matchInfo.MatchedGems)
+                foreach (IPiece piece in matchInfo.MatchedPieces)
                 {
-                    if (gem is { IsColorBomb: false } && gem.Type != PieceType.bomb)
+                    if (piece is { IsColorBomb: false } && piece.Type != PieceType.bomb)
                     {
-                        matchedGems.Value.Add(gem);
+                        matchedPieces.Value.Add(piece);
                     }
                 }
             }
 
-            return matchedGems;
+            return matchedPieces;
         }
 
-        public PooledList<IPiece> CollectExplosionsNonBomb(PooledHashSet<IPiece> matchedGems)
+        public PooledList<IPiece> CollectExplosionsNonBomb(PooledHashSet<IPiece> matchedPieces)
         {
             PooledList<IPiece> nonBombExplosions = PooledList<IPiece>.Get();
             
-            foreach (IPiece gem in matchService.Explosions)
+            foreach (IPiece piece in matchService.Explosions)
             {
-                if (gem is { IsColorBomb: false } && gem.Type != PieceType.bomb && !matchedGems.Value.Contains(gem))
+                if (piece is { IsColorBomb: false } && piece.Type != PieceType.bomb && !matchedPieces.Value.Contains(piece))
                 {
-                    nonBombExplosions.Value.Add(gem);
+                    nonBombExplosions.Value.Add(piece);
                 }
             }
 
             return nonBombExplosions;
         }
 
-        public PooledList<IPiece> CollectExplosionsBomb(PooledHashSet<IPiece> matchedGems)
+        public PooledList<IPiece> CollectExplosionsBomb(PooledHashSet<IPiece> matchedPieces)
         {
             PooledList<IPiece> bombExplosions = PooledList<IPiece>.Get();
             
-            foreach (IPiece gem in matchService.Explosions)
+            foreach (IPiece piece in matchService.Explosions)
             {
-                if (gem != null && (gem.IsColorBomb || gem.Type == PieceType.bomb) && !matchedGems.Value.Contains(gem))
+                if (piece != null && (piece.IsColorBomb || piece.Type == PieceType.bomb) && !matchedPieces.Value.Contains(piece))
                 {
-                    bombExplosions.Value.Add(gem);
+                    bombExplosions.Value.Add(piece);
                 }
             }
 

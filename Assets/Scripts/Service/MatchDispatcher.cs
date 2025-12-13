@@ -50,29 +50,29 @@ namespace Service
         private async UniTask DestroyMatchesAsync()
         {
             using var bombCreationPositions = pathfinderService.CollectBombCreationPositions();
-            using var matchedGems = pathfinderService.CollectMatchedGems();
+            using var matchedPieces = pathfinderService.CollectMatchedPieces();
             
-            destroyService.DestroyMatchedGems(matchedGems.Value);
+            destroyService.DestroyMatchedPieces(matchedPieces.Value);
             bombService.CreateBombs(bombCreationPositions.Value);
 
-            await DestroyExplosionsWithDelayAsync(matchedGems);
+            await DestroyExplosionsWithDelayAsync(matchedPieces);
             await DecreaseRowAsync();
         }
 
-        private async UniTask DestroyExplosionsWithDelayAsync(PooledHashSet<IPiece> matchedGems)
+        private async UniTask DestroyExplosionsWithDelayAsync(PooledHashSet<IPiece> matchedPieces)
         {
-            using var nonBombExplosions = pathfinderService.CollectExplosionsNonBomb(matchedGems);
+            using var nonBombExplosions = pathfinderService.CollectExplosionsNonBomb(matchedPieces);
             if (nonBombExplosions.Value.Count > 0)
             {
                 await UniTask.WaitForSeconds(settings.BombNeighborDelay);
-                destroyService.DestroyMatchedGems(nonBombExplosions.Value);
+                destroyService.DestroyMatchedPieces(nonBombExplosions.Value);
             }
 
-            using var bombExplosions = pathfinderService.CollectExplosionsBomb(matchedGems);
+            using var bombExplosions = pathfinderService.CollectExplosionsBomb(matchedPieces);
             if (bombExplosions.Value.Count > 0)
             {
                 await UniTask.WaitForSeconds(settings.BombSelfDelay);
-                destroyService.DestroyMatchedGems(bombExplosions.Value);
+                destroyService.DestroyMatchedPieces(bombExplosions.Value);
                 await UniTask.WaitForSeconds(settings.BombPostSelfDelay);
             }
         }
@@ -96,7 +96,7 @@ namespace Service
 
             await UniTask.WhenAll(decreaseTasks.Value);
 
-            boardView.CheckMisplacedGems();
+            boardView.CheckMisplacedPieces();
 
             await UniTask.WaitForSeconds(settings.FindAllMatchesDelay);
 

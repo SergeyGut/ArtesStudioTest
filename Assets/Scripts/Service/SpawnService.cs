@@ -13,7 +13,7 @@ namespace Service
         private readonly IDropService dropService;
         private readonly IBoardView gameBoardView;
         private readonly IMatchCounterService matchCounterService;
-        private readonly IGemPool<IPieceView> gemPool;
+        private readonly IPiecePool<IPieceView> piecePool;
         private readonly ISettings settings;
 
         private readonly Random random = new();
@@ -23,14 +23,14 @@ namespace Service
             IDropService dropService,
             IBoardView gameBoardView,
             IMatchCounterService matchCounterService,
-            IGemPool<IPieceView> gemPool,
+            IPiecePool<IPieceView> piecePool,
             ISettings settings)
         {
             this.gameBoard = gameBoard;
             this.dropService = dropService;
             this.gameBoardView = gameBoardView;
             this.matchCounterService = matchCounterService;
-            this.gemPool = gemPool;
+            this.piecePool = piecePool;
             this.settings = settings;
         }
         
@@ -40,26 +40,26 @@ namespace Service
             for (int y = 0; y < gameBoard.Height; y++)
             {
                 var pos = new GridPosition(x, y);
-                var gemToSpawn = SelectNonMatchingGem(pos);
-                SpawnGem(pos, gemToSpawn);
+                var pieceToSpawn = SelectNonMatchingPiece(pos);
+                SpawnPiece(pos, pieceToSpawn);
             }
         }
 
-        private IPieceData SelectNonMatchingGem(GridPosition position)
+        private IPieceData SelectNonMatchingPiece(GridPosition position)
         {
-            using var validGems = PooledList<IPieceData>.Get();
+            using var validPieces = PooledList<IPieceData>.Get();
             using var matchCounts = PooledList<int>.Get();
             int lowestMatchCount = int.MaxValue;
-            var gems = settings.Gems;
+            var pieces = settings.Pieces;
 
-            for (int i = 0; i < gems.Count; i++)
+            for (int i = 0; i < pieces.Count; i++)
             {
-                int matchCount = matchCounterService.GetMatchCountAt(position, gems[i].Type);
+                int matchCount = matchCounterService.GetMatchCountAt(position, pieces[i].Type);
                 matchCounts.Value.Add(matchCount);
 
                 if (matchCount == 0)
                 {
-                    validGems.Value.Add(gems[i]);
+                    validPieces.Value.Add(pieces[i]);
                 }
                 else if (matchCount < lowestMatchCount)
                 {
@@ -67,24 +67,24 @@ namespace Service
                 }
             }
 
-            if (validGems.Value.Count > 0)
+            if (validPieces.Value.Count > 0)
             {
-                return validGems.Value[random.Next(0, validGems.Value.Count)];
+                return validPieces.Value[random.Next(0, validPieces.Value.Count)];
             }
 
-            validGems.Value.Clear();
-            for (int i = 0; i < gems.Count; i++)
+            validPieces.Value.Clear();
+            for (int i = 0; i < pieces.Count; i++)
             {
                 if (matchCounts.Value[i] == lowestMatchCount)
                 {
-                    validGems.Value.Add(gems[i]);
+                    validPieces.Value.Add(pieces[i]);
                 }
             }
 
-            return validGems.Value[random.Next(0, validGems.Value.Count)];
+            return validPieces.Value[random.Next(0, validPieces.Value.Count)];
         }
 
-        public void SpawnGem(GridPosition position, IPieceData pieceToSpawn, int dropHeight = 0)
+        public void SpawnPiece(GridPosition position, IPieceData pieceToSpawn, int dropHeight = 0)
         {
             if (random.Next(0, 100) < settings.BombChance)
             {
@@ -93,30 +93,30 @@ namespace Service
 
             position = new GridPosition(position.X, position.Y + dropHeight);
             
-            var gem = new PieceModel(pieceToSpawn, position);
-            var gemView = gemPool.SpawnGem(pieceToSpawn.PieceView, gem);
+            var piece = new PieceModel(pieceToSpawn, position);
+            var pieceView = piecePool.SpawnPiece(pieceToSpawn.PieceView, piece);
             
-            gameBoardView.AddPieceView(gemView);
+            gameBoardView.AddPieceView(pieceView);
             
             if (dropHeight > 0)
             {
-                dropService.RunDropAsync(gem);
+                dropService.RunDropAsync(piece);
             }
             else
             {
-                gameBoard.SetGem(position, gem);
+                gameBoard.SetPiece(position, piece);
             }
         }
 
         public void SpawnTopX(int x)
         {
             GridPosition topPos = new GridPosition(x, gameBoard.Height - 1);
-            IPiece topGem = gameBoard.GetGem(topPos);
+            IPiece topPiece = gameBoard.GetPiece(topPos);
 
-            if (topGem == null)
+            if (topPiece == null)
             {
-                var gemToSpawn = SelectNonMatchingGem(topPos);
-                SpawnGem(topPos, gemToSpawn, settings.DropHeight);
+                var pieceToSpawn = SelectNonMatchingPiece(topPos);
+                SpawnPiece(topPos, pieceToSpawn, settings.DropHeight);
             }
         }
     }

@@ -5,8 +5,8 @@ namespace Service.Interfaces
 {
     public interface ISettings : IBoardSettings
     {
-        IReadOnlyList<IPieceData> Gems { get; }
-        IReadOnlyList<IPieceData> GemBombs { get; }
+        IReadOnlyList<IPieceData> Pieces { get; }
+        IReadOnlyList<IPieceData> PieceBombs { get; }
         float BombChance { get; }
         int DropHeight { get; }
         IPieceData Bomb { get; }
@@ -22,8 +22,8 @@ namespace Service.Interfaces
         float DestroyMatchesDelay { get; }
         float ChangeStateDelay { get; }
         object TilePrefabs { get; }
-        float GemSpeed { get; }
-        float GemSwapEase(float t);
-        float GemDropSpeedEase(float t);
+        float PieceSpeed { get; }
+        float PieceSwapEase(float t);
+        float PieceDropSpeedEase(float t);
     }
 }

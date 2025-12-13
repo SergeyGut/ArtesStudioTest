@@ -11,7 +11,7 @@ namespace Presentation
     {
         private readonly IGameBoard gameBoard;
         private readonly ISettings settings;
-        private readonly IGemPool<IPieceView> gemPool;
+        private readonly IPiecePool<IPieceView> gemPool;
         private readonly Transform gemsHolder;
 
         private readonly Dictionary<IReadOnlyPiece, IPieceView> gemViews = new();
@@ -20,7 +20,7 @@ namespace Presentation
             [Inject(Id = "GemsHolder")] Transform gemsHolder,
             IGameBoard gameBoard,
             ISettings settings,
-            IGemPool<IPieceView> gemPool)
+            IPiecePool<IPieceView> gemPool)
         {
             this.gemsHolder = gemsHolder;
             this.gameBoard = gameBoard;
@@ -62,7 +62,7 @@ namespace Presentation
             return null;
         }
 
-        public void CheckMisplacedGems()
+        public void CheckMisplacedPieces()
         {
             using var foundGems = PooledHashSet<IPieceView>.Get();
             foundGems.Value.UnionWith(Object.FindObjectsOfType<GemView>());
@@ -71,7 +71,7 @@ namespace Presentation
             {
                 for (int y = 0; y < gameBoard.Height; y++)
                 {
-                    IPiece gem = gameBoard.GetGem(x, y);
+                    IPiece gem = gameBoard.GetPiece(x, y);
                     if (gem == null)
                     {
                         continue;
@@ -87,7 +87,7 @@ namespace Presentation
 
             foreach (var pieceView in foundGems.Value)
             {
-                gemPool.ReturnGem(pieceView);
+                gemPool.ReturnPiece(pieceView);
             }
         }
     }
