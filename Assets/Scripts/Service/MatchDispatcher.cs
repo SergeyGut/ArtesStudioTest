@@ -2,7 +2,6 @@
 using Domain.Interfaces;
 using Domain.Pool;
 using Service.Interfaces;
-using Zenject;
 
 namespace Service
 {
@@ -51,30 +50,29 @@ namespace Service
         private async UniTask DestroyMatchesAsync()
         {
             using var bombCreationPositions = pathfinderService.CollectBombCreationPositions();
-            using var newlyCreatedBombs = PooledHashSet<IPiece>.Get();
-
             using var matchedGems = pathfinderService.CollectMatchedGems();
-            destroyService.DestroyGems(matchedGems.Value);
-            bombService.CreateBombs(bombCreationPositions.Value, newlyCreatedBombs);
+            
+            destroyService.DestroyMatchedGems(matchedGems.Value);
+            bombService.CreateBombs(bombCreationPositions.Value);
 
-            await DestroyExplosionsWithDelayAsync(newlyCreatedBombs);
+            await DestroyExplosionsWithDelayAsync(matchedGems);
             await DecreaseRowAsync();
         }
 
-        private async UniTask DestroyExplosionsWithDelayAsync(PooledHashSet<IPiece> newlyCreatedBombs)
+        private async UniTask DestroyExplosionsWithDelayAsync(PooledHashSet<IPiece> matchedGems)
         {
-            using var nonBombExplosions = pathfinderService.CollectNonBombExplosions(newlyCreatedBombs);
+            using var nonBombExplosions = pathfinderService.CollectExplosionsNonBomb(matchedGems);
             if (nonBombExplosions.Value.Count > 0)
             {
                 await UniTask.WaitForSeconds(settings.BombNeighborDelay);
-                destroyService.DestroyGems(nonBombExplosions.Value);
+                destroyService.DestroyMatchedGems(nonBombExplosions.Value);
             }
 
-            using var bombExplosions = pathfinderService.CollectBombExplosions(newlyCreatedBombs);
+            using var bombExplosions = pathfinderService.CollectExplosionsBomb(matchedGems);
             if (bombExplosions.Value.Count > 0)
             {
                 await UniTask.WaitForSeconds(settings.BombSelfDelay);
-                destroyService.DestroyGems(bombExplosions.Value);
+                destroyService.DestroyMatchedGems(bombExplosions.Value);
                 await UniTask.WaitForSeconds(settings.BombPostSelfDelay);
             }
         }

@@ -5,6 +5,6 @@ namespace Service.Interfaces
 {
     public interface IDestroyService
     {
-        void DestroyGems(IEnumerable<IPiece> gems);
+        void DestroyMatchedGems(IEnumerable<IPiece> gems);
     }
 }

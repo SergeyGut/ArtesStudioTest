@@ -1,4 +1,4 @@
-using Domain;
+using System.Collections.Generic;
 using Domain.Interfaces;
 using Domain.Pool;
 using Service.Interfaces;
@@ -11,21 +11,20 @@ namespace Presentation
     {
         private readonly IGameBoard gameBoard;
         private readonly ISettings settings;
-        private readonly ISpawnService spawnService;
-        private readonly IGemPool<IPiece> gemPool;
+        private readonly IGemPool<IPieceView> gemPool;
         private readonly Transform gemsHolder;
 
+        private readonly Dictionary<IPiece, IPieceView> gemViews = new();
+        
         public BoardView(
             [Inject(Id = "GemsHolder")] Transform gemsHolder,
             IGameBoard gameBoard,
-            ISpawnService spawnService,
             ISettings settings,
-            IGemPool<IPiece> gemPool)
+            IGemPool<IPieceView> gemPool)
         {
             this.gemsHolder = gemsHolder;
             this.gameBoard = gameBoard;
             this.settings = settings;
-            this.spawnService = spawnService;
             this.gemPool = gemPool;
         }
 
@@ -40,31 +39,51 @@ namespace Presentation
                 GameObject _bgTile = Object.Instantiate(settings.TilePrefabs as GameObject, _pos, Quaternion.identity);
                 _bgTile.transform.SetParent(parent);
                 _bgTile.name = "BG Tile - " + x + ", " + y;
-
-                var gemToSpawn = spawnService.SelectNonMatchingGem(new GridPosition(x, y));
-                spawnService.SpawnGem(new GridPosition(x, y), gemToSpawn);
             }
+        }
+
+        public void AddPieceView(IPieceView pieceView)
+        {
+            gemViews.Add(pieceView.Piece, pieceView);
+        }
+        
+        public IPieceView GetPieceView(IPiece piece)
+        {
+            return gemViews[piece];
+        }
+
+        public IPieceView RemovePieceView(IPiece piece)
+        {
+            if (gemViews.Remove(piece, out var pieceView))
+            {
+                return pieceView;
+            }
+
+            return null;
         }
 
         public void CheckMisplacedGems()
         {
-            using var foundGems = PooledHashSet<IPiece>.Get();
-            foundGems.Value.UnionWith(Object.FindObjectsOfType<SC_Gem>());
+            using var foundGems = PooledHashSet<IPieceView>.Get();
+            foundGems.Value.UnionWith(Object.FindObjectsOfType<GemView>());
 
             for (int x = 0; x < gameBoard.Width; x++)
             {
                 for (int y = 0; y < gameBoard.Height; y++)
                 {
-                    IPiece curGem = gameBoard.GetGem(x, y);
-                    if (curGem != null)
+                    IPiece gem = gameBoard.GetGem(x, y);
+                    IPieceView gemView = GetPieceView(gem);
+                    if (gemView != null)
                     {
-                        foundGems.Value.Remove(curGem);
+                        foundGems.Value.Remove(gemView);
                     }
                 }
             }
 
-            foreach (var g in foundGems.Value)
-                gemPool.ReturnGem(g);
+            foreach (var pieceView in foundGems.Value)
+            {
+                gemPool.ReturnGem(pieceView);
+            }
         }
     }
 }

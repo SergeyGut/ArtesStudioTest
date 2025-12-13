@@ -10,10 +10,9 @@ namespace Domain.Interfaces
         int BlastSize { get; }
         bool IsMatch { get; set; }
         bool IsSwapMovement { get; set; }
-        bool IsMoving { get; }
-        bool JustSpawned { get; }
+        bool IsMoving { get; set; }
+        bool JustSpawned { get; set; }
         int ScoreValue { get; }
-        void RunDestroyEffect();
     }    
 }
 

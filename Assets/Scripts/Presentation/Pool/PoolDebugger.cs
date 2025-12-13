@@ -17,7 +17,7 @@ namespace Presentation.Pool
         private int lastGemAvailableCount;
         private int lastWaitForSecondsCacheSize;
 
-        private IGemPool<IPiece> gemPool;
+        private IGemPool<IPieceView> gemPool;
 
         private void Start()
         {

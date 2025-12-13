@@ -100,13 +100,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c5d1e13e319aa044e9776fbd351e9d03, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  type: 0
-  isColorBomb: 1
-  isMatch: 0
+  inputHandler: {fileID: 5989257758731760354}
   destroyEffect: {fileID: 8904178830182364799, guid: d794be08823edd34da1790efd1739074,
     type: 3}
-  scoreValue: 10
-  blastSize: 2
 --- !u!114 &5989257758731760354
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -197,7 +193,7 @@ SpriteRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 10754, guid: 0000000000000000f000000000000000, type: 0}
+  - {fileID: 2100000, guid: 903caaa20373b3240b0430ea26389dec, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0

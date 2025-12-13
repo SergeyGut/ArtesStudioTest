@@ -31,10 +31,9 @@ namespace Presentation.Installers
             Container.Bind<TextMeshProUGUI>().WithId("ScoreText").FromInstance(scoreText).AsSingle();
             
             Container.Bind<IGameStateProvider>().To<GameStateProvider>().AsSingle();
-            Container.Bind<IGemPool<IPiece>>().To<GemPool>().AsSingle();
             
+            Container.BindInterfacesTo<GemPool>().AsSingle();
             Container.BindInterfacesTo<ScoreUpdater>().AsSingle();
-            Container.BindInterfacesTo<BoardView>().AsSingle();
         }
     }
 }

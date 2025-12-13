@@ -13,5 +13,8 @@ MonoBehaviour:
   m_Name: BombGem
   m_EditorClassIdentifier: 
   type: 5
-  gemViewPrefab: {fileID: -7932498854989450506, guid: 985dfcb6799096640a2d8d04f4a933b2,
+  isColorBomb: 0
+  blastSize: 1
+  scoreValue: 10
+  gemViewPrefab: {fileID: 7728721766547317714, guid: aa0291e650b382941875040db9e8a232,
     type: 3}

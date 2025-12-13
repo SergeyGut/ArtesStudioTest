@@ -7,40 +7,44 @@ namespace Service
     public class DestroyService : IDestroyService
     {
         private readonly IGameBoard gameBoard;
-        private readonly IGemPool<IPiece> gemPool;
+        private readonly IBoardView boardView;
+        private readonly IGemPool<IPieceView> gemPool;
         private readonly IScoreService scoreService;
 
-        public DestroyService(IGameBoard gameBoard, IGemPool<IPiece> gemPool, IScoreService scoreService)
+        public DestroyService(
+            IGameBoard gameBoard,
+            IBoardView boardView,
+            IGemPool<IPieceView> gemPool,
+            IScoreService scoreService)
         {
             this.gameBoard = gameBoard;
+            this.boardView = boardView;
             this.gemPool = gemPool;
             this.scoreService = scoreService;
         }
 
-        public void DestroyGems(IEnumerable<IPiece> gems)
+        public void DestroyMatchedGems(IEnumerable<IPiece> gems)
         {
             foreach (var gem in gems)
             {
-                if (gem != null)
-                {
-                    scoreService.AddScore(gem.ScoreValue);
-                    DestroyMatchedGemsAt(gem);
-                }
+                if (gem == null) continue;
+                
+                scoreService.AddScore(gem.ScoreValue);
+                DestroyGem(gem);
             }
         }
 
-        private void DestroyMatchedGemsAt(IPiece gem)
+        private void DestroyGem(IPiece piece)
         {
-            if (gem != null)
-            {
-                var position = gem.Position;
-                gem.RunDestroyEffect();
-                gemPool.ReturnGem(gem);
+            if (piece == null) return;
+            
+            var pieceView = boardView.RemovePieceView(piece);
+            pieceView.RunDestroyEffect();
+            gemPool.ReturnGem(pieceView);
 
-                if (gameBoard.GetGem(position) == gem)
-                {
-                    gameBoard.SetGem(position, null);
-                }
+            if (gameBoard.GetGem(piece.Position) == piece)
+            {
+                gameBoard.SetGem(piece.Position, null);
             }
         }
     }

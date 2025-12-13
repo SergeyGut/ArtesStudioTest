@@ -1,50 +1,40 @@
 using System.Collections.Generic;
 using Domain;
 using Domain.Interfaces;
-using Domain.Pool;
 using Service.Interfaces;
 
 namespace Service
 {
     public class BombService : IBombService
     {
-        private readonly IGameBoard gameBoard;
-        private readonly IMatchService matchService;
-        private readonly IGemPool<IPiece> gemPool;
+        private readonly ISpawnService spawnService;
         private readonly ISettings settings;
 
         public BombService(
-            IGameBoard gameBoard,
-            IMatchService matchService,
-            IGemPool<IPiece> gemPool,
+            ISpawnService spawnService,
             ISettings settings)
         {
-            this.gameBoard = gameBoard;
-            this.matchService = matchService;
-            this.gemPool = gemPool;
+            this.spawnService = spawnService;
             this.settings = settings;
         }
 
-        public void CreateBombs(Dictionary<GridPosition, GemType> bombPositions,
-            PooledHashSet<IPiece> newlyCreatedBombs)
+        public void CreateBombs(Dictionary<GridPosition, GemType> bombPositions)
         {
             foreach (var (pos, type) in bombPositions)
             {
-                var bombPrefab = GetBombPrefabForType(type);
-                var newBomb = gemPool.SpawnGem(bombPrefab, pos);
-                gameBoard.SetGem(pos, newBomb);
-                newlyCreatedBombs.Value.Add(newBomb);
-
-                matchService.Explosions.Remove(newBomb);
+                var gemData = GetBombPrefabForType(type);
+                spawnService.SpawnGem(pos, gemData);
             }
         }
 
-        private IPiece GetBombPrefabForType(GemType type)
+        private IGemData GetBombPrefabForType(GemType type)
         {
             foreach (var gemData in settings.GemBombs)
             {
                 if (gemData.Type == type)
-                    return gemData.GemView;
+                {
+                    return gemData;
+                }
             }
 
             return null;

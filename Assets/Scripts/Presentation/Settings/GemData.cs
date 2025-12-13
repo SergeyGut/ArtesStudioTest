@@ -16,10 +16,10 @@ namespace Presentation.Settings
         [SerializeField]
         private int scoreValue;
         [SerializeField]
-        private SC_Gem gemViewPrefab;
+        private GemView gemViewPrefab;
         
         public GemType Type => type;
-        public IPiece GemView => gemViewPrefab;
+        public IPieceView PieceView => gemViewPrefab;
         public bool IsColorBomb => isColorBomb;
         public int BlastSize => blastSize;
         public int ScoreValue => scoreValue;

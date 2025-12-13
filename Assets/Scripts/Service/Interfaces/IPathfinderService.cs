@@ -8,8 +8,8 @@ namespace Service.Interfaces
     public interface IPathfinderService
     {
         PooledDictionary<GridPosition, GemType> CollectBombCreationPositions();
-        PooledList<IPiece> CollectMatchedGems();
-        PooledList<IPiece> CollectNonBombExplosions(PooledHashSet<IPiece> newlyCreatedBombs);
-        PooledList<IPiece> CollectBombExplosions(PooledHashSet<IPiece> newlyCreatedBombs);
+        PooledHashSet<IPiece> CollectMatchedGems();
+        PooledList<IPiece> CollectExplosionsNonBomb(PooledHashSet<IPiece> matchedGems);
+        PooledList<IPiece> CollectExplosionsBomb(PooledHashSet<IPiece> matchedGems);
     }
 }

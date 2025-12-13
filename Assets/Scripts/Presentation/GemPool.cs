@@ -1,4 +1,4 @@
-using Domain;
+using System;
 using Domain.Interfaces;
 using Presentation.Pool;
 using Service.Interfaces;
@@ -7,9 +7,9 @@ using Zenject;
 
 namespace Presentation
 {
-    public class GemPool : IGemPool<IPiece>
+    public class GemPool : IGemPool<IPieceView>, IDisposable
     {
-        private readonly IObjectPool<SC_Gem> pool;
+        private readonly IObjectPool<GemView> pool;
         private readonly Transform parentTransform;
 
         public int AvailableCount => pool.AvailableCount;
@@ -18,33 +18,38 @@ namespace Presentation
         public GemPool([Inject(Id = "GemsHolder")] Transform parent, DiContainer container)
         {
             parentTransform = parent;
-            pool = new GenericObjectPool<SC_Gem>(parent, container);
+            pool = new GenericObjectPool<GemView>(parent, container);
         }
 
-        public IPiece SpawnGem(IPiece item, GridPosition position, float dropHeight = 0f)
+        public IPieceView SpawnGem(IPieceView item, IPiece piece, float dropHeight = 0f)
         {
-            if (item is not SC_Gem prefab)
+            if (item is not GemView prefab)
                 return null;
 
-            SC_Gem gem = pool.Get(prefab);
+            GemView gem = pool.Get(prefab);
 
-            gem.transform.position = new Vector3(position.X, position.Y + dropHeight, 0f);
+            gem.transform.position = new Vector3(piece.Position.X, piece.Position.Y + dropHeight, 0f);
             gem.transform.SetParent(parentTransform);
-            gem.name = "Gem - " + position.X + ", " + position.Y;
-            gem.SetupGem(position);
+            gem.name = "Gem - " + piece.Position.X + ", " + piece.Position.Y;
+            gem.SetupGem(piece);
 
             return gem;
         }
 
-        public void ReturnGem(IPiece item)
+        public void ReturnGem(IPieceView item)
         {
-            if (item is SC_Gem gem)
+            if (item is GemView gem)
                 pool.Return(gem);
         }
 
         public void ClearPool()
         {
             pool.Clear();
+        }
+
+        public void Dispose()
+        {
+            ClearPool();
         }
     }
 }

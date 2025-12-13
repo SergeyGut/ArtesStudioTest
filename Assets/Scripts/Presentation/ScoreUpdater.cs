@@ -7,7 +7,7 @@ namespace Presentation
 {
     public class ScoreUpdater : ITickable, IInitializable
     {
-        private float displayScore = 0;
+        private float displayScore;
         private float scoreSpeed;
         private int lastDisplayedScoreInt = -1;
 
@@ -30,11 +30,13 @@ namespace Presentation
             displayScore = Mathf.Lerp(displayScore, scoreService.Score, scoreSpeed * Time.deltaTime);
 
             int currentScoreInt = Mathf.RoundToInt(displayScore);
-            if (currentScoreInt != lastDisplayedScoreInt)
+            if (currentScoreInt == lastDisplayedScoreInt)
             {
-                scoreText.text = currentScoreInt.ToString();
-                lastDisplayedScoreInt = currentScoreInt;
+                return;
             }
+            
+            scoreText.text = currentScoreInt.ToString();
+            lastDisplayedScoreInt = currentScoreInt;
         }
 
         public void Initialize()

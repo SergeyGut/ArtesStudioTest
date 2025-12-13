@@ -1,4 +1,3 @@
-
 using Domain;
 using Domain.Interfaces;
 using Domain.Pool;
@@ -11,7 +10,9 @@ namespace Service
         private readonly IMatchService matchService;
         private readonly ISettings settings;
 
-        public PathfinderService(IMatchService matchService, ISettings settings)
+        public PathfinderService(
+            IMatchService matchService,
+            ISettings settings)
         {
             this.matchService = matchService;
             this.settings = settings;
@@ -19,37 +20,40 @@ namespace Service
 
         public PooledDictionary<GridPosition, GemType> CollectBombCreationPositions()
         {
-            var bombCreationPositions = PooledDictionary<GridPosition, GemType>.Get();
+            PooledDictionary<GridPosition, GemType> bombCreationPositions = PooledDictionary<GridPosition, GemType>.Get();
 
-            foreach (var matchInfo in matchService.MatchInfoMap)
+            foreach (MatchInfo matchInfo in matchService.MatchInfoMap)
             {
-                if (matchInfo.MatchedGems.Count >= settings.MinMatchForBomb)
+                if (matchInfo.MatchedGems.Count < settings.MinMatchForBomb)
                 {
-                    IPiece firstGem = null;
-                    foreach (var gem in matchInfo.MatchedGems)
-                    {
-                        firstGem = gem;
-                        break;
-                    }
+                    continue;
+                }
+                
+                IPiece firstGem = null;
+                foreach (IPiece gem in matchInfo.MatchedGems)
+                {
+                    firstGem = gem;
+                    break;
+                }
 
-                    if (firstGem != null)
-                    {
-                        bombCreationPositions.Value.TryAdd(matchInfo.UserActionPos ?? firstGem.Position, firstGem.Type);
-                    }
+                if (firstGem != null)
+                {
+                    bombCreationPositions.Value.TryAdd(matchInfo.UserActionPos ?? firstGem.Position, firstGem.Type);
                 }
             }
 
             return bombCreationPositions;
         }
 
-        public PooledList<IPiece> CollectMatchedGems()
+        public PooledHashSet<IPiece> CollectMatchedGems()
         {
-            var matchedGems = PooledList<IPiece>.Get();
-            foreach (var matchInfo in matchService.MatchInfoMap)
+            PooledHashSet<IPiece> matchedGems = PooledHashSet<IPiece>.Get();
+            
+            foreach (MatchInfo matchInfo in matchService.MatchInfoMap)
             {
-                foreach (var gem in matchInfo.MatchedGems)
+                foreach (IPiece gem in matchInfo.MatchedGems)
                 {
-                    if (gem != null && !gem.IsColorBomb && gem.Type != GemType.bomb)
+                    if (gem is { IsColorBomb: false } && gem.Type != GemType.bomb)
                     {
                         matchedGems.Value.Add(gem);
                     }
@@ -59,13 +63,13 @@ namespace Service
             return matchedGems;
         }
 
-        public PooledList<IPiece> CollectNonBombExplosions(PooledHashSet<IPiece> newlyCreatedBombs)
+        public PooledList<IPiece> CollectExplosionsNonBomb(PooledHashSet<IPiece> matchedGems)
         {
-            var nonBombExplosions = PooledList<IPiece>.Get();
-            foreach (var gem in matchService.Explosions)
+            PooledList<IPiece> nonBombExplosions = PooledList<IPiece>.Get();
+            
+            foreach (IPiece gem in matchService.Explosions)
             {
-                if (gem != null && !gem.IsColorBomb && gem.Type != GemType.bomb &&
-                    !newlyCreatedBombs.Value.Contains(gem))
+                if (gem is { IsColorBomb: false } && gem.Type != GemType.bomb && !matchedGems.Value.Contains(gem))
                 {
                     nonBombExplosions.Value.Add(gem);
                 }
@@ -74,13 +78,13 @@ namespace Service
             return nonBombExplosions;
         }
 
-        public PooledList<IPiece> CollectBombExplosions(PooledHashSet<IPiece> newlyCreatedBombs)
+        public PooledList<IPiece> CollectExplosionsBomb(PooledHashSet<IPiece> matchedGems)
         {
-            var bombExplosions = PooledList<IPiece>.Get();
-            foreach (var gem in matchService.Explosions)
+            PooledList<IPiece> bombExplosions = PooledList<IPiece>.Get();
+            
+            foreach (IPiece gem in matchService.Explosions)
             {
-                if (gem != null && (gem.IsColorBomb || gem.Type == GemType.bomb) &&
-                    !newlyCreatedBombs.Value.Contains(gem))
+                if (gem != null && (gem.IsColorBomb || gem.Type == GemType.bomb) && !matchedGems.Value.Contains(gem))
                 {
                     bombExplosions.Value.Add(gem);
                 }

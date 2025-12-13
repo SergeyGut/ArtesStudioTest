@@ -99,13 +99,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c5d1e13e319aa044e9776fbd351e9d03, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  type: 0
-  isColorBomb: 0
-  isMatch: 0
+  inputHandler: {fileID: 2452796413145528900}
   destroyEffect: {fileID: 8904178830182364799, guid: d794be08823edd34da1790efd1739074,
     type: 3}
-  scoreValue: 10
-  blastSize: 1
 --- !u!114 &2452796413145528900
 MonoBehaviour:
   m_ObjectHideFlags: 0

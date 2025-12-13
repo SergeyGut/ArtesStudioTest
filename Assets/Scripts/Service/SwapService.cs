@@ -6,9 +6,8 @@ namespace Service
 {
     public class SwapService : ISwapService
     {
-        private const float POSITION_THRESHOLD = 0.01f;
-        
         private readonly IGameBoard gameBoard;
+        private readonly IBoardView boardView;
         private readonly IGameStateProvider gameStateProvider;
         private readonly IMatchService matchService;
         private readonly IMatchDispatcher matchDispatcher;
@@ -17,32 +16,39 @@ namespace Service
         private IPiece gem;
         private IPiece otherGem;
         
-        public SwapService(IGameBoard gameBoard,
+        public SwapService(
+            IGameBoard gameBoard,
+            IBoardView boardView,
             IGameStateProvider gameStateProvider,
             IMatchService matchService,
             IMatchDispatcher matchDispatcher,
             ISettings settings)
         {
             this.gameBoard = gameBoard;
+            this.boardView = boardView;
             this.gameStateProvider = gameStateProvider;
             this.matchService = matchService;
             this.matchDispatcher = matchDispatcher;
             this.settings = settings;
         }
         
-        public void MovePieces(IPiece gem)
+        public void MovePieces(IPiece piece)
         {
-            this.gem = gem;
+            gem = piece;
+
+            var gemView = boardView.GetPieceView(gem);
             
-            GetOtherGem(gem as IGemView);
+            GetOtherGem(gemView);
 
             gameBoard.SetGem(gem.Position, gem);
             gameBoard.SetGem(otherGem.Position, otherGem);
 
-            CheckMoveAsync(gem as IGemView, otherGem as IGemView).Forget();
+            var otherGemView = boardView.GetPieceView(otherGem);
+            
+            CheckMoveAsync(gemView, otherGemView).Forget();
         }
         
-        private void GetOtherGem(IGemView gemView)
+        private void GetOtherGem(IPieceView gemView)
         {
             switch (gemView.SwapAngle)
             {
@@ -85,11 +91,12 @@ namespace Service
             }
         }
 
-        private async UniTask CheckMoveAsync(IGemView gemView, IGemView otherGemView)
+        private async UniTask CheckMoveAsync(IPieceView gemView, IPieceView otherGemView)
         {
             gameStateProvider.SetState(GameState.wait);
 
             await WaitForSwapCompletion(gemView, otherGemView);
+            
             matchService.FindAllMatches(gem.Position, otherGem.Position);
 
             if (otherGem != null)
@@ -114,10 +121,9 @@ namespace Service
             }
         }
 
-        private async UniTask WaitForSwapCompletion(IGemView gemView, IGemView otherGemView)
+        private async UniTask WaitForSwapCompletion(IPieceView gemView, IPieceView otherGemView)
         {
-            while (gemView.TargetPositionDistance > POSITION_THRESHOLD ||
-                   otherGemView?.TargetPositionDistance > POSITION_THRESHOLD)
+            while (!gemView.TargetPositionArrived || !otherGemView.TargetPositionArrived)
             {
                 await UniTask.Yield();
             }
