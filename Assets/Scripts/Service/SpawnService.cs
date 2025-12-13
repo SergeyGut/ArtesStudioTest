@@ -45,9 +45,9 @@ namespace Service
             }
         }
 
-        private IGemData SelectNonMatchingGem(GridPosition position)
+        private IPieceData SelectNonMatchingGem(GridPosition position)
         {
-            using var validGems = PooledList<IGemData>.Get();
+            using var validGems = PooledList<IPieceData>.Get();
             using var matchCounts = PooledList<int>.Get();
             int lowestMatchCount = int.MaxValue;
             var gems = settings.Gems;
@@ -84,17 +84,17 @@ namespace Service
             return validGems.Value[random.Next(0, validGems.Value.Count)];
         }
 
-        public void SpawnGem(GridPosition position, IGemData gemToSpawn, int dropHeight = 0)
+        public void SpawnGem(GridPosition position, IPieceData pieceToSpawn, int dropHeight = 0)
         {
             if (random.Next(0, 100) < settings.BombChance)
             {
-                gemToSpawn = settings.Bomb;
+                pieceToSpawn = settings.Bomb;
             }
 
             position = new GridPosition(position.X, position.Y + dropHeight);
             
-            var gem = new GemModel(gemToSpawn, position);
-            var gemView = gemPool.SpawnGem(gemToSpawn.PieceView, gem);
+            var gem = new PieceModel(pieceToSpawn, position);
+            var gemView = gemPool.SpawnGem(pieceToSpawn.PieceView, gem);
             
             gameBoardView.AddPieceView(gemView);
             

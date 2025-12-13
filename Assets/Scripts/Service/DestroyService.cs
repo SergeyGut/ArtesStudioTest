@@ -46,6 +46,8 @@ namespace Service
             {
                 gameBoard.SetGem(piece.Position, null);
             }
+            
+            piece.Dispose();
         }
     }
 }

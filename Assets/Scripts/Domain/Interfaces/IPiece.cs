@@ -1,4 +1,7 @@
 
+using System;
+using System.Threading;
+
 namespace Domain.Interfaces
 {
     public interface IReadOnlyPiece
@@ -8,9 +11,9 @@ namespace Domain.Interfaces
         bool IsMoving { get; }
     }
     
-    public interface IPiece : IReadOnlyPiece
+    public interface IPiece : IReadOnlyPiece, IDisposable
     {
-        GemType Type { get; }
+        PieceType Type { get; }
         new ref GridPosition Position { get; }
         GridPosition PrevPosition { get; set; }
         bool IsColorBomb { get; }
@@ -19,6 +22,7 @@ namespace Domain.Interfaces
         new bool IsSwap { set; }
         new bool IsMoving { get; set; }
         int ScoreValue { get; }
+        CancellationToken Token { get; }
     }
 }
 

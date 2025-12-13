@@ -11,7 +11,7 @@ namespace Domain
             this.gameBoard = gameBoard;
         }
 
-        public int GetMatchCountAt(GridPosition _PositionToCheck, GemType typeToMatch)
+        public int GetMatchCountAt(GridPosition _PositionToCheck, PieceType typeToMatch)
         {
             int horizontalMatches = CountHorizontalMatch(_PositionToCheck, typeToMatch);
             int verticalMatches = CountVerticalMatch(_PositionToCheck, typeToMatch);
@@ -19,7 +19,7 @@ namespace Domain
                    (verticalMatches >= 2 ? verticalMatches : 0);
         }
 
-        private int CountHorizontalMatch(GridPosition pos, GemType typeToMatch)
+        private int CountHorizontalMatch(GridPosition pos, PieceType typeToMatch)
         {
             int leftCount = CountMatchingGemsInDirection(pos, -1, 0, typeToMatch);
             int rightCount = CountMatchingGemsInDirection(pos, 1, 0, typeToMatch);
@@ -27,7 +27,7 @@ namespace Domain
             return leftCount + rightCount;
         }
 
-        private int CountVerticalMatch(GridPosition pos, GemType typeToMatch)
+        private int CountVerticalMatch(GridPosition pos, PieceType typeToMatch)
         {
             int belowCount = CountMatchingGemsInDirection(pos, 0, -1, typeToMatch);
             int aboveCount = CountMatchingGemsInDirection(pos, 0, 1, typeToMatch);
@@ -35,7 +35,7 @@ namespace Domain
             return belowCount + aboveCount;
         }
 
-        private int CountMatchingGemsInDirection(GridPosition startPos, int deltaX, int deltaY, GemType typeToMatch)
+        private int CountMatchingGemsInDirection(GridPosition startPos, int deltaX, int deltaY, PieceType typeToMatch)
         {
             int count = 0;
             int x = startPos.X + deltaX;

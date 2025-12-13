@@ -30,8 +30,7 @@ namespace Presentation.Installers
             Container.Bind<Transform>().WithId("GemsHolder").FromInstance(gemsHolder).AsSingle();
             Container.Bind<TextMeshProUGUI>().WithId("ScoreText").FromInstance(scoreText).AsSingle();
             
-            Container.Bind<IGameStateProvider>().To<GameStateProvider>().AsSingle();
-            
+            Container.BindInterfacesTo<GameStateProvider>().AsSingle();
             Container.BindInterfacesTo<GemPool>().AsSingle();
             Container.BindInterfacesTo<ScoreUpdater>().AsSingle();
         }

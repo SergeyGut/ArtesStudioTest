@@ -18,9 +18,9 @@ namespace Service
             this.settings = settings;
         }
 
-        public PooledDictionary<GridPosition, GemType> CollectBombCreationPositions()
+        public PooledDictionary<GridPosition, PieceType> CollectBombCreationPositions()
         {
-            PooledDictionary<GridPosition, GemType> bombCreationPositions = PooledDictionary<GridPosition, GemType>.Get();
+            PooledDictionary<GridPosition, PieceType> bombCreationPositions = PooledDictionary<GridPosition, PieceType>.Get();
 
             foreach (MatchInfo matchInfo in matchService.MatchInfoMap)
             {
@@ -53,7 +53,7 @@ namespace Service
             {
                 foreach (IPiece gem in matchInfo.MatchedGems)
                 {
-                    if (gem is { IsColorBomb: false } && gem.Type != GemType.bomb)
+                    if (gem is { IsColorBomb: false } && gem.Type != PieceType.bomb)
                     {
                         matchedGems.Value.Add(gem);
                     }
@@ -69,7 +69,7 @@ namespace Service
             
             foreach (IPiece gem in matchService.Explosions)
             {
-                if (gem is { IsColorBomb: false } && gem.Type != GemType.bomb && !matchedGems.Value.Contains(gem))
+                if (gem is { IsColorBomb: false } && gem.Type != PieceType.bomb && !matchedGems.Value.Contains(gem))
                 {
                     nonBombExplosions.Value.Add(gem);
                 }
@@ -84,7 +84,7 @@ namespace Service
             
             foreach (IPiece gem in matchService.Explosions)
             {
-                if (gem != null && (gem.IsColorBomb || gem.Type == GemType.bomb) && !matchedGems.Value.Contains(gem))
+                if (gem != null && (gem.IsColorBomb || gem.Type == PieceType.bomb) && !matchedGems.Value.Contains(gem))
                 {
                     bombExplosions.Value.Add(gem);
                 }

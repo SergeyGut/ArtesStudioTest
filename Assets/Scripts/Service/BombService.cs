@@ -18,7 +18,7 @@ namespace Service
             this.settings = settings;
         }
 
-        public void CreateBombs(Dictionary<GridPosition, GemType> bombPositions)
+        public void CreateBombs(Dictionary<GridPosition, PieceType> bombPositions)
         {
             foreach (var (pos, type) in bombPositions)
             {
@@ -27,7 +27,7 @@ namespace Service
             }
         }
 
-        private IGemData GetBombPrefabForType(GemType type)
+        private IPieceData GetBombPrefabForType(PieceType type)
         {
             foreach (var gemData in settings.GemBombs)
             {

@@ -17,6 +17,7 @@ namespace Presentation
 
         private Vector2 startPosition;
         private float moveStartTime;
+        private bool wasMovedLastFrame;
 
         private ISettings settings;
         private IReadOnlyPiece piece;
@@ -48,11 +49,18 @@ namespace Presentation
                 }
 
                 transform.position = Vector2.Lerp(startPosition, targetPos, t);
+                
+                wasMovedLastFrame = true;
             }
             else
             {
-                startPosition = transform.position;
+                if (wasMovedLastFrame)
+                {
+                    transform.position = startPosition = piece.Position.ToVector2();
+                }
+                
                 moveStartTime = Time.time;
+                wasMovedLastFrame = false;
             }
         }
 
@@ -62,6 +70,7 @@ namespace Presentation
             
             startPosition = transform.position;
             moveStartTime = Time.time;
+            wasMovedLastFrame = false;
         }
 
         public void OnSpawnFromPool()
@@ -72,8 +81,6 @@ namespace Presentation
         public void OnReturnToPool()
         {
             piece = null;
-            
-            // TODO: Stop all async operations
         }
         
         public void RunDestroyEffect()

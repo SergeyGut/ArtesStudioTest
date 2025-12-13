@@ -5,11 +5,11 @@ namespace Service.Interfaces
 {
     public interface ISettings : IBoardSettings
     {
-        IReadOnlyList<IGemData> Gems { get; }
-        IReadOnlyList<IGemData> GemBombs { get; }
+        IReadOnlyList<IPieceData> Gems { get; }
+        IReadOnlyList<IPieceData> GemBombs { get; }
         float BombChance { get; }
         int DropHeight { get; }
-        IGemData Bomb { get; }
+        IPieceData Bomb { get; }
         int MinMatchForBomb { get; }
         float ScoreSpeed { get; }
         float BombNeighborDelay { get; }

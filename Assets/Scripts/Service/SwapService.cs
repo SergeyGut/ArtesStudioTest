@@ -1,3 +1,4 @@
+using System.Threading;
 using Cysharp.Threading.Tasks;
 using Domain.Interfaces;
 using Service.Interfaces;
@@ -15,6 +16,8 @@ namespace Service
         
         private IPiece piece;
         private IPiece otherPiece;
+        
+        private bool IsAnyCancellationRequested => piece.Token.IsCancellationRequested || otherPiece.Token.IsCancellationRequested;
         
         public SwapService(
             IGameBoard gameBoard,
@@ -89,11 +92,16 @@ namespace Service
             otherPiece.IsSwap = true;
         }
 
-        private async UniTask CheckMoveAsync(IPieceView gemView, IPieceView otherGemView)
+        private async UniTask CheckMoveAsync(IPieceView pieceView, IPieceView otherPieceView)
         {
             gameStateProvider.SetState(GameState.wait);
 
-            await WaitForSwapCompletion(gemView, otherGemView);
+            await WaitForSwapCompletion(pieceView, otherPieceView);
+            
+            if (IsAnyCancellationRequested)
+            {
+                return;
+            }
             
             matchService.FindAllMatches(piece.Position, otherPiece.Position);
 
@@ -110,7 +118,12 @@ namespace Service
                     gameBoard.SetGem(piece.Position, piece);
                     gameBoard.SetGem(otherPiece.Position, otherPiece);
 
-                    await WaitForSwapCompletion(gemView, otherGemView);
+                    await WaitForSwapCompletion(pieceView, otherPieceView);
+                    
+                    if (IsAnyCancellationRequested)
+                    {
+                        return;
+                    }
                     
                     piece.IsSwap = false;
                     otherPiece.IsSwap = false;
@@ -128,6 +141,11 @@ namespace Service
         {
             while (!gemView.TargetPositionArrived || !otherGemView.TargetPositionArrived)
             {
+                if (IsAnyCancellationRequested)
+                {
+                    return;
+                }
+                
                 await UniTask.Yield();
             }
         }

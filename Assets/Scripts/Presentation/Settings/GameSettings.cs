@@ -32,10 +32,10 @@ namespace Presentation.Settings
         [HideInInspector] public int rowsSize = 7;
         [HideInInspector] public int colsSize = 7;
 
-        public IReadOnlyList<IGemData> Gems => gems;
+        public IReadOnlyList<IPieceData> Gems => gems;
         public float BombChance => bombChance;
         public int DropHeight => dropHeight;
-        public IGemData Bomb => bomb;
+        public IPieceData Bomb => bomb;
         public int MinMatchForBomb => minMatchForBomb;
         public float ScoreSpeed => scoreSpeed;
         public float BombNeighborDelay => bombNeighborDelay;
@@ -47,7 +47,7 @@ namespace Presentation.Settings
         public float FindAllMatchesDelay => findAllMatchesDelay;
         public float DestroyMatchesDelay => destroyMatchesDelay;
         public float ChangeStateDelay => changeStateDelay;
-        public IReadOnlyList<IGemData> GemBombs => gemBombs;
+        public IReadOnlyList<IPieceData> GemBombs => gemBombs;
         public object TilePrefabs => bgTilePrefabs;
         public float GemSpeed => gemSpeed;
         public int RowsSize => rowsSize;

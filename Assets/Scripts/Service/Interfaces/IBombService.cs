@@ -6,6 +6,6 @@ namespace Service.Interfaces
 {
     public interface IBombService
     {
-        void CreateBombs(Dictionary<GridPosition, GemType> bombPositions);
+        void CreateBombs(Dictionary<GridPosition, PieceType> bombPositions);
     }
 }

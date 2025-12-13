@@ -14,14 +14,14 @@ namespace Presentation
         private float swipeAngle;
 
         private GemView gemView;
-        private IGameStateProvider gameStateProvider;
+        private IReadOnlyGameStateProvider gameStateProvider;
         private ISwapService swapService;
 
         public float SwapAngle => swipeAngle;
 
         [Inject]
         public void Construct(
-            IGameStateProvider gameStateProvider,
+            IReadOnlyGameStateProvider gameStateProvider,
             ISwapService swapService)
         {
             this.gameStateProvider = gameStateProvider;

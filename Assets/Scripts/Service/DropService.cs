@@ -68,7 +68,14 @@ namespace Service
                         gameBoard.SetGem(x, y, null);
                     }
                     
-                    await UniTask.WaitForSeconds(1f / settings.GemSpeed);
+                    await UniTask.
+                        WaitForSeconds(1f / settings.GemSpeed, cancellationToken: gem.Token).
+                        SuppressCancellationThrow();
+                    
+                    if (gem.Token.IsCancellationRequested)
+                    {
+                        return;
+                    }
                 }
                 else
                 {

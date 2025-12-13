@@ -1,9 +1,9 @@
 
 namespace Domain.Interfaces
 {
-    public interface IGemData
+    public interface IPieceData
     {
-        GemType Type { get; }
+        PieceType Type { get; }
         IPieceView PieceView { get; }
         bool IsColorBomb { get; }
         int BlastSize { get; }

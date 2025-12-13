@@ -133,7 +133,7 @@ namespace Domain
         }
 
         private IEnumerable<IPiece> GetMatchingGemsInDirection(int startX, int startY, int deltaX, int deltaY,
-            GemType typeToMatch)
+            PieceType typeToMatch)
         {
             int x = startX + deltaX;
             int y = startY + deltaY;
@@ -157,28 +157,28 @@ namespace Domain
                 if (gem.Position.X > 0)
                 {
                     var otherGem = gameBoard.GetGem(x - 1, y);
-                    if (otherGem?.Type == GemType.bomb)
+                    if (otherGem?.Type == PieceType.bomb)
                         MarkBombArea(new GridPosition(x - 1, y), otherGem.BlastSize);
                 }
 
                 if (gem.Position.X + 1 < gameBoard.Width)
                 {
                     var otherGem = gameBoard.GetGem(x + 1, y);
-                    if (otherGem?.Type == GemType.bomb)
+                    if (otherGem?.Type == PieceType.bomb)
                         MarkBombArea(new GridPosition(x + 1, y), otherGem.BlastSize);
                 }
 
                 if (gem.Position.Y > 0)
                 {
                     var otherGem = gameBoard.GetGem(x, y - 1);
-                    if (otherGem?.Type == GemType.bomb)
+                    if (otherGem?.Type == PieceType.bomb)
                         MarkBombArea(new GridPosition(x, y - 1), otherGem.BlastSize);
                 }
 
                 if (gem.Position.Y + 1 < gameBoard.Height)
                 {
                     var otherGem = gameBoard.GetGem(x, y + 1);
-                    if (otherGem?.Type == GemType.bomb)
+                    if (otherGem?.Type == PieceType.bomb)
                         MarkBombArea(new GridPosition(x, y + 1), otherGem.BlastSize);
                 }
             }
@@ -238,7 +238,7 @@ namespace Domain
                     return;
                 }
 
-                if (gem.Type == GemType.bomb)
+                if (gem.Type == PieceType.bomb)
                 {
                     MarkBombArea(gem.Position, gem.BlastSize);
                 }
