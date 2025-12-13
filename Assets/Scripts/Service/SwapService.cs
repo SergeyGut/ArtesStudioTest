@@ -40,6 +40,12 @@ namespace Service
             piece = pieceView.Piece as IPiece;
             
             GetOtherPiece(pieceView);
+            
+            if (otherPiece == null)
+            {
+                ResetState();
+                return;
+            }
 
             gameBoard.SetPiece(piece.Position, piece);
             gameBoard.SetPiece(otherPiece.Position, otherPiece);
@@ -134,6 +140,8 @@ namespace Service
                 {
                     matchDispatcher.DestroyMatches();
                 }
+                
+                ResetState();
             }
         }
 
@@ -148,6 +156,12 @@ namespace Service
                 
                 await UniTask.Yield();
             }
+        }
+
+        private void ResetState()
+        {
+            piece = null;
+            otherPiece = null;
         }
     }
 }
