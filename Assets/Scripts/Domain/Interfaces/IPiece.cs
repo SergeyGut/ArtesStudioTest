@@ -9,9 +9,8 @@ namespace Domain.Interfaces
         bool IsColorBomb { get; }
         int BlastSize { get; }
         bool IsMatch { get; set; }
-        bool IsSwapMovement { get; set; }
+        bool IsSwap { get; set; }
         bool IsMoving { get; set; }
-        bool JustSpawned { get; set; }
         int ScoreValue { get; }
     }    
 }

@@ -7,9 +7,8 @@ namespace Domain
         private readonly IGemData gemData;
         
         private bool isMatch;
-        private bool isSwapMovement;
+        private bool isSwap;
         private bool isMoving;
-        private bool justSpawned;
         private GridPosition position;
         private GridPosition prevPosition;
         
@@ -24,32 +23,25 @@ namespace Domain
             get => isMatch;
             set => isMatch = value;
         }
-        public bool IsSwapMovement 
+        public bool IsSwap 
         {
-            get => isSwapMovement;
-            set => isSwapMovement = value;
+            get => isSwap;
+            set => isSwap = value;
         }
         public bool IsMoving
         {
             get => isMoving;
             set => isMoving = value;
         }
-
-        public bool JustSpawned
-        {
-            get => justSpawned;
-            set => justSpawned = value;
-        }
-
+        
         public GemModel(IGemData gemData, GridPosition position)
         {
             this.gemData = gemData;
             this.position = position;
             this.prevPosition = position;
             this.isMatch = false;
-            this.isSwapMovement = false;
+            this.isSwap = false;
             this.isMoving = false;
-            this.justSpawned = true;
         }
     }
 }

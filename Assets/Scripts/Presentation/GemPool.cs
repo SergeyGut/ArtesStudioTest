@@ -21,15 +21,15 @@ namespace Presentation
             pool = new GenericObjectPool<GemView>(parent, container);
         }
 
-        public IPieceView SpawnGem(IPieceView item, IPiece piece, float dropHeight = 0f)
+        public IPieceView SpawnGem(IPieceView item, IPiece piece)
         {
             if (item is not GemView prefab)
                 return null;
 
             GemView gem = pool.Get(prefab);
 
-            gem.transform.position = new Vector3(piece.Position.X, piece.Position.Y + dropHeight, 0f);
             gem.transform.SetParent(parentTransform);
+            gem.transform.position = new Vector3(piece.Position.X, piece.Position.Y, 0f);
             gem.name = "Gem - " + piece.Position.X + ", " + piece.Position.Y;
             gem.SetupGem(piece);
 

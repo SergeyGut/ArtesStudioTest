@@ -10,6 +10,7 @@ namespace Service
     public class SpawnService : ISpawnService, IInitializable
     {
         private readonly IGameBoard gameBoard;
+        private readonly IDropService dropService;
         private readonly IBoardView gameBoardView;
         private readonly IMatchCounterService matchCounterService;
         private readonly IGemPool<IPieceView> gemPool;
@@ -19,12 +20,14 @@ namespace Service
 
         public SpawnService(
             IGameBoard gameBoard,
+            IDropService dropService,
             IBoardView gameBoardView,
             IMatchCounterService matchCounterService,
             IGemPool<IPieceView> gemPool,
             ISettings settings)
         {
             this.gameBoard = gameBoard;
+            this.dropService = dropService;
             this.gameBoardView = gameBoardView;
             this.matchCounterService = matchCounterService;
             this.gemPool = gemPool;
@@ -42,7 +45,7 @@ namespace Service
             }
         }
 
-        public IGemData SelectNonMatchingGem(GridPosition position)
+        private IGemData SelectNonMatchingGem(GridPosition position)
         {
             using var validGems = PooledList<IGemData>.Get();
             using var matchCounts = PooledList<int>.Get();
@@ -81,19 +84,28 @@ namespace Service
             return validGems.Value[random.Next(0, validGems.Value.Count)];
         }
 
-        public IPiece SpawnGem(GridPosition position, IGemData gemToSpawn)
+        public void SpawnGem(GridPosition position, IGemData gemToSpawn, int dropHeight = 0)
         {
             if (random.Next(0, 100) < settings.BombChance)
             {
                 gemToSpawn = settings.Bomb;
             }
-            
-            var gemModel = new GemModel(gemToSpawn, position);
-            var gemView = gemPool.SpawnGem(gemToSpawn.PieceView, gemModel, settings.DropHeight);
-            gameBoard.SetGem(position, gemModel);
-            gameBoardView.AddPieceView(gemView);
 
-            return gemModel;
+            position = new GridPosition(position.X, position.Y + dropHeight);
+            
+            var gem = new GemModel(gemToSpawn, position);
+            var gemView = gemPool.SpawnGem(gemToSpawn.PieceView, gem);
+            
+            gameBoardView.AddPieceView(gemView);
+            
+            if (dropHeight > 0)
+            {
+                dropService.RunDropAsync(gem);
+            }
+            else
+            {
+                gameBoard.SetGem(position, gem);
+            }
         }
 
         public void SpawnTopX(int x)
@@ -104,7 +116,7 @@ namespace Service
             if (topGem == null)
             {
                 var gemToSpawn = SelectNonMatchingGem(topPos);
-                SpawnGem(topPos, gemToSpawn);
+                SpawnGem(topPos, gemToSpawn, settings.DropHeight);
             }
         }
     }

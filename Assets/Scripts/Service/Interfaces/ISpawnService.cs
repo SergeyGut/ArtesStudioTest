@@ -5,7 +5,7 @@ namespace Service.Interfaces
 {
     public interface ISpawnService
     {
-        IPiece SpawnGem(GridPosition position, IGemData gemToSpawn);
+        void SpawnGem(GridPosition position, IGemData gemToSpawn, int dropHeight = 0);
         void SpawnTopX(int x);
     }
 }

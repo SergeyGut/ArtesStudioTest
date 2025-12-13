@@ -72,6 +72,11 @@ namespace Presentation
                 for (int y = 0; y < gameBoard.Height; y++)
                 {
                     IPiece gem = gameBoard.GetGem(x, y);
+                    if (gem == null)
+                    {
+                        continue;
+                    }
+                    
                     IPieceView gemView = GetPieceView(gem);
                     if (gemView != null)
                     {

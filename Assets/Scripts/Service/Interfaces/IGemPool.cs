@@ -7,7 +7,7 @@ namespace Service.Interfaces
         int AvailableCount { get; }
         int ActiveCount { get; }
 
-        T SpawnGem(IPieceView item, IPiece piece, float dropHeight = 0f);
+        T SpawnGem(IPieceView item, IPiece piece);
         void ReturnGem(T item);
         void ClearPool();
     }
