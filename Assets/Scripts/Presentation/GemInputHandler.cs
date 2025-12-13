@@ -13,7 +13,7 @@ namespace Presentation
         private bool swapTriggered;
         private float swipeAngle;
 
-        private GemView gem;
+        private GemView gemView;
         private IGameStateProvider gameStateProvider;
         private ISwapService swapService;
 
@@ -30,7 +30,7 @@ namespace Presentation
 
         private void Awake()
         {
-            gem = GetComponent<GemView>();
+            gemView = GetComponent<GemView>();
         }
 
         private void Update()
@@ -77,7 +77,7 @@ namespace Presentation
             if (distance > 0.5f)
             {
                 swipeAngle = Mathf.Atan2(delta.y, delta.x) * Mathf.Rad2Deg;
-                swapService.MovePieces(gem.Piece);
+                swapService.MovePieces(gemView);
                 swapTriggered = true;
             }
         }

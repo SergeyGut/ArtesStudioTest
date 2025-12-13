@@ -13,8 +13,8 @@ namespace Service
         private readonly IMatchDispatcher matchDispatcher;
         private readonly ISettings settings;
         
-        private IPiece gem;
-        private IPiece otherGem;
+        private IPiece piece;
+        private IPiece otherPiece;
         
         public SwapService(
             IGameBoard gameBoard,
@@ -32,63 +32,61 @@ namespace Service
             this.settings = settings;
         }
         
-        public void MovePieces(IPiece piece)
+        public void MovePieces(IPieceView pieceView)
         {
-            gem = piece;
-
-            var gemView = boardView.GetPieceView(gem);
+            piece = pieceView.Piece as IPiece;
             
-            GetOtherGem(gemView);
+            GetOtherGem(pieceView);
 
-            gameBoard.SetGem(gem.Position, gem);
-            gameBoard.SetGem(otherGem.Position, otherGem);
+            gameBoard.SetGem(piece.Position, piece);
+            gameBoard.SetGem(otherPiece.Position, otherPiece);
 
-            var otherGemView = boardView.GetPieceView(otherGem);
+            var otherGemView = boardView.GetPieceView(otherPiece);
             
-            CheckMoveAsync(gemView, otherGemView).Forget();
+            CheckMoveAsync(pieceView, otherGemView).Forget();
         }
         
         private void GetOtherGem(IPieceView gemView)
         {
             switch (gemView.SwapAngle)
             {
-                case < 45 and > -45 when gem.Position.X < settings.RowsSize - 1:
+                case < 45 and > -45 when piece.Position.X < settings.RowsSize - 1:
                 {
-                    otherGem = gameBoard.GetGem(gem.Position.X + 1, gem.Position.Y);
-                    otherGem.Position.X--;
-                    gem.PrevPosition = gem.Position;
-                    gem.Position.X++;
+                    otherPiece = gameBoard.GetGem(piece.Position.X + 1, piece.Position.Y);
+                    otherPiece.Position.X--;
+                    piece.PrevPosition = piece.Position;
+                    piece.Position.X++;
                     break;
                 }
-                case > 45 and <= 135 when gem.Position.Y < settings.ColsSize - 1:
+                case > 45 and <= 135 when piece.Position.Y < settings.ColsSize - 1:
                 {
-                    otherGem = gameBoard.GetGem(gem.Position.X, gem.Position.Y + 1);
-                    otherGem.Position.Y--;
-                    gem.PrevPosition = gem.Position;
-                    gem.Position.Y++;
+                    otherPiece = gameBoard.GetGem(piece.Position.X, piece.Position.Y + 1);
+                    otherPiece.Position.Y--;
+                    piece.PrevPosition = piece.Position;
+                    piece.Position.Y++;
                     break;
                 }
-                case < -45 and >= -135 when gem.Position.Y > 0:
+                case < -45 and >= -135 when piece.Position.Y > 0:
                 {
-                    otherGem = gameBoard.GetGem(gem.Position.X, gem.Position.Y - 1);
-                    otherGem.Position.Y++;
-                    gem.PrevPosition = gem.Position;
-                    gem.Position.Y--;
+                    otherPiece = gameBoard.GetGem(piece.Position.X, piece.Position.Y - 1);
+                    otherPiece.Position.Y++;
+                    piece.PrevPosition = piece.Position;
+                    piece.Position.Y--;
                     break;
                 }
-                case > 135 or < -135 when gem.Position.X > 0:
+                case > 135 or < -135 when piece.Position.X > 0:
                 {
-                    otherGem = gameBoard.GetGem(gem.Position.X - 1, gem.Position.Y);
-                    otherGem.Position.X++;
-                    gem.PrevPosition = gem.Position;
-                    gem.Position.X--;
+                    otherPiece = gameBoard.GetGem(piece.Position.X - 1, piece.Position.Y);
+                    otherPiece.Position.X++;
+                    piece.PrevPosition = piece.Position;
+                    piece.Position.X--;
                     break;
                 }
                 default: return;
             }
             
-            gem.IsSwap = true;
-            otherGem.IsSwap = true;
+            piece.IsSwap = true;
+            otherPiece.IsSwap = true;
         }
 
         private async UniTask CheckMoveAsync(IPieceView gemView, IPieceView otherGemView)
@@ -97,25 +95,25 @@ namespace Service
 
             await WaitForSwapCompletion(gemView, otherGemView);
             
-            matchService.FindAllMatches(gem.Position, otherGem.Position);
+            matchService.FindAllMatches(piece.Position, otherPiece.Position);
 
-            if (otherGem != null)
+            if (otherPiece != null)
             {
-                if (gem.IsMatch == false && otherGem.IsMatch == false)
+                if (piece.IsMatch == false && otherPiece.IsMatch == false)
                 {
-                    otherGem.Position = gem.Position;
-                    gem.Position = gem.PrevPosition;
+                    otherPiece.Position = piece.Position;
+                    piece.Position = piece.PrevPosition;
                     
-                    gem.IsSwap = true;
-                    otherGem.IsSwap = true;
+                    piece.IsSwap = true;
+                    otherPiece.IsSwap = true;
 
-                    gameBoard.SetGem(gem.Position, gem);
-                    gameBoard.SetGem(otherGem.Position, otherGem);
+                    gameBoard.SetGem(piece.Position, piece);
+                    gameBoard.SetGem(otherPiece.Position, otherPiece);
 
                     await WaitForSwapCompletion(gemView, otherGemView);
                     
-                    gem.IsSwap = false;
-                    otherGem.IsSwap = false;
+                    piece.IsSwap = false;
+                    otherPiece.IsSwap = false;
 
                     gameStateProvider.SetState(GameState.move);
                 }

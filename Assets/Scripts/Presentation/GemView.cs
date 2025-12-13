@@ -19,9 +19,9 @@ namespace Presentation
         private float moveStartTime;
 
         private ISettings settings;
-        private IPiece piece;
+        private IReadOnlyPiece piece;
 
-        public IPiece Piece => piece;
+        public IReadOnlyPiece Piece => piece;
         public float SwapAngle => inputHandler != null ? inputHandler.SwapAngle : 0;
         public bool TargetPositionArrived => Vector2.Distance(transform.position, piece.Position.ToVector2()) < POSITION_THRESHOLD;
 
@@ -35,7 +35,7 @@ namespace Presentation
         {
             if (piece.IsMoving || piece.IsSwap)
             {
-                Vector2 targetPos = new Vector2(piece.Position.X, piece.Position.Y);
+                Vector2 targetPos = piece.Position.ToVector2();
                 float sqrStartDistance = (startPosition - targetPos).sqrMagnitude;
                 float distance = Mathf.Sqrt(sqrStartDistance);
                 float elapsed = Time.time - moveStartTime;
@@ -56,7 +56,7 @@ namespace Presentation
             }
         }
 
-        public void SetupGem(IPiece piece)
+        public void SetupGem(IReadOnlyPiece piece)
         {
             this.piece = piece;
             
@@ -66,7 +66,7 @@ namespace Presentation
 
         public void OnSpawnFromPool()
         {
-            ResetState();
+            inputHandler.ResetState();
         }
 
         public void OnReturnToPool()
@@ -75,15 +75,10 @@ namespace Presentation
             
             // TODO: Stop all async operations
         }
-
-        private void ResetState()
-        {
-            inputHandler.ResetState();
-        }
         
         public void RunDestroyEffect()
         {
-            Instantiate(destroyEffect, piece.Position.ToVector3(), Quaternion.identity);
+            Instantiate(destroyEffect, transform.position, Quaternion.identity);
         }
     }
 }

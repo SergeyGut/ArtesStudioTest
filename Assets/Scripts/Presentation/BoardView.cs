@@ -14,7 +14,7 @@ namespace Presentation
         private readonly IGemPool<IPieceView> gemPool;
         private readonly Transform gemsHolder;
 
-        private readonly Dictionary<IPiece, IPieceView> gemViews = new();
+        private readonly Dictionary<IReadOnlyPiece, IPieceView> gemViews = new();
         
         public BoardView(
             [Inject(Id = "GemsHolder")] Transform gemsHolder,

@@ -2,7 +2,7 @@
 {
     public interface IPieceView
     {
-        IPiece Piece { get; }
+        IReadOnlyPiece Piece { get; }
         float SwapAngle { get; }
         bool TargetPositionArrived { get; }
         void RunDestroyEffect();
