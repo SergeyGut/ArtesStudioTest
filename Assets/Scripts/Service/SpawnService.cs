@@ -40,8 +40,7 @@ namespace Service
             for (int y = 0; y < gameBoard.Height; y++)
             {
                 var pos = new GridPosition(x, y);
-                var pieceToSpawn = SelectNonMatchingPiece(pos);
-                SpawnPiece(pos, pieceToSpawn);
+                SpawnPiece(pos);
             }
         }
 
@@ -84,13 +83,17 @@ namespace Service
             return validPieces.Value[random.Next(0, validPieces.Value.Count)];
         }
 
+        private void SpawnPiece(GridPosition position, int dropHeight = 0)
+        {
+            var pieceToSpawn = random.Next(0, 100) < settings.BombChance ? 
+                settings.Bomb :
+                SelectNonMatchingPiece(position);
+
+            SpawnPiece(position, pieceToSpawn, dropHeight);
+        }
+
         public void SpawnPiece(GridPosition position, IPieceData pieceToSpawn, int dropHeight = 0)
         {
-            if (random.Next(0, 100) < settings.BombChance)
-            {
-                pieceToSpawn = settings.Bomb;
-            }
-
             position = new GridPosition(position.X, position.Y + dropHeight);
             
             var piece = new PieceModel(pieceToSpawn, position);
@@ -115,8 +118,7 @@ namespace Service
 
             if (topPiece == null)
             {
-                var pieceToSpawn = SelectNonMatchingPiece(topPos);
-                SpawnPiece(topPos, pieceToSpawn, settings.DropHeight);
+                SpawnPiece(topPos, settings.DropHeight);
             }
         }
     }

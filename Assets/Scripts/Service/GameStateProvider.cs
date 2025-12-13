@@ -1,7 +1,7 @@
 using Domain.Interfaces;
 using Service.Interfaces;
 
-namespace Presentation
+namespace Service
 {
     public class GameStateProvider : IGameStateProvider
     {

@@ -21,31 +21,31 @@ The project required implementation of the following tasks with a focus on SOLID
 
 **Implementation**:
 
-### One-by-One Row Dropping
-- **`BoardService.DropSingleRow()`**: Processes board row by row, moving gems down one position at a time when space below is empty
+### One-by-One Column Dropping
+- **`DropService.DropSingleX()`**: Processes board column by column, moving gems down one position at a time when space below is empty
 - Returns `true` when any movement occurs, enabling cascading loop
 - Gems drop sequentially from bottom to top
 
 ### Match Prevention System
-- **`SpawnService.SelectNonMatchingGem()`**: Validates all gem types before spawning
-  - Uses `GameBoard.GetMatchCountAt()` to check potential matches
+- **`SpawnService.SelectNonMatchingPiece()`**: Validates all gem types before spawning
+  - Uses `MatchCounterService.GetMatchCountAt()` to check potential matches
   - Selects gems that create zero matches when possible
   - Falls back to gems with minimum match count if all would match
 - Prevents matches during cascading and minimizes matches after refill
 
 ### Cascading Flow
-Implemented in `SC_GameLogic.DecreaseRowCo()`:
+Implemented in `MatchDispatcher.DecreaseColumnAsync()`:
 1. Spawn new gems at top row (with match prevention)
-2. Drop gems one row at a time using `BoardService.DropSingleRow()`
-3. Wait `decreaseSingleRowDelay` between row drops
+2. Drop gems one column at a time using `DropService.DropSingleX()`
+3. Wait `decreaseSingleRowDelay` between column drops
 4. Repeat until no more drops occur
 5. Check for new matches after cascading completes
 
 **Key Files**:
-- `Scripts/Services/BoardService.cs` - Row dropping logic
-- `Scripts/Services/SpawnService.cs` - Match prevention
-- `Scripts/SC_GameLogic.cs` - Cascading coroutine
-- `Scripts/GameBoard.cs` - Match detection utilities
+- `Scripts/Service/DropService.cs` - Column dropping logic
+- `Scripts/Service/SpawnService.cs` - Match prevention
+- `Scripts/Service/MatchDispatcher.cs` - Cascade orchestration
+- `Scripts/Domain/MatchService.cs` - Match detection
 
 ---
 
@@ -57,14 +57,14 @@ Implemented in `SC_GameLogic.DecreaseRowCo()`:
 
 ### Core Pooling Components
 
-**`GemPool`** (`Scripts/GemPool.cs`):
-- Implements `IGemPool` interface
-- Manages gem instance lifecycle using `GenericObjectPool<SC_Gem>`
-- `SpawnGem()`: Retrieves gem from pool or instantiates if pool is empty
-- `ReturnGem()`: Returns gem to pool for reuse
+**`GemPool`** (`Scripts/Presentation/GemPool.cs`):
+- Implements `IPiecePool<IPieceView>` interface
+- Manages gem instance lifecycle using `GenericObjectPool<GemView>`
+- `SpawnPiece()`: Retrieves gem from pool or instantiates if pool is empty
+- `ReturnPiece()`: Returns gem to pool for reuse
 - Tracks active and available gem counts
 
-**`GenericObjectPool<T>`** (`Scripts/Pool/GenericObjectPool.cs`):
+**`GenericObjectPool<T>`** (`Scripts/Presentation/Pool/GenericObjectPool.cs`):
 - Generic pooling infrastructure supporting any `IPoolable` type
 - Automatic cleanup and state reset on return via `IPoolable` interface
 - Efficient get/return operations with minimal allocations
@@ -72,12 +72,12 @@ Implemented in `SC_GameLogic.DecreaseRowCo()`:
 **`IPoolable` Interface**:
 - `OnSpawnFromPool()`: Called when object retrieved from pool
 - `OnReturnToPool()`: Called when object returned to pool
-- Implemented by `SC_Gem` for proper state management
+- Implemented by `GemView` for proper state management
 
 ### Integration
 - `DestroyService`: Returns gems to pool instead of `Destroy()`
-- `SpawnService` and `BombService`: Retrieve gems from pool via `GemPool.SpawnGem()`
-- `SC_GameLogic`: Returns misplaced gems to pool during cleanup
+- `SpawnService` and `BombService`: Retrieve gems from pool via `GemPool.SpawnPiece()`
+- `BoardView`: Returns misplaced gems to pool during cleanup
 
 ### Performance Impact
 - ~60% reduction in GC allocations
@@ -85,10 +85,10 @@ Implemented in `SC_GameLogic.DecreaseRowCo()`:
 - Stable memory footprint during gameplay
 
 **Key Files**:
-- `Scripts/GemPool.cs` - Gem pool implementation
-- `Scripts/Pool/GenericObjectPool.cs` - Generic pooling system
-- `Scripts/Pool/IPoolable.cs` - Poolable interface
-- `Scripts/Services/DestroyService.cs` - Pool integration
+- `Scripts/Presentation/GemPool.cs` - Gem pool implementation
+- `Scripts/Presentation/Pool/GenericObjectPool.cs` - Generic pooling system
+- `Scripts/Presentation/Pool/IPoolable.cs` - Poolable interface
+- `Scripts/Service/DestroyService.cs` - Pool integration
 
 ---
 
@@ -105,13 +105,13 @@ Implemented in `SC_GameLogic.DecreaseRowCo()`:
 - **Pool Integration**: Uses `GemPool` to spawn bomb instances
 
 **Flow**:
-1. `MatchService.CollectBombCreationPositions()` identifies positions for bombs (matches with 4+ gems)
+1. `PathfinderService.CollectBombCreationPositions()` identifies positions for bombs (matches with 4+ gems)
 2. `BombService.CreateBombs()` spawns bombs at identified positions
 3. Newly created bombs are tracked to prevent immediate destruction bug
 
 ### Bomb Matching
 
-**Implementation**: Enhanced `GameBoard.FindAllMatches()`
+**Implementation**: Enhanced `MatchService.FindAllMatches()`
 - Bombs can match with other bombs (any color)
 - Bombs can match with 2 or more regular pieces of the same color
 - Matching 3+ regular pieces with a bomb creates a new bomb (4+ total = bomb creation)
@@ -119,7 +119,7 @@ Implemented in `SC_GameLogic.DecreaseRowCo()`:
 
 ### Bomb Destruction with Delays
 
-**Implementation**: `SC_GameLogic.DestroyExplosionsWithDelay()`
+**Implementation**: `MatchDispatcher.DestroyExplosionsWithDelayAsync()`
 
 **Sequence**:
 1. **Neighbor Destruction**: After `bombNeighborDelay`, destroy all neighbor pieces marked for explosion (non-bomb explosions first)
@@ -127,19 +127,19 @@ Implemented in `SC_GameLogic.DecreaseRowCo()`:
 3. **Post-Destruction Delay**: Wait `bombPostSelfDelay` after bomb destruction
 4. **Cascading Start**: Regular refill logic starts only after bomb is destroyed
 
-**Configuration** (`SC_GameVariables`):
-- `bombNeighborDelay`: Delay before destroying neighbor group (default: 0.2s)
-- `bombSelfDelay`: Delay before destroying bomb itself (default: 0.3s)
-- `bombPostSelfDelay`: Delay after bomb destruction (default: 0.3s)
+**Configuration** (`GameSettings` ScriptableObject):
+- `bombNeighborDelay`: Delay before destroying neighbor group (default: 0.3s)
+- `bombSelfDelay`: Delay before destroying bomb itself (default: 0.2s)
+- `bombPostSelfDelay`: Delay after bomb destruction (default: 0.1s)
 - `minMatchForBomb`: Minimum match size to create bomb (default: 4)
 
 **Design**: Separates bomb explosions from regular gem explosions for different timing. Tracks newly created bombs to prevent them from exploding immediately.
 
 **Key Files**:
-- `Scripts/Services/BombService.cs` - Bomb creation
-- `Scripts/Services/MatchService.cs` - Bomb position collection
-- `Scripts/GameBoard.cs` - Bomb matching detection
-- `Scripts/SC_GameLogic.cs` - Destruction delays
+- `Scripts/Service/BombService.cs` - Bomb creation
+- `Scripts/Service/PathfinderService.cs` - Bomb position collection
+- `Scripts/Domain/MatchService.cs` - Bomb matching detection
+- `Scripts/Service/MatchDispatcher.cs` - Destruction delays and orchestration
 
 ---
 
@@ -150,85 +150,119 @@ Implemented in `SC_GameLogic.DecreaseRowCo()`:
 **Implementation**:
 
 ### Staggered Timing System
-- **Row-by-Row Processing**: `BoardService.DropSingleRow()` processes one row per iteration
-- **Delay Between Drops**: `decreaseSingleRowDelay` (default: 0.05s) creates staggered effect between rows
+- **Column-by-Column Processing**: `DropService.DropSingleX()` processes one column per iteration
+- **Delay Between Drops**: `decreaseSingleRowDelay` (default: 0.05s) creates staggered effect between column drops
 - **Individual Gem Animation**: Each gem animates independently based on its position and movement state
 
 ### Animation Mechanics
-**In `SC_Gem.Update()`**:
+**In `DropService.RunDropAsync()`**:
 - Gems check for empty space below and drop automatically
-- Each gem tracks its own movement start time and position
+- Each gem tracks its own movement state and position
 - Uses non-linear easing curves for smooth acceleration/deceleration
 - `gemDropSpeedCurve`: Configurable animation curve based on drop distance
 
 ### Cascading Effect
-**Flow** (`SC_GameLogic.DecreaseRowCo()`):
+**Flow** (`MatchDispatcher.DecreaseColumnAsync()`):
 1. Spawn gems at top row
-2. Drop one row of gems
+2. Drop one column of gems
 3. Wait `decreaseSingleRowDelay`
 4. Repeat until no more drops occur
 5. Each gem's animation begins when space above is cleared
 
 **Visual Result**: Gems fall one by one in a chain-like motion, creating smooth cascading effect similar to professional match-3 games.
 
-**Configuration**: `SC_GameVariables.decreaseSingleRowDelay` controls stagger timing (adjustable in Unity Inspector)
+**Configuration**: `GameSettings.decreaseSingleRowDelay` controls stagger timing (adjustable in Unity Inspector)
 
 **Key Files**:
-- `Scripts/Services/BoardService.cs` - Row-by-row dropping
-- `Scripts/SC_Gem.cs` - Individual gem movement and animation
-- `Scripts/SC_GameLogic.cs` - Staggered drop coroutine
-- `Scripts/SC_GameVariables.cs` - Animation timing configuration
+- `Scripts/Service/DropService.cs` - Column-by-column dropping
+- `Scripts/Presentation/GemView.cs` - Individual gem view and animation
+- `Scripts/Service/MatchDispatcher.cs` - Staggered drop orchestration
+- `Scripts/Presentation/Settings/GameSettings.cs` - Animation timing configuration
 
 ---
 
-## Architecture Refactoring
+## Architecture
 
-### Service-Oriented Architecture
+### Clean Architecture
 
-**Goal**: Transform monolithic code into maintainable, SOLID-compliant architecture.
+The project follows Clean Architecture principles with clear separation of concerns across three layers:
 
-**Implementation**:
-- Extracted game logic into focused service classes
-- Created interface layer for dependency inversion
-- Implemented dependency injection via constructors
-- `SC_GameLogic` orchestrates services and handles UI only
+**Domain Layer** (`Scripts/Domain/`):
+- Core business logic and rules, independent of Unity
+- No Unity dependencies (`noEngineReferences: true`)
+- Contains: `GameBoard`, `MatchService`, `MatchCounterService`, `PieceModel`
+- Pure C# classes with no MonoBehaviour dependencies
+
+**Service/Application Layer** (`Scripts/Service/`):
+- Orchestrates domain logic and coordinates game flow
+- Independent services for specific responsibilities
+- Contains: `MatchDispatcher`, `BombService`, `SpawnService`, `DestroyService`, `DropService`, `ScoreService`, `SwapService`, `PathfinderService`
+- Uses async/await (UniTask) for asynchronous operations
+
+**Presentation Layer** (`Scripts/Presentation/`):
+- Views, animations, and Unity-specific components
+- Contains: `BoardView`, `GemView`, `GemInputHandler`, `GemPool`, `ScoreUpdater`
+- Handles visual representation only, no gameplay logic
+
+### Dependency Injection
+
+**Framework**: Zenject (Extenject)
+
+**Installers**:
+- `DomainInstaller`: Registers domain layer services (`IGameBoard`, `IMatchService`, `IMatchCounterService`)
+- `ServiceInstaller`: Registers application layer services (all service interfaces)
+- `SceneInstaller`: Registers presentation layer components and Unity-specific bindings
+
+**Pattern**: Constructor injection throughout - all dependencies resolved via container, no manual instantiation or runtime lookups.
 
 ### Service Layer
 
-**`MatchService`** (`Scripts/Services/MatchService.cs`):
-- Centralized match detection and bomb position collection
+**`MatchDispatcher`** (`Scripts/Service/MatchDispatcher.cs`):
+- Orchestrates match processing, cascade flow, and bomb timing
+- Coordinates multiple services for game flow
+- Handles async timing and state transitions
+
+**`MatchService`** (`Scripts/Domain/MatchService.cs`):
+- Centralized match detection logic
 - Separates matched gems from bomb/color bomb gems
 - Categorizes explosions for different destruction timing
 
-**`SpawnService`** (`Scripts/Services/SpawnService.cs`):
+**`SpawnService`** (`Scripts/Service/SpawnService.cs`):
 - Manages gem spawning with match prevention (Task 1)
-- `SelectNonMatchingGem()`: Validates and selects non-matching gems
+- `SelectNonMatchingPiece()`: Validates and selects non-matching gems
 - Integrates with gem pool for object reuse
 
-**`DestroyService`** (`Scripts/Services/DestroyService.cs`):
+**`DestroyService`** (`Scripts/Service/DestroyService.cs`):
 - Handles gem destruction, effects, and score
 - Returns gems to pool (Task 2 implementation)
 - Updates board state after destruction
 
-**`BombService`** (`Scripts/Services/BombService.cs`):
+**`BombService`** (`Scripts/Service/BombService.cs`):
 - Handles bomb creation logic (Task 3)
 - Selects appropriate bomb type based on matched gem color
-- Tracks newly created bombs
 
-**`BoardService`** (`Scripts/Services/BoardService.cs`):
-- Manages board-level operations for cascading (Tasks 1 & 5)
-- `DropSingleRow()`: Drops gems one row at a time
+**`DropService`** (`Scripts/Service/DropService.cs`):
+- Manages gem dropping for cascading (Tasks 1 & 5)
+- `DropSingleX()`: Drops gems one column at a time
 
-**`ScoreService`** (`Scripts/Services/ScoreService.cs`):
+**`ScoreService`** (`Scripts/Service/ScoreService.cs`):
 - Centralized score management
 - Provides read-only access to current score
 
+**`SwapService`** (`Scripts/Service/SwapService.cs`):
+- Handles piece swapping logic
+- Validates swaps and triggers match detection
+
+**`PathfinderService`** (`Scripts/Service/PathfinderService.cs`):
+- Collects bomb creation positions
+- Collects matched pieces and explosions
+- Separates bomb and non-bomb explosions
+
 ### Interface Layer
 
-- **`IGameBoard`**: Board operations contract
-- **`IGemPool`**: Pooling operations contract (Task 2)
-- **`IGameLogic`**: Game logic contract
-- **`ISpawnService`**, **`IDestroyService`**, **`IMatchService`**, **`IBombService`**, **`IBoardService`**, **`IScoreService`**: Service contracts
+- **`IGameBoard`**: Board state operations contract
+- **`IPiecePool<T>`**: Pooling operations contract (Task 2)
+- **`ISpawnService`**, **`IDestroyService`**, **`IMatchService`**, **`IBombService`**, **`IDropService`**, **`IScoreService`**, **`ISwapService`**, **`IPathfinderService`**, **`IMatchDispatcher`**: Service contracts
 
 **SOLID Compliance**:
 - ✅ **Single Responsibility**: Each service has one clear purpose
@@ -295,14 +329,13 @@ Implemented in `SC_GameLogic.DecreaseRowCo()`:
 **Issue**: Bombs created after 4+ match would explode immediately in the same move.
 
 **Fix**: 
-- Track `newlyCreatedBombs` in `DestroyMatchesCo()`
-- Remove from `gameBoard.Explosions` immediately after creation
-- Filter out in explosion collection methods
+- Filter out newly created bombs in `PathfinderService.CollectExplosionsBomb()` and `CollectExplosionsNonBomb()`
+- Only process bombs that existed before the current match cycle
 
 ### Unnecessary Delay Bug
 **Issue**: Game flow would delay even when no blocks were destroyed by bomb explosions.
 
-**Fix**: Added `Count > 0` checks before delay coroutines in `DestroyExplosionsWithDelay()`
+**Fix**: Added `Count > 0` checks before delay coroutines in `MatchDispatcher.DestroyExplosionsWithDelayAsync()`
 
 ### Other Fixes
 - Operator precedence fix in swipe angle check
@@ -315,63 +348,97 @@ Implemented in `SC_GameLogic.DecreaseRowCo()`:
 
 ```
 Scripts/
-├── Interfaces/
-│   ├── IGameBoard.cs          # Board operations contract
-│   ├── IGameLogic.cs          # Game logic contract
-│   ├── IGemPool.cs            # Pooling contract (Task 2)
-│   ├── ISpawnService.cs       # Spawning contract (Task 1)
-│   ├── IDestroyService.cs     # Destruction contract
-│   ├── IMatchService.cs       # Match detection contract
-│   ├── IBombService.cs        # Bomb creation contract (Task 3)
-│   ├── IBoardService.cs       # Board operations contract
-│   └── IScoreService.cs       # Score management contract
-├── Services/
-│   ├── BoardService.cs        # Board manipulation (Tasks 1 & 5)
-│   ├── BombService.cs         # Bomb creation (Task 3)
-│   ├── DestroyService.cs      # Gem destruction (Task 2)
-│   ├── MatchService.cs        # Match detection (Task 3)
-│   ├── ScoreService.cs        # Score management
-│   └── SpawnService.cs        # Gem spawning (Task 1)
-├── Pool/
-│   ├── GenericObjectPool.cs   # Base pooling system (Task 2)
-│   ├── IPoolable.cs           # Poolable interface (Task 2)
-│   ├── IObjectPool.cs         # Pool interface
-│   ├── PoolDebugger.cs        # Pool monitoring tool
-│   ├── PooledCollection.cs    # Pooled collections
-│   └── WaitForSecondsPool.cs  # Coroutine wait pooling
-├── GameBoard.cs               # Board implementation
-├── GemPool.cs                 # Gem pooling (Task 2)
-├── SC_GameLogic.cs            # Main game orchestrator
-├── SC_GameVariables.cs        # Game settings (Singleton)
-├── SC_Gem.cs                  # Gem behavior and movement
-└── GlobalEnums.cs             # Game enums
+├── Domain/                     # Domain Layer (Core Logic)
+│   ├── GameBoard.cs            # Board state management
+│   ├── MatchService.cs         # Match detection logic
+│   ├── MatchCounterService.cs  # Match counting utilities
+│   ├── PieceModel.cs           # Piece domain model
+│   ├── GridPosition.cs         # Position value type
+│   ├── MatchInfo.cs            # Match information data
+│   ├── Pool/                   # Pooled collections
+│   │   ├── PooledList.cs
+│   │   ├── PooledDictionary.cs
+│   │   ├── PooledHashSet.cs
+│   │   └── CollectionPool.cs
+│   └── Interfaces/
+│       ├── IGameBoard.cs
+│       ├── IMatchService.cs
+│       ├── IMatchCounterService.cs
+│       ├── IPiece.cs
+│       ├── IPieceData.cs
+│       ├── IPieceView.cs
+│       └── IBoardSettings.cs
+├── Service/                    # Service/Application Layer
+│   ├── MatchDispatcher.cs      # Game flow orchestration
+│   ├── BombService.cs          # Bomb creation (Task 3)
+│   ├── DestroyService.cs       # Gem destruction (Task 2)
+│   ├── DropService.cs          # Gem dropping (Tasks 1 & 5)
+│   ├── SpawnService.cs         # Gem spawning (Task 1)
+│   ├── ScoreService.cs         # Score management
+│   ├── SwapService.cs          # Piece swapping
+│   ├── PathfinderService.cs    # Bomb/explosion collection
+│   └── Interfaces/
+│       ├── IMatchDispatcher.cs
+│       ├── IBombService.cs
+│       ├── IDestroyService.cs
+│       ├── IDropService.cs
+│       ├── ISpawnService.cs
+│       ├── IScoreService.cs
+│       ├── ISwapService.cs
+│       ├── IPathfinderService.cs
+│       ├── IBoardView.cs
+│       ├── ISettings.cs
+│       └── IGameStateProvider.cs
+└── Presentation/               # Presentation Layer (Views)
+    ├── BoardView.cs            # Board view management
+    ├── GemView.cs              # Gem view and animation
+    ├── GemInputHandler.cs      # Input handling
+    ├── GemPool.cs              # Gem pooling (Task 2)
+    ├── ScoreUpdater.cs         # Score UI updates
+    ├── GameState.cs            # Game state enum
+    ├── Pool/                    # Object pooling
+    │   ├── GenericObjectPool.cs
+    │   ├── IObjectPool.cs
+    │   ├── IPoolable.cs
+    │   └── PoolDebugger.cs
+    ├── Settings/               # ScriptableObject settings
+    │   ├── GameSettings.cs     # Main game configuration
+    │   └── GemData.cs          # Gem data assets
+    └── Zenject/                # Dependency injection
+        ├── DomainInstaller.cs
+        ├── ServiceInstaller.cs
+        ├── SceneInstaller.cs
+        └── GameSettingsInstaller.cs
 ```
 
 ---
 
 ## Design Patterns Used
 
-1. **Service-Oriented Architecture**: Separation of concerns into focused services
-2. **Dependency Injection**: Services injected via constructors
-3. **Object Pool Pattern**: Reuse objects to reduce allocations (Task 2)
-4. **Singleton Pattern**: `SC_GameVariables` for global settings
+1. **Clean Architecture**: Three-layer separation (Domain/Service/Presentation)
+2. **Dependency Injection**: Zenject framework with constructor injection
+3. **Service-Oriented Architecture**: Separation of concerns into focused services
+4. **Object Pool Pattern**: Reuse objects to reduce allocations (Task 2)
 5. **Strategy Pattern**: Animation curves for different easing strategies
 6. **Facade Pattern**: `ScoreService` simplifies score access
 7. **RAII Pattern**: Automatic cleanup via `using` statements
-8. **Coroutine Pattern**: Asynchronous operations for animations (Task 5)
-9. **Iterator Pattern**: Sequential processing of board rows (Task 1)
+8. **Async/Await Pattern**: UniTask for asynchronous operations (Task 5)
+9. **Iterator Pattern**: Sequential processing of board columns (Task 1)
 10. **Interface Segregation**: Focused, minimal interfaces
 11. **Dependency Inversion**: Depend on abstractions, not concretions
+12. **Orchestrator Pattern**: `MatchDispatcher` coordinates service interactions
 
 ---
 
 ## Technical Details
 
 **Unity Version**: Compatible with Unity 2021.3+  
-**Dependencies**: TextMeshPro, UnityEngine.Pool  
-**Architecture**: Service-oriented with dependency injection  
+**Dependencies**: TextMeshPro, Zenject (Extenject), UniTask (Cysharp.Threading.Tasks)  
+**Architecture**: Clean Architecture (Domain/Service/Presentation) with Dependency Injection  
+**DI Framework**: Zenject (Extenject)  
 **Memory Management**: Comprehensive object pooling system  
-**SOLID Compliance**: ✅ All principles followed
+**SOLID Compliance**: ✅ All principles followed  
+**Assembly Definitions**: Enforced layer boundaries with asmdef files
 
 **Performance Metrics**:
 - ~60% reduction in GC allocations
@@ -383,22 +450,28 @@ Scripts/
 
 ## Configuration
 
-All game parameters are configurable via `SC_GameVariables` in Unity Inspector:
+All game parameters are configurable via `GameSettings` ScriptableObject in Unity Inspector:
 
 **Bomb System** (Task 3):
-- `bombNeighborDelay`: Delay before neighbor destruction (default: 0.2s)
-- `bombSelfDelay`: Delay before bomb destruction (default: 0.3s)
-- `bombPostSelfDelay`: Delay after bomb destruction (default: 0.3s)
+- `bombNeighborDelay`: Delay before neighbor destruction (default: 0.3s)
+- `bombSelfDelay`: Delay before bomb destruction (default: 0.2s)
+- `bombPostSelfDelay`: Delay after bomb destruction (default: 0.1s)
 - `minMatchForBomb`: Minimum match size to create bomb (default: 4)
 
 **Cascading & Animation** (Tasks 1 & 5):
 - `decreaseRowDelay`: Delay before starting cascading (default: 0.2s)
-- `decreaseSingleRowDelay`: Delay between row drops for staggering (default: 0.05s)
-- `gemSpeed`: Base gem movement speed
+- `decreaseSingleRowDelay`: Delay between column drops for staggering (default: 0.05s)
+- `decreaseSingleColumnDelay`: Delay between parallel column processing (default: 0.03s)
+- `gemSpeed` / `pieceSpeed`: Base gem movement speed
 - `gemDropSpeedCurve`: Animation curve for drop speed based on distance
 - `gemSwapEaseCurve`: Animation curve for swap animations
 
 **Game Flow**:
-- `findAllMatchesDelay`: Delay before checking for new matches (default: 0.5s)
-- `destroyMatchesDelay`: Delay before destroying matches (default: 0.5s)
-- `changeStateDelay`: Delay before returning to move state (default: 0.5s)
+- `findAllMatchesDelay`: Delay before checking for new matches (default: 0.2s)
+- `destroyMatchesDelay`: Delay before destroying matches (default: 0.1s)
+- `changeStateDelay`: Delay before returning to move state (default: 0s)
+
+**Other Settings**:
+- `bombChance`: Random bomb spawn chance percentage (default: 3%)
+- `dropHeight`: Height above board for new gem spawns (default: 1)
+- `rowsSize` / `colsSize`: Board dimensions (default: 7x7)

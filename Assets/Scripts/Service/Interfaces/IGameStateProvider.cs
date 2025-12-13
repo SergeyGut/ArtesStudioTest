@@ -1,4 +1,3 @@
-
 using Domain.Interfaces;
 
 namespace Service.Interfaces

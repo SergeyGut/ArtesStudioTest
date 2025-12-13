@@ -15,8 +15,9 @@ namespace Presentation.Installers
             Container.Bind<IDropService>().To<DropService>().AsSingle();
             Container.Bind<IMatchDispatcher>().To<MatchDispatcher>().AsSingle();
             Container.Bind<ISwapService>().To<SwapService>().AsSingle();
+            
+            Container.BindInterfacesTo<GameStateProvider>().AsSingle();
             Container.BindInterfacesTo<SpawnService>().AsSingle();
-            Container.BindInterfacesTo<BoardView>().AsSingle();
         }
     }
 }
